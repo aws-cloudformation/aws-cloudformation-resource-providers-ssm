@@ -1,6 +1,6 @@
 {
     "typeName": "AWS::SSM::Association",
-    "description": "Resource Schema For AWS::SSM::Association",
+    "description": "An example resource schema demonstrating some basic constructs and validation rules.",
     "sourceUrl": "git@github.com:aws-cloudformation/aws-cloudformation-rpdk.git",
     "definitions": {
         "InstanceAssociationOutputLocation": {
