@@ -1,0 +1,7 @@
+{
+    "typeName": "AWS::SSM::Association",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.aws.ssm.association.HandlerWrapper::handleRequest",
+    "settings": {}
+}
