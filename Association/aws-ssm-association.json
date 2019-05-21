@@ -1,7 +1,7 @@
 {
     "typeName": "AWS::SSM::Association",
     "description": "Resource Schema For AWS::SSM::Association",
-    "sourceUrl": "git@github.com:aws-cloudformation/aws-cloudformation-rpdk.git",
+    "sourceUrl": "git@github.com:aws-cloudformation/aws-cloudformation-resource-providers-ssm.git",
     "definitions": {
         "InstanceAssociationOutputLocation": {
             "type": "object",
@@ -28,7 +28,7 @@
         "Parameters": {
             "type": "object",
             "patternProperties": {
-                "_S": {
+                "^S_": {
                     "$ref": "#/definitions/ParameterValues"
                 }
             }
@@ -119,12 +119,12 @@
         }
     ],
     "createOnlyProperties": [
-        "#/properties/InstanceId",
-        "#/properties/Name",
-        "#/properties/Targets"
+        "/properties/InstanceId",
+        "/properties/Name",
+        "/properties/Targets"
     ],
     "readOnlyProperties": [
-        "#/properties/AssociationId"
+        "/properties/AssociationId"
     ],
     "identifiers": [
         [
