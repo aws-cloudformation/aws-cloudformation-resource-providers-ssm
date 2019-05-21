@@ -15,10 +15,13 @@
             "type": "object",
             "properties": {
                 "OutputS3BucketName": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 63
                 },
                 "OutputS3KeyPrefix": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 500
                 }
             }
         },
@@ -60,7 +63,10 @@
                     }
                 }
             },
-            "required": ["Key", "Values"]
+            "required": [
+                "Key",
+                "Values"
+            ]
         }
     },
     "properties": {
@@ -68,16 +74,19 @@
             "type": "string"
         },
         "AssociationName": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
         },
         "DocumentVersion": {
             "type": "string"
         },
         "InstanceId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "(^i-(\\w{8}|\\w{17})$)|(^mi-\\w{17}$)"
         },
         "Name": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-.:/]{3,128}$"
         },
         "OutputLocation": {
             "$ref": "#/definitions/InstanceAssociationOutputLocation"
@@ -86,26 +95,43 @@
             "$ref": "#/definitions/Parameters"
         },
         "ScheduleExpression": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
         },
         "Targets": {
-            "$ref": "#/definitions/Targets"
+            "$ref": "#/definitions/Targets",
+            "maxItems": 5
         }
     },
-    "required": [
-        "/properties/Name"
+    "oneOf": [
+        {
+            "required": [
+                "#/properties/Name",
+                "#/properties/InstanceId"
+            ]
+        },
+        {
+            "required": [
+                "#/properties/Name",
+                "#/properties/Targets"
+            ]
+        }
     ],
     "createOnlyProperties": [
-        "/properties/InstanceId",
-        "/properties/Name",
-        "/properties/Targets"
+        "#/properties/InstanceId",
+        "#/properties/Name",
+        "#/properties/Targets"
     ],
     "readOnlyProperties": [
-        "/properties/AssociationId"
+        "#/properties/AssociationId"
     ],
     "identifiers": [
-        [   "/properties/AssociationId",
-            "/properties/Name"
+        [
+            "#/properties/AssociationId"
+        ],
+        [
+            "#/properties/Name"
         ]
     ]
 }
