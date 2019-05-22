@@ -25,7 +25,7 @@ phases:
       - cd "$CODEBUILD_SRC_DIR_JAVA_PLUGIN"
       - mvn package org.apache.maven.plugins:maven-install-plugin:3.0.0-M1:install --batch-mode
       - pip install "$CODEBUILD_SRC_DIR_RPDK" .
-#      # end-to-end test child repo(s)
-#      - cd "$CODEBUILD_SRC_DIR"
-#      - cd Association
-#      - mvn package
+      # end-to-end test child repo(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd Association
+      - mvn package
