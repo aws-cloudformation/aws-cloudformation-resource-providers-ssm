@@ -4,13 +4,11 @@ Description: Manage GitHub Continuous Integration and Release processes
 Parameters:
   GitHubRepositoryName:
     Type: String
-    Description: GitHub Repo Name For aws-cloudformation-resource-providers-ssm
+    Description: GitHub Repo Name (e.g; 'aws-cloudformation-resource-providers-s3')
   CFNSDKBucket:
     Type: String
     Description: S3 Location of CloudFormation SDK; should be removed when we can publish the latest client
-  CIRoleName:
-    Type: String
-    Description: Role Name For CodeBuild CI Role
+
 Resources:
   AWSCloudFormationResourceProviderCIPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -42,7 +40,7 @@ Resources:
   AWSCloudFormationResourceProviderCIRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Ref CIRoleName
+      RoleName: !Sub "codebuild-${GitHubRepositoryName}-ci-role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
