@@ -3,5 +3,12 @@
     "language": "java",
     "runtime": "java8",
     "entrypoint": "com.aws.ssm.association.HandlerWrapper::handleRequest",
-    "settings": {}
+    "settings": {
+        "namespace": [
+            "com",
+            "aws",
+            "ssm",
+            "association"
+        ]
+    }
 }

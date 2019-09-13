@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project
-    xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.aws.ssm.association</groupId>
@@ -26,6 +26,13 @@
     </repositories>
 
     <dependencies>
+        <!-- Custom dependencies -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ssm</artifactId>
+            <version>1.11.517</version>
+        </dependency>
+
         <!-- https://github.com/awslabs/aws-cloudformation-rpdk-java-plugin/ -->
         <dependency>
             <groupId>com.amazonaws.cloudformation</groupId>
@@ -155,6 +162,7 @@
                         <exclude>**/BaseConfiguration*</exclude>
                         <exclude>**/BaseHandler*</exclude>
                         <exclude>**/HandlerWrapper*</exclude>
+                        <exclude>**/ResourceModel*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -182,11 +190,6 @@
                                     <limits>
                                         <limit>
                                             <counter>BRANCH</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.8</minimum>
-                                        </limit>
-                                        <limit>
-                                            <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.8</minimum>
                                         </limit>

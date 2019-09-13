@@ -2,8 +2,8 @@ package com.aws.ssm.association;
 
 import com.amazonaws.cloudformation.proxy.AmazonWebServicesClientProxy;
 import com.amazonaws.cloudformation.proxy.Logger;
-import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.OperationStatus;
+import com.amazonaws.cloudformation.proxy.ProgressEvent;
 import com.amazonaws.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.ArrayList;
