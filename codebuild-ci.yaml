@@ -79,30 +79,9 @@ Resources:
         GitCloneDepth: 1
         BuildSpec: buildspec.yml
       SecondarySources:
-          - Type: GITHUB
-            Auth:
-              Type: OAUTH
-            Location: https://github.com/aws-cloudformation/aws-cloudformation-resource-schema.git
-            ReportBuildStatus: false
-            GitCloneDepth: 1
-            SourceIdentifier: SCHEMA
-          - Type: GITHUB
-            Auth:
-              Type: OAUTH
-            Location: https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git
-            ReportBuildStatus: false
-            GitCloneDepth: 1
-            SourceIdentifier: RPDK
-          - Type: GITHUB
-            Auth:
-              Type: OAUTH
-            Location: https://github.com/aws-cloudformation/aws-cloudformation-rpdk-java-plugin.git
-            ReportBuildStatus: false
-            GitCloneDepth: 1
-            SourceIdentifier: JAVA_PLUGIN
-          - Type: S3
-            Location: !Sub "${CFNSDKBucket}/"
-            SourceIdentifier: SDK
+        - Type: S3
+          Location: !Sub "${CFNSDKBucket}/"
+          SourceIdentifier: SDK
       ServiceRole: !GetAtt AWSCloudFormationResourceProviderCIRole.Arn
       Triggers:
         Webhook: true

@@ -28,6 +28,7 @@ hs_err_pid*
 
 # Build
 target/
+env/
 
 # Generated Files
 .classpath

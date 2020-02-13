@@ -18,17 +18,17 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>http://central.maven.org/maven2</url>
-        </repository>
-    </repositories>
-
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/ssm -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>ssm</artifactId>
+            <version>2.10.15</version>
+        </dependency>
+
         <!-- https://github.com/awslabs/aws-cloudformation-rpdk-java-plugin/ -->
         <dependency>
-            <groupId>com.amazonaws.cloudformation</groupId>
+            <groupId>software.amazon.cloudformation</groupId>
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
             <version>1.0</version>
         </dependency>
@@ -155,6 +155,7 @@
                         <exclude>**/BaseConfiguration*</exclude>
                         <exclude>**/BaseHandler*</exclude>
                         <exclude>**/HandlerWrapper*</exclude>
+                        <exclude>**/ResourceModel*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -182,11 +183,6 @@
                                     <limits>
                                         <limit>
                                             <counter>BRANCH</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.8</minimum>
-                                        </limit>
-                                        <limit>
-                                            <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.8</minimum>
                                         </limit>

@@ -2,12 +2,12 @@
     "typeName": "AWS::SSM::Association",
     "language": "java",
     "runtime": "java8",
-    "entrypoint": "com.aws.ssm.association.HandlerWrapper::handleRequest",
-    "testEntrypoint": "com.aws.ssm.association.HandlerWrapper::testEntrypoint",
+    "entrypoint": "com.amazonaws.ssm.association.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.ssm.association.HandlerWrapper::testEntrypoint",
     "settings": {
         "namespace": [
             "com",
-            "aws",
+            "amazonaws",
             "ssm",
             "association"
         ]
