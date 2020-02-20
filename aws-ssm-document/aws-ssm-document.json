@@ -171,8 +171,7 @@
     },
     "additionalProperties": false,
     "required": [
-        "Content",
-        "Name"
+        "Content"
     ],
     "createOnlyProperties": [
         "/properties/Name",

@@ -1,15 +1,15 @@
 package com.amazonaws.ssm.document;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.ssm.model.AttachmentsSource;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
-import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DocumentRequires;
+import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.Tag;
 
-import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
 import javax.annotation.Nullable;
@@ -29,12 +29,12 @@ class DocumentModelTranslator {
     /**
      * Generate CreateDocumentRequest from the CreateResource request.
      */
-    CreateDocumentRequest getCreateDocumentRequest(@NonNull final ResourceModel model,
-                                                   @Nullable final Map<String, String> systemTags,
-                                                   @NonNull final String requestToken) {
+    CreateDocumentRequest generateCreateDocumentRequest(@NonNull final ResourceModel model,
+                                                        @Nullable final Map<String, String> systemTags,
+                                                        @NonNull final String requestToken) {
         final String documentName;
 
-        if (model.getName() == null || model.getName().isEmpty()) {
+        if (StringUtils.isEmpty(model.getName())) {
             documentName = generateName(systemTags, requestToken);
         } else {
             documentName = model.getName();
@@ -53,8 +53,8 @@ class DocumentModelTranslator {
                 .build();
     }
 
-    DescribeDocumentRequest generateDescribeDocumentRequest(@NonNull final ResourceModel model) {
-        return DescribeDocumentRequest.builder()
+    GetDocumentRequest generateGetDocumentRequest(@NonNull final ResourceModel model) {
+        return GetDocumentRequest.builder()
                 .name(model.getName())
                 .documentVersion(model.getDocumentVersion())
                 .build();
@@ -83,8 +83,8 @@ class DocumentModelTranslator {
     }
 
     private List<Tag> translateTags(@Nullable final List<com.amazonaws.ssm.document.Tag> tags) {
-        if (tags == null || tags.isEmpty()) {
-            return ImmutableList.of();
+        if (CollectionUtils.isEmpty(tags)) {
+            return null;
         }
 
         return tags.stream().map(
@@ -96,8 +96,8 @@ class DocumentModelTranslator {
     }
 
     private List<AttachmentsSource> translateAttachments(@Nullable final List<com.amazonaws.ssm.document.AttachmentsSource> attachmentsSources) {
-        if (attachmentsSources == null || attachmentsSources.isEmpty()) {
-            return ImmutableList.of();
+        if (CollectionUtils.isEmpty(attachmentsSources)) {
+            return null;
         }
 
         return attachmentsSources.stream().map(
@@ -110,8 +110,8 @@ class DocumentModelTranslator {
     }
 
     private List<DocumentRequires> translateRequires(@Nullable final List<com.amazonaws.ssm.document.DocumentRequires> requires) {
-        if (requires == null || requires.isEmpty()) {
-            return ImmutableList.of();
+        if (CollectionUtils.isEmpty(requires)) {
+            return null;
         }
 
         return requires.stream().map(
