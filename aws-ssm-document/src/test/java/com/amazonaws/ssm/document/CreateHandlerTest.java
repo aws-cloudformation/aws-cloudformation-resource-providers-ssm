@@ -67,7 +67,7 @@ public class CreateHandlerTest {
             .name(SAMPLE_DOCUMENT_NAME)
             .build();
     private static final int CALLBACK_DELAY_SECONDS = 30;
-    private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 30;
+    private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 20;
     private static final String FAILED_MESSAGE = "failed";
 
     @Mock

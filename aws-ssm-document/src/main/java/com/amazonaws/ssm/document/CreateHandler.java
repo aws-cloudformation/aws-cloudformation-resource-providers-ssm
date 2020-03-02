@@ -30,7 +30,6 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
 
-
 /**
  * Create a new AWS::SSM::Document resource.
  */
@@ -41,7 +40,9 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      */
     private static final int CALLBACK_DELAY_SECONDS = 30;
 
-    private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 15 * 60 / CALLBACK_DELAY_SECONDS;
+    private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 10 * 60 / CALLBACK_DELAY_SECONDS;
+
+    private static final String CREATE_DOCUMENT_OPERATION_NAME = "CreateDocument";
 
     @NonNull
     private final DocumentModelTranslator documentModelTranslator;
@@ -51,7 +52,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
     @VisibleForTesting
     public CreateHandler() {
-        this(new DocumentModelTranslator(), SsmClient.create());
+        this(new DocumentModelTranslator(), ClientBuilder.getClient());
     }
 
     /**
@@ -88,14 +89,14 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
         } catch (final DocumentLimitExceededException e) {
-            throw new CfnServiceLimitExceededException(e);
+            throw new CfnServiceLimitExceededException(TYPE_NAME, e.getMessage(), e);
         } catch (final DocumentAlreadyExistsException e) {
-            throw new ResourceAlreadyExistsException(e);
+            throw new ResourceAlreadyExistsException(TYPE_NAME, model.getName());
         } catch (final MaxDocumentSizeExceededException | InvalidDocumentContentException | InvalidDocumentSchemaVersionException
                 | AutomationDefinitionNotFoundException | AutomationDefinitionVersionNotFoundException e) {
-            throw new CfnInvalidRequestException(e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final SsmException e) {
-            throw new CfnGeneralServiceException(e);
+            throw new CfnGeneralServiceException(CREATE_DOCUMENT_OPERATION_NAME, e);
         }
     }
 

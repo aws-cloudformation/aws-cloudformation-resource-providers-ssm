@@ -1,13 +1,13 @@
 {
     "typeName": "AWS::SSM::Document",
     "description": "The AWS::SSM::Document resource is an SSM document in AWS Systems Manager that defines the actions that Systems Manager performs, which can be used to set up and run commands on your instances.",
-    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-ssm",
     "definitions": {
         "AttachmentsSource": {
             "type": "object",
             "properties": {
                 "Key": {
-                    "description": "",
+                    "description": "The key of a key-value pair that identifies the location of an attachment to a document.",
                     "type": "string",
                     "enum": [
                         "SourceUrl",
@@ -17,7 +17,7 @@
                     ]
                 },
                 "Values": {
-                    "description": "",
+                    "description": "The value of a key-value pair that identifies the location of an attachment to a document. The format for Value depends on the type of key you specify.",
                     "type": "array",
                     "items": {
                         "type": "string",
@@ -28,49 +28,52 @@
                     "maxItems": 1
                 },
                 "Name": {
-                    "description": "",
+                    "description": "The name of the document attachment file.",
                     "type": "string",
                     "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
                     "minLength": 1,
                     "maxLength": 128
                 }
-            }
+            },
+            "additionalProperties": false
         },
         "Tag": {
             "type": "object",
             "properties": {
                 "Key": {
-                    "description": "",
+                    "description": "The name of the tag.",
                     "type": "string",
                     "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
                     "minLength": 1,
                     "maxLength": 128
                 },
                 "Value": {
-                    "description": "",
+                    "description": "The value of the tag.",
                     "type": "string",
                     "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
                     "minLength": 1,
                     "maxLength": 256
                 }
-            }
+            },
+            "additionalProperties": false
         },
         "DocumentRequires": {
             "type": "object",
             "properties": {
                 "Name": {
-                    "description": "",
+                    "description": "The name of the required SSM document. The name can be an Amazon Resource Name (ARN).",
                     "type": "string",
                     "pattern": "^[a-zA-Z0-9_\\-.:/]{3,200}$",
                     "maxLength": 200
                 },
                 "Version": {
-                    "description": "",
+                    "description": "The document version required by the current document.",
                     "type": "string",
                     "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)",
                     "maxLength": 8
                 }
-            }
+            },
+            "additionalProperties": false
         }
     },
     "properties": {
@@ -120,7 +123,8 @@
                 "YAML",
                 "JSON",
                 "TEXT"
-            ]
+            ],
+            "default": "JSON"
         },
         "TargetType": {
             "description": "Specify a target type to define the kinds of resources the document can run on.",
