@@ -12,7 +12,6 @@
                     "enum": [
                         "SourceUrl",
                         "S3FileUrl",
-                        "RawContent",
                         "AttachmentReference"
                     ]
                 },
