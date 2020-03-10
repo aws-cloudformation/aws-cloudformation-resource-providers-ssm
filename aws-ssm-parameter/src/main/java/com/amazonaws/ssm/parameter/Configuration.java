@@ -1,8 +1,4 @@
-package software.amazon.ssm.parameter;
-
-import java.util.Map;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+package com.amazonaws.ssm.parameter;
 
 class Configuration extends BaseConfiguration {
 

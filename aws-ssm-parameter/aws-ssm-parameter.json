@@ -1,41 +1,50 @@
 {
-  "typeName" : "AWS::SSM::Parameter",
-  "description" : "Resource Type definition for AWS::SSM::Parameter",
-  "additionalProperties" : false,
-  "properties" : {
-    "Id" : {
-      "type" : "string"
+    "typeName": "AWS::SSM::Parameter",
+    "description": "Resource Type definition for AWS::SSM::Parameter",
+    "additionalProperties": false,
+    "properties": {
+        "Id": {
+            "type": "string"
+        },
+        "Type": {
+            "type": "string"
+        },
+        "Value": {
+            "type": "string"
+        },
+        "Description": {
+            "type": "string"
+        },
+        "Policies": {
+            "type": "string"
+        },
+        "AllowedPattern": {
+            "type": "string"
+        },
+        "Tier": {
+            "type": "string"
+        },
+        "Tags": {
+            "type": "object"
+        },
+        "Name": {
+            "type": "string"
+        }
     },
-    "Type" : {
-      "type" : "string"
-    },
-    "Value" : {
-      "type" : "string"
-    },
-    "Description" : {
-      "type" : "string"
-    },
-    "Policies" : {
-      "type" : "string"
-    },
-    "AllowedPattern" : {
-      "type" : "string"
-    },
-    "Tier" : {
-      "type" : "string"
-    },
-    "Tags" : {
-      "type" : "object"
-    },
-    "Name" : {
-      "type" : "string"
-    }
-  },
-  "required" : [ "Value", "Type" ],
-  "createOnlyProperties" : [ "/properties/Name" ],
-  "primaryIdentifier" : [ "/properties/Id" ],
-  "readOnlyProperties" : [ "/properties/Id" ],
-  "handlers": {
+    "required": [
+        "Value",
+        "Type"
+    ],
+    "createOnlyProperties": [
+        "/properties/Name"
+    ],
+    "primaryIdentifier": [
+        "/properties/Id"
+    ],
+    "readOnlyProperties": [
+        "/properties/Id"
+    ],
+    "handlers": {
         "create": {
             "permissions": [
                 "ssm:PutParameter",

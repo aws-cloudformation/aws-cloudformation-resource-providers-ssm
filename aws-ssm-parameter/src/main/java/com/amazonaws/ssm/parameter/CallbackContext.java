@@ -1,4 +1,4 @@
-package software.amazon.ssm.parameter;
+package com.amazonaws.ssm.parameter;
 
 import lombok.Builder;
 import lombok.Data;

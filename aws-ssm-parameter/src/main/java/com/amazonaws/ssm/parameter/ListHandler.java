@@ -1,4 +1,4 @@
-package software.amazon.ssm.parameter;
+package com.amazonaws.ssm.parameter;
 
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -6,7 +6,10 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public class DeleteHandler extends BaseHandler<CallbackContext> {
+import java.util.ArrayList;
+import java.util.List;
+
+public class ListHandler extends BaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -15,12 +18,12 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        final ResourceModel model = request.getDesiredResourceState();
+        final List<ResourceModel> models = new ArrayList<>();
 
         // TODO : put your code here
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(model)
+            .resourceModels(models)
             .status(OperationStatus.SUCCESS)
             .build();
     }
