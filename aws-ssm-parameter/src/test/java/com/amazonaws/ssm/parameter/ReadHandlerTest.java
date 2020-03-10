@@ -1,6 +1,5 @@
 package com.amazonaws.ssm.parameter;
 
-import org.assertj.core.api.Assertions;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -48,7 +47,7 @@ public class ReadHandlerTest {
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        Assertions.assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
