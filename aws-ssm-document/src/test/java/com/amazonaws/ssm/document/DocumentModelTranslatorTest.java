@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DeleteDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,7 @@ public class DocumentModelTranslatorTest {
     private static final String SAMPLE_VERSION_NAME = "versionName";
     private static final String SAMPLE_DOCUMENT_FORMAT = "format";
     private static final String SAMPLE_DOCUMENT_TYPE = "type";
+    private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
     private static final String SAMPLE_TARGET_TYPE = "targetType";
     private static final List<Tag> SAMPLE_RESOURCE_MODEL_TAGS = ImmutableList.of(
             Tag.builder().key("tagKey1").value("tagValue1").build(),
@@ -177,6 +180,62 @@ public class DocumentModelTranslatorTest {
 
         final CreateDocumentRequest request =
                 unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_REQUEST_TOKEN);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    //UpdateDocumentRequest tests
+    @Test
+    public void testGenerateUpdateDocumentRequest_verifyResult() {
+        final ResourceModel model = createResourceModel();
+
+        final UpdateDocumentRequest expectedRequest = UpdateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .documentVersion(LATEST_DOCUMENT_VERSION)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .build();
+
+        final UpdateDocumentRequest request =
+                unitUnderTest.generateUpdateDocumentRequest(model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    @Test
+    public void testGenerateUpdateDocumentRequest_AttachmentIsNull_verifyResult() {
+        final ResourceModel model = createResourceModel();
+        model.setAttachments(null);
+
+        final UpdateDocumentRequest expectedRequest = UpdateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .documentVersion(LATEST_DOCUMENT_VERSION)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .build();
+
+        final UpdateDocumentRequest request =
+                unitUnderTest.generateUpdateDocumentRequest(model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    //DeleteDocumentRequest tests
+    @Test
+    public void testGenerateDeleteDocumentRequest_verifyResult() {
+        final ResourceModel model = createResourceModel();
+
+        final DeleteDocumentRequest expectedRequest = DeleteDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .force(true)
+                .build();
+
+        final DeleteDocumentRequest request = unitUnderTest.generateDeleteDocumentRequest(model);
 
         Assertions.assertEquals(expectedRequest, request);
     }

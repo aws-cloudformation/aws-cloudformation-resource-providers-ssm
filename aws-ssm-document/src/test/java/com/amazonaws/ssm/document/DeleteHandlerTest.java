@@ -53,13 +53,14 @@ public class DeleteHandlerTest {
             .name(SAMPLE_DOCUMENT_NAME)
             .build();
     private static final int CALLBACK_DELAY_SECONDS = 30;
-    private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 30;
+    private static final int NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES = 20;
     private static final String FAILED_MESSAGE = "failed";
 
     private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
     private static final String RESOURCE_MODEL_DELETING_STATE = "Deleting";
     private static final String RESOURCE_MODEL_FAILED_STATE = "Failed";
     private static final String SAMPLE_STATUS_INFO = "resource status info";
+    private static final String OPERATION_NAME = "AWS::SSM::DeleteDocument";
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -97,7 +98,7 @@ public class DeleteHandlerTest {
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -121,7 +122,7 @@ public class DeleteHandlerTest {
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -133,7 +134,7 @@ public class DeleteHandlerTest {
 
         when(documentModelTranslator.generateDeleteDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DELETE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DELETE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
-        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME)).thenReturn(cfnException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
     }
@@ -142,7 +143,7 @@ public class DeleteHandlerTest {
     public void testHandleRequest_StabilizationRetrieverReturnsDeletingState_verifyResponse() {
         final CallbackContext inProgressCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME)
@@ -153,7 +154,7 @@ public class DeleteHandlerTest {
 
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -182,7 +183,7 @@ public class DeleteHandlerTest {
     public void testHandleRequest_StabilizationRetrieverReturnsFailedState_verifyResponse() {
         final CallbackContext inProgressCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME)
@@ -193,7 +194,7 @@ public class DeleteHandlerTest {
 
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -222,7 +223,7 @@ public class DeleteHandlerTest {
     public void testHandleRequest_StabilizationRetrieverThrowsInvalidDocumentException_verifySuccessResponse() {
         final CallbackContext inProgressCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -244,12 +245,12 @@ public class DeleteHandlerTest {
     public void testHandleRequest_StabilizationRetrieverThrowsSsmException_verifySuccessResponse() {
         final CallbackContext inProgressCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
                 .thenThrow(ssmException);
-        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME)).thenReturn(cfnException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class,
                 () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger));

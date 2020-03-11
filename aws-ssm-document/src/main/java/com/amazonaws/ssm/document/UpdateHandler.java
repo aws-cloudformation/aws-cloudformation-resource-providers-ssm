@@ -4,11 +4,8 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.DocumentStatus;
-import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -26,10 +23,11 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
      */
     private static final int CALLBACK_DELAY_SECONDS = 30;
 
-    private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 15 * 60 / CALLBACK_DELAY_SECONDS;
+    private static final int NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES = 10 * 60 / CALLBACK_DELAY_SECONDS;
 
     private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
     private static final String RESOURCE_MODEL_UPDATING_STATE = "Updating";
+    private static final String OPERATION_NAME = "AWS::SSM::UpdateDocument";
 
     @NonNull
     private final DocumentModelTranslator documentModelTranslator;
@@ -45,7 +43,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
     @VisibleForTesting
     UpdateHandler() {
-        this(new DocumentModelTranslator(), new StabilizationProgressRetriever(), new DocumentExceptionTranslator(), SsmClient.create());
+        this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
+             DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient());
     }
 
     @Override
@@ -68,7 +67,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             logger.log("sending update request for document name: " + model.getName());
             final UpdateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(updateDocumentRequest, ssmClient::updateDocument);
             context.setEventStarted(true);
-            context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES);
+            context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES);
 
             logger.log("update response: " + response);
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -78,10 +77,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .callbackContext(context)
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
-        } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName());
         } catch (final Exception e) {
-            throw new CfnGeneralServiceException(e);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
     }
 
@@ -94,10 +91,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
        try {
            progressResponse = stabilizationProgressRetriever.getEventProgress(model, context, ssmClient, proxy, logger);
-       } catch (final SsmException e) {
-           throw exceptionTranslator.getCfnException(e, model.getName());
        } catch (final Exception e) {
-           throw new CfnGeneralServiceException(e);
+           throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
        }
 
        final ResourceModel responseModel = progressResponse.getResourceModel();

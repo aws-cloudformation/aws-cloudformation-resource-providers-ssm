@@ -183,10 +183,6 @@
             "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)",
             "maxLength": 8
         },
-        "Force": {
-            "description": "Some SSM document types require that you specify a Force flag before you can delete the document.",
-            "type": "boolean"
-        },
         "Status": {
             "description": "The status of the Systems Manager document.",
             "type": "string",
@@ -223,10 +219,6 @@
         "/properties/Status",
         "/properties/StatusInformation",
         "/properties/AttachmentsContent"
-    ],
-    "writeOnlyProperties": [
-        "/properties/Force",
-        "/properties/Attachments"
     ],
     "primaryIdentifier": [
         "/properties/Name"

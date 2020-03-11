@@ -23,14 +23,24 @@ import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
 @RequiredArgsConstructor
 class StabilizationProgressRetriever {
 
+    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
+    private static final String RESOURCE_MODEL_UPDATING_STATE = "Updating";
+
+    private static StabilizationProgressRetriever INSTANCE;
+
     @NonNull
     private final DocumentModelTranslator documentModelTranslator;
 
     @NonNull
     private final DocumentResponseModelTranslator documentResponseModelTranslator;
 
-    StabilizationProgressRetriever() {
-        this(new DocumentModelTranslator(), new DocumentResponseModelTranslator());
+    static StabilizationProgressRetriever getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new StabilizationProgressRetriever(DocumentModelTranslator.getInstance(),
+                    DocumentResponseModelTranslator.getInstance());
+        }
+
+        return INSTANCE;
     }
 
     /**

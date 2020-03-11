@@ -9,6 +9,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 class DocumentResponseModelTranslator {
+
+    private static DocumentResponseModelTranslator INSTANCE;
+
+    static DocumentResponseModelTranslator getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new DocumentResponseModelTranslator();
+        }
+
+        return INSTANCE;
+    }
+
     ResourceModel generateResourceModel(@NonNull final GetDocumentResponse response) {
         return ResourceModel.builder()
                 .name(response.name())

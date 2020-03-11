@@ -32,6 +32,16 @@ class DocumentModelTranslator {
     private static final String DOCUMENT_NAME_DELIMITER = "-";
     private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
 
+    private static DocumentModelTranslator INSTANCE;
+
+    static DocumentModelTranslator getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new DocumentModelTranslator();
+        }
+
+        return INSTANCE;
+    }
+
     /**
      * Generate CreateDocumentRequest from the CreateResource request.
      */
@@ -81,9 +91,7 @@ class DocumentModelTranslator {
     DeleteDocumentRequest generateDeleteDocumentRequest(@NonNull final ResourceModel model) {
         return DeleteDocumentRequest.builder()
                 .name(model.getName())
-                .versionName(model.getVersionName())
-                .documentVersion(model.getDocumentVersion())
-                .force(model.getForce())
+                .force(true) // This is required for certain document types. If the user does not have permissions to use this flag, the call will fail.
                 .build();
     }
 
