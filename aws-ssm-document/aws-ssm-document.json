@@ -73,6 +73,37 @@
                 }
             },
             "additionalProperties": false
+        },
+        "AttachmentContent": {
+            "type": "object",
+            "properties": {
+                "Name": {
+                    "description": "The name of an attachment.",
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
+                },
+                "Size": {
+                    "description": "The size of an attachment in bytes.",
+                    "type": "integer"
+                },
+                "Hash": {
+                    "description": "The cryptographic hash value of the document content.",
+                    "type": "string",
+                    "maxLength": 256
+                },
+                "HashType": {
+                    "description": "The hash algorithm used to calculate the hash value.",
+                    "type": "string",
+                    "enum": [
+                        "Sha256"
+                    ]
+                },
+                "Url": {
+                    "description": "The URL location of the attachment content.",
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
         }
     },
     "properties": {
@@ -152,10 +183,6 @@
             "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)",
             "maxLength": 8
         },
-        "Force": {
-            "description": "Some SSM document types require that you specify a Force flag before you can delete the document.",
-            "type": "boolean"
-        },
         "Status": {
             "description": "The status of the Systems Manager document.",
             "type": "string",
@@ -170,6 +197,13 @@
         "StatusInformation": {
             "description": "A message returned by AWS Systems Manager that explains the Status value.",
             "type": "string"
+        },
+        "AttachmentsContent": {
+            "description": "A description of the document attachments, including names, locations, sizes, etc.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/AttachmentContent"
+            }
         }
     },
     "additionalProperties": false,
@@ -183,7 +217,8 @@
     ],
     "readOnlyProperties": [
         "/properties/Status",
-        "/properties/StatusInformation"
+        "/properties/StatusInformation",
+        "/properties/AttachmentsContent"
     ],
     "primaryIdentifier": [
         "/properties/Name"
