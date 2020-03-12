@@ -99,59 +99,6 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void testHandleRequest_DocumentUpdateSuccess_VerifyResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.SUCCESS)
-                .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_UPDATE_DOCUMENT_ACTIVE_RESPONSE);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-    }
-
-    @Test
-    public void testHandleRequest_DocumentUpdateFailed_VerifyResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.FAILED)
-                .message(FAILED_MESSAGE)
-                .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        final UpdateDocumentResponse updateDocumentResponse = UpdateDocumentResponse.builder()
-                .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.FAILED).statusInformation(FAILED_MESSAGE).build())
-                .build();
-
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenReturn(updateDocumentResponse);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-    }
-
-    @Test
     public void testHandleRequest_DocumentUpdateApiReturnsUpdatingStatus_VerifyResponse() {
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
@@ -195,7 +142,7 @@ public class UpdateHandlerTest {
 
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
                 .build();
 
         final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
@@ -235,7 +182,7 @@ public class UpdateHandlerTest {
 
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
                 .build();
 
         final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
@@ -275,7 +222,7 @@ public class UpdateHandlerTest {
 
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
                 .build();
 
         final GetProgressResponse getProgressResponse = GetProgressResponse.builder()

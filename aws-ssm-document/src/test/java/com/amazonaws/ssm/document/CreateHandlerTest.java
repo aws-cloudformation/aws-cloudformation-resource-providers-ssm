@@ -69,6 +69,11 @@ public class CreateHandlerTest {
     private static final int CALLBACK_DELAY_SECONDS = 30;
     private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 20;
     private static final String FAILED_MESSAGE = "failed";
+    private static final String OPERATION_NAME = "CreateDocument";
+    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
+    private static final String RESOURCE_MODEL_CREATING_STATE = "Creating";
+    private static final String RESOURCE_MODEL_FAILED_STATE = "Failed";
+    private static final String SAMPLE_STATUS_INFO = "resource status info";
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -80,66 +85,25 @@ public class CreateHandlerTest {
     private DocumentModelTranslator documentModelTranslator;
 
     @Mock
+    private StabilizationProgressRetriever progressUpdater;
+
+    @Mock
+    private DocumentExceptionTranslator exceptionTranslator;
+
+    @Mock
     private SsmClient ssmClient;
+
+    @Mock
+    private SsmException ssmException;
+
+    @Mock
+    private CfnGeneralServiceException cfnException;
 
     private CreateHandler unitUnderTest;
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new CreateHandler(documentModelTranslator, ssmClient);
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_VerifySucceededResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .createDocumentStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.SUCCESS)
-                .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_CREATE_DOCUMENT_ACTIVE_RESPONSE);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-            = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreationFailed_VerifyResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .createDocumentStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.FAILED)
-                .message(FAILED_MESSAGE)
-                .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        final CreateDocumentResponse createDocumentResponse = CreateDocumentResponse.builder()
-                .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.FAILED).statusInformation(FAILED_MESSAGE).build())
-                .build();
-
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenReturn(createDocumentResponse);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
+        unitUnderTest = new CreateHandler(documentModelTranslator, progressUpdater, exceptionTranslator, ssmClient);
     }
 
     @Test
@@ -171,95 +135,59 @@ public class CreateHandlerTest {
     }
 
     @Test
-    public void handleRequest_NewDocumentCreation_DocumentLimitExceededException_VerifyExpectedException() {
+    public void handleRequest_NewDocumentCreation_ssmServiceThrowsException_VerifyExpectedException() {
         when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(DocumentLimitExceededException.class);
-
-        Assertions.assertThrows(CfnServiceLimitExceededException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_DocumentAlreadyExistsException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(DocumentAlreadyExistsException.class);
-
-        Assertions.assertThrows(ResourceAlreadyExistsException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_MaxDocumentSizeExceededException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(MaxDocumentSizeExceededException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_InvalidDocumentContentException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentContentException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_InvalidDocumentSchemaVersionException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentSchemaVersionException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_AutomationDefinitionNotFoundException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(AutomationDefinitionNotFoundException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_AutomationDefinitionVersionNotFoundException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(AutomationDefinitionVersionNotFoundException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_NewDocumentCreation_SsmException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(SsmException.class);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
     }
 
     @Test
-    public void handleRequest_CallbackContextStabilizationInProgress_GetDocumentReturnsSuccess_VerifyResponse() {
+    public void handleRequest_CallbackContextStabilizationInProgress_StabilizationRetrieverThrowsException_VerifyExpectedException() {
         final CallbackContext inProgressCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
+                .thenThrow(ssmException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
+
+        Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger));
+    }
+
+    @Test
+    public void handleRequest_CallbackContextStabilizationInProgress_StabilizationRetrieverReturnsActiveState_VerifyResponse() {
+        final CallbackContext inProgressCallbackContext = CallbackContext.builder()
+                .createDocumentStarted(true)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .build();
+
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
+                .status(RESOURCE_MODEL_ACTIVE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES-1)
                 .build();
 
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceModel(expectedModel)
+                .build();
+
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(expectedModel)
                 .status(OperationStatus.SUCCESS)
+                .message(SAMPLE_STATUS_INFO)
                 .callbackContext(expectedCallbackContext)
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
 
-        final GetDocumentResponse getDocumentResponse = GetDocumentResponse.builder()
-                .name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE)
-                .build();
-
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(getDocumentResponse);
+        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
+                .thenReturn(getProgressResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
@@ -268,13 +196,16 @@ public class CreateHandlerTest {
     }
 
     @Test
-    public void handleRequest_CallbackContextStabilizationInProgress_GetDocumentReturnsInProgress_VerifyResponse() {
+    public void handleRequest_CallbackContextStabilizationInProgress_StabilizationRetrieverReturnsInProgress_VerifyResponse() {
         final CallbackContext inProgressCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
+                .status(RESOURCE_MODEL_CREATING_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES-1)
@@ -283,16 +214,18 @@ public class CreateHandlerTest {
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(expectedModel)
                 .status(OperationStatus.IN_PROGRESS)
+                .message(SAMPLE_STATUS_INFO)
                 .callbackContext(expectedCallbackContext)
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
 
-        final GetDocumentResponse getDocumentResponse = GetDocumentResponse.builder()
-                .name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.CREATING)
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceModel(expectedModel)
                 .build();
 
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(getDocumentResponse);
+        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
+                .thenReturn(getProgressResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
@@ -307,7 +240,10 @@ public class CreateHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
+                .status(RESOURCE_MODEL_FAILED_STATE)
+                .statusInformation(FAILED_MESSAGE)
+                .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES-1)
@@ -321,28 +257,17 @@ public class CreateHandlerTest {
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
 
-        final GetDocumentResponse getDocumentResponse = GetDocumentResponse.builder()
-                .name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.FAILED)
-                .statusInformation(FAILED_MESSAGE)
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceModel(expectedModel)
                 .build();
 
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(getDocumentResponse);
+        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
+                .thenReturn(getProgressResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
 
         Assertions.assertEquals(expectedResponse, response);
-    }
-
-    @Test
-    public void handleRequest_CallbackContextStabilizationInProgress_ZeroStabilizationRetriesRemaining_throwsCfnExcpetion() {
-        final CallbackContext inProgressCallbackContext = CallbackContext.builder()
-                .createDocumentStarted(true)
-                .stabilizationRetriesRemaining(0)
-                .build();
-
-        Assertions.assertThrows(CfnNotStabilizedException.class,
-                () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger));
     }
 }

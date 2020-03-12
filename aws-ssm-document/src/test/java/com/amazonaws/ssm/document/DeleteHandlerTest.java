@@ -119,19 +119,6 @@ public class DeleteHandlerTest {
 
     @Test
     public void testHandleRequest_DeleteDocumentApiFails_verifyResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.IN_PROGRESS)
-                .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
         when(documentModelTranslator.generateDeleteDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DELETE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DELETE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
@@ -154,7 +141,7 @@ public class DeleteHandlerTest {
 
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES-1)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -194,7 +181,7 @@ public class DeleteHandlerTest {
 
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES-1)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
