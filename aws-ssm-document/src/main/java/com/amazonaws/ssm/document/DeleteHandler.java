@@ -71,7 +71,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                     .callbackContext(context)
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
-        } catch (final Exception e) {
+        } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
     }

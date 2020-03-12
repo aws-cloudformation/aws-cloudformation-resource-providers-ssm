@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -77,7 +78,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .callbackContext(context)
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
-        } catch (final Exception e) {
+        } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
     }
@@ -91,7 +92,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
        try {
            progressResponse = stabilizationProgressRetriever.getEventProgress(model, context, ssmClient, proxy, logger);
-       } catch (final Exception e) {
+       } catch (final SsmException e) {
            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
        }
 

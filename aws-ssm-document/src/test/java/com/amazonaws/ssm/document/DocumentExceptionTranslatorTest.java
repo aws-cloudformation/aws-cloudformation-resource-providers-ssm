@@ -29,9 +29,11 @@ public class DocumentExceptionTranslatorTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_OPERATION_NAME = "sampleOperation";
-    private static final String ACCESS_DENIED_ERROR_CODE = "AccessDenied";
 
     private final DocumentExceptionTranslator unitUnderTest = new DocumentExceptionTranslator();
+
+    @Mock
+    private SsmException ssmException;
 
     @Test
     public void testGetCfnException_verifyExceptionsReturned() {
@@ -51,14 +53,6 @@ public class DocumentExceptionTranslatorTest {
 
         Assertions.assertTrue(unitUnderTest.getCfnException(AutomationDefinitionNotFoundException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
 
-        final Exception e = SsmException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("InternalFailure").build()).build();
-        Assertions.assertTrue(unitUnderTest.getCfnException(e, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
-    }
-
-    @Test
-    public void testGetCfnException_AccessDeniedException_verifyExceptionReturned() {
-        final Exception e = AwsServiceException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode(ACCESS_DENIED_ERROR_CODE).build()).build();
-
-        Assertions.assertTrue(unitUnderTest.getCfnException(e, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnAccessDeniedException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
     }
 }

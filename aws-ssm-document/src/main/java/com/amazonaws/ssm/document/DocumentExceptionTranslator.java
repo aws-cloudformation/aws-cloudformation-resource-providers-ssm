@@ -35,7 +35,7 @@ class DocumentExceptionTranslator {
         return INSTANCE;
     }
 
-    RuntimeException getCfnException(@NonNull final Exception e, @NonNull String documentName, @NonNull String operationName) {
+    RuntimeException getCfnException(@NonNull final SsmException e, @NonNull String documentName, @NonNull String operationName) {
         if (e instanceof DocumentLimitExceededException || e instanceof DocumentVersionLimitExceededException) {
 
             return new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.getMessage());
@@ -54,20 +54,8 @@ class DocumentExceptionTranslator {
 
             return new CfnNotFoundException(ResourceModel.TYPE_NAME, documentName);
 
-        } else if (isAccessDeniedException(e)) {
-            return new CfnAccessDeniedException(operationName, e);
         }
 
         return new CfnGeneralServiceException(e);
-    }
-
-    private boolean isAccessDeniedException(final Exception e) {
-        if (!(e instanceof AwsServiceException)) {
-            return false;
-        }
-
-        final AwsServiceException exception = (AwsServiceException)e;
-
-        return exception.awsErrorDetails().errorCode().equalsIgnoreCase(ACCESS_DENIED_ERROR_CODE);
     }
 }
