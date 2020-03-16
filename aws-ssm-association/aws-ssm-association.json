@@ -196,6 +196,8 @@
     "handlers": {
         "create": {
             "permissions": [
+                "ec2:DescribeInstanceStatus",
+                "iam:PassRole",
                 "ssm:CreateAssociation",
                 "ssm:DescribeAssociation"
             ]
@@ -207,6 +209,7 @@
         },
         "update": {
             "permissions": [
+                "iam:PassRole",
                 "ssm:UpdateAssociation"
             ]
         },
