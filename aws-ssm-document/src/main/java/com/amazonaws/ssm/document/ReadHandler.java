@@ -52,8 +52,10 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             final GetDocumentResponse getDocumentResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
 
+            final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceModel(getDocumentResponse);
+
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(documentResponseModelTranslator.generateResourceModel(getDocumentResponse))
+                    .resourceModel(resourceInformation.getResourceModel())
                     .status(OperationStatus.SUCCESS)
                     .build();
         } catch (final InvalidDocumentException e) {

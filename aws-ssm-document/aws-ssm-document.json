@@ -84,7 +84,7 @@
                 },
                 "Size": {
                     "description": "The size of an attachment in bytes.",
-                    "type": "integer"
+                    "type": "number"
                 },
                 "Hash": {
                     "description": "The cryptographic hash value of the document content.",
@@ -182,21 +182,6 @@
             "type": "string",
             "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)",
             "maxLength": 8
-        },
-        "Status": {
-            "description": "The status of the Systems Manager document.",
-            "type": "string",
-            "enum": [
-                "Creating",
-                "Active",
-                "Updating",
-                "Deleting",
-                "Failed"
-            ]
-        },
-        "StatusInformation": {
-            "description": "A message returned by AWS Systems Manager that explains the Status value.",
-            "type": "string"
         },
         "AttachmentsContent": {
             "description": "A description of the document attachments, including names, locations, sizes, etc.",

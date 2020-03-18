@@ -4,31 +4,14 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.AutomationDefinitionNotFoundException;
-import software.amazon.awssdk.services.ssm.model.AutomationDefinitionVersionNotFoundException;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentResponse;
-import software.amazon.awssdk.services.ssm.model.DocumentAlreadyExistsException;
-import software.amazon.awssdk.services.ssm.model.DocumentLimitExceededException;
-import software.amazon.awssdk.services.ssm.model.DocumentStatus;
-import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
-import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
-import software.amazon.awssdk.services.ssm.model.MaxDocumentSizeExceededException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
-import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
-import software.amazon.cloudformation.exceptions.ResourceAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
 
 /**
  * Create a new AWS::SSM::Document resource.
@@ -114,22 +97,22 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
 
-        final ResourceModel responseModel = progressResponse.getResourceModel();
+        final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(responseModel)
-                .status(getOperationStatus(responseModel.getStatus()))
-                .message(responseModel.getStatusInformation())
+                .resourceModel(resourceInformation.getResourceModel())
+                .status(getOperationStatus(resourceInformation.getStatus()))
+                .message(resourceInformation.getStatusInformation())
                 .callbackContext(progressResponse.getCallbackContext())
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
     }
 
-    private OperationStatus getOperationStatus(@NonNull final String status) {
+    private OperationStatus getOperationStatus(@NonNull final ResourceStatus status) {
         switch (status) {
-            case RESOURCE_MODEL_ACTIVE_STATE:
+            case ACTIVE:
                 return OperationStatus.SUCCESS;
-            case RESOURCE_MODEL_CREATING_STATE:
+            case CREATING:
                 return OperationStatus.IN_PROGRESS;
             default:
                 return OperationStatus.FAILED;

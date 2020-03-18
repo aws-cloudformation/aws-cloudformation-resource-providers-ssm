@@ -40,6 +40,8 @@ public class StabilizationProgressRetrieverTest {
     private static final int CALLBACK_DELAY_SECONDS = 30;
     private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 30;
     private static final String FAILED_MESSAGE = "failed";
+    private static final String SAMPLE_STATUS_INFO = "sample status info";
+    private static final ResourceStatus SAMPLE_RESOURCE_STATE = ResourceStatus.ACTIVE;
 
     @Mock
     private DocumentModelTranslator documentModelTranslator;
@@ -71,6 +73,10 @@ public class StabilizationProgressRetrieverTest {
                 .build();
 
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
+                .status(SAMPLE_RESOURCE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES-1)
@@ -78,7 +84,7 @@ public class StabilizationProgressRetrieverTest {
 
         final GetProgressResponse expectedResponse = GetProgressResponse.builder()
                 .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final GetDocumentResponse getDocumentResponse = GetDocumentResponse.builder()
@@ -87,7 +93,7 @@ public class StabilizationProgressRetrieverTest {
 
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(getDocumentResponse);
-        when(responseModelTranslator.generateResourceModel(getDocumentResponse)).thenReturn(expectedModel);
+        when(responseModelTranslator.generateResourceModel(getDocumentResponse)).thenReturn(expectedResourceInformation);
 
         final GetProgressResponse response
                 = unitUnderTest.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger);

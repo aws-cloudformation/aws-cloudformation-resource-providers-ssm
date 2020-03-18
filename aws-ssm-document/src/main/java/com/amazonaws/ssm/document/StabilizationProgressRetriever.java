@@ -3,17 +3,12 @@ package com.amazonaws.ssm.document;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
 
 import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
 
@@ -68,12 +63,11 @@ class StabilizationProgressRetriever {
         final GetDocumentResponse response =
                 proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::getDocument);
 
-        final ResourceModel responseModel = documentResponseModelTranslator.generateResourceModel(response);
+        final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceModel(response);
 
         return GetProgressResponse.builder()
-                .resourceModel(responseModel)
+                .resourceInformation(resourceInformation)
                 .callbackContext(context)
                 .build();
-
     }
 }

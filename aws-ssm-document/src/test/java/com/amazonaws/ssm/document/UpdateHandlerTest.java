@@ -24,10 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,9 +59,9 @@ public class UpdateHandlerTest {
     private static final int NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES = 20;
     private static final String FAILED_MESSAGE = "failed";
 
-    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
-    private static final String RESOURCE_MODEL_UPDATING_STATE = "Updating";
-    private static final String RESOURCE_MODEL_FAILED_STATE = "Failed";
+    private static final ResourceStatus RESOURCE_MODEL_ACTIVE_STATE = ResourceStatus.ACTIVE;
+    private static final ResourceStatus RESOURCE_MODEL_UPDATING_STATE = ResourceStatus.UPDATING;
+    private static final ResourceStatus RESOURCE_MODEL_FAILED_STATE = ResourceStatus.FAILED;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
     private static final String OPERATION_NAME = "AWS::SSM::UpdateDocument";
 
@@ -115,7 +113,7 @@ public class UpdateHandlerTest {
                 .build();
 
         final UpdateDocumentResponse updateDocumentResponse = UpdateDocumentResponse.builder()
-                .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.UPDATING).statusInformation(SAMPLE_STATUS_INFO).build())
+                .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).statusInformation(SAMPLE_STATUS_INFO).build())
                 .build();
 
         when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
@@ -134,20 +132,18 @@ public class UpdateHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_UPDATING_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
-
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
                 .build();
-
         final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
                 .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -174,20 +170,18 @@ public class UpdateHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_ACTIVE_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
-
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
                 .build();
-
         final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
                 .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -214,20 +208,18 @@ public class UpdateHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_FAILED_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
-
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
                 .build();
-
         final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
                 .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()

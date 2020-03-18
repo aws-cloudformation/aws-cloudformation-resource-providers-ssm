@@ -70,9 +70,9 @@ public class CreateHandlerTest {
     private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 20;
     private static final String FAILED_MESSAGE = "failed";
     private static final String OPERATION_NAME = "CreateDocument";
-    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
-    private static final String RESOURCE_MODEL_CREATING_STATE = "Creating";
-    private static final String RESOURCE_MODEL_FAILED_STATE = "Failed";
+    private static final ResourceStatus RESOURCE_MODEL_ACTIVE_STATE = ResourceStatus.ACTIVE;
+    private static final ResourceStatus RESOURCE_MODEL_CREATING_STATE = ResourceStatus.CREATING;
+    private static final ResourceStatus RESOURCE_MODEL_FAILED_STATE = ResourceStatus.FAILED;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
 
     @Mock
@@ -164,7 +164,8 @@ public class CreateHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_ACTIVE_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
@@ -175,7 +176,7 @@ public class CreateHandlerTest {
 
         final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
                 .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -202,13 +203,18 @@ public class CreateHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_CREATING_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES-1)
+                .build();
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -217,11 +223,6 @@ public class CreateHandlerTest {
                 .message(SAMPLE_STATUS_INFO)
                 .callbackContext(expectedCallbackContext)
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
-                .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
@@ -240,13 +241,18 @@ public class CreateHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_FAILED_STATE)
                 .statusInformation(FAILED_MESSAGE)
                 .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .createDocumentStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES-1)
+                .build();
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -255,11 +261,6 @@ public class CreateHandlerTest {
                 .message(FAILED_MESSAGE)
                 .callbackContext(expectedCallbackContext)
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
-                .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))

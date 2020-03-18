@@ -43,6 +43,8 @@ public class ReadHandlerTest {
     final GetDocumentResponse SAMPLE_GET_DOCUMENT_RESPONSE = GetDocumentResponse.builder()
             .name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE)
             .build();
+    private static final ResourceStatus SAMPLE_RESOURCE_STATE = ResourceStatus.ACTIVE;
+    private static final String SAMPLE_STATUS_INFO = "resource status info";
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -68,9 +70,10 @@ public class ReadHandlerTest {
 
     @Test
     public void testHandleRequest_ReadSuccess_verifyResult() {
-        final ResourceModel expectedModel = ResourceModel.builder()
-                .name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
+                .status(SAMPLE_RESOURCE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(expectedModel)
@@ -79,7 +82,7 @@ public class ReadHandlerTest {
 
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
-        when(documentResponseModelTranslator.generateResourceModel(SAMPLE_GET_DOCUMENT_RESPONSE)).thenReturn(expectedModel);
+        when(documentResponseModelTranslator.generateResourceModel(SAMPLE_GET_DOCUMENT_RESPONSE)).thenReturn(expectedResourceInformation);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
