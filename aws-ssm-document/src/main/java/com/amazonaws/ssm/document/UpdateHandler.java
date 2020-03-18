@@ -102,7 +102,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .resourceModel(responseModel)
                 .status(getOperationStatus(responseModel.getStatus()))
                 .message(responseModel.getStatusInformation())
-                .callbackContext(context)
+                .callbackContext(progressResponse.getCallbackContext())
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
     }

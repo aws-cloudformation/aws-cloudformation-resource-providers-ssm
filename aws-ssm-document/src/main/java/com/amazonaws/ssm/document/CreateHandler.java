@@ -42,17 +42,26 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
     private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 10 * 60 / CALLBACK_DELAY_SECONDS;
 
-    private static final String CREATE_DOCUMENT_OPERATION_NAME = "CreateDocument";
+    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
+    private static final String RESOURCE_MODEL_CREATING_STATE = "Creating";
+    private static final String OPERATION_NAME = "CreateDocument";
 
     @NonNull
     private final DocumentModelTranslator documentModelTranslator;
+
+    @NonNull
+    private final StabilizationProgressRetriever stabilizationProgressRetriever;
+
+    @NonNull
+    private final DocumentExceptionTranslator exceptionTranslator;
 
     @NonNull
     private final SsmClient ssmClient;
 
     @VisibleForTesting
     public CreateHandler() {
-        this(new DocumentModelTranslator(), ClientBuilder.getClient());
+        this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
+                DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient());
     }
 
     /**
@@ -83,20 +92,13 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
-                    .status(getOperationStatus(response.documentDescription().status()))
+                    .status(OperationStatus.IN_PROGRESS)
                     .message(response.documentDescription().statusInformation())
                     .callbackContext(context)
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
-        } catch (final DocumentLimitExceededException e) {
-            throw new CfnServiceLimitExceededException(TYPE_NAME, e.getMessage(), e);
-        } catch (final DocumentAlreadyExistsException e) {
-            throw new ResourceAlreadyExistsException(TYPE_NAME, model.getName());
-        } catch (final MaxDocumentSizeExceededException | InvalidDocumentContentException | InvalidDocumentSchemaVersionException
-                | AutomationDefinitionNotFoundException | AutomationDefinitionVersionNotFoundException e) {
-            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final SsmException e) {
-            throw new CfnGeneralServiceException(CREATE_DOCUMENT_OPERATION_NAME, e);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
     }
 
@@ -104,37 +106,30 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                                                                          final SsmClient ssmClient,
                                                                          final AmazonWebServicesClientProxy proxy,
                                                                          final Logger logger) {
-        if (context.getStabilizationRetriesRemaining() == 0) {
-            logger.log(String.format(
-                    "Maximum stabilization retries reached for %s [%s]. Resource not stabilized",
-                    TYPE_NAME,
-                    model.getName()));
-            throw new CfnNotStabilizedException(TYPE_NAME, model.getName());
-        }
+        final GetProgressResponse progressResponse;
 
-        final GetDocumentRequest describeDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
-        context.decrementStabilizationRetriesRemaining();
         try {
-            final GetDocumentResponse response =
-                    proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::getDocument);
-
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
-                    .status(getOperationStatus(response.status()))
-                    .message(response.statusInformation())
-                    .callbackContext(context)
-                    .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                    .build();
+            progressResponse = stabilizationProgressRetriever.getEventProgress(model, context, ssmClient, proxy, logger);
         } catch (final SsmException e) {
-            throw new CfnGeneralServiceException(e);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
+
+        final ResourceModel responseModel = progressResponse.getResourceModel();
+
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(responseModel)
+                .status(getOperationStatus(responseModel.getStatus()))
+                .message(responseModel.getStatusInformation())
+                .callbackContext(progressResponse.getCallbackContext())
+                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .build();
     }
 
-    private OperationStatus getOperationStatus(@NonNull final DocumentStatus status) {
+    private OperationStatus getOperationStatus(@NonNull final String status) {
         switch (status) {
-            case ACTIVE:
+            case RESOURCE_MODEL_ACTIVE_STATE:
                 return OperationStatus.SUCCESS;
-            case CREATING:
+            case RESOURCE_MODEL_CREATING_STATE:
                 return OperationStatus.IN_PROGRESS;
             default:
                 return OperationStatus.FAILED;

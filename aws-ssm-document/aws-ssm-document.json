@@ -216,8 +216,7 @@
         "/properties/Tags"
     ],
     "readOnlyProperties": [
-        "/properties/Status",
-        "/properties/StatusInformation",
+        "/properties/DocumentVersion",
         "/properties/AttachmentsContent"
     ],
     "primaryIdentifier": [
