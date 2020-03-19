@@ -210,7 +210,8 @@
     "handlers": {
         "create": {
             "permissions": [
-                "ssm:CreateDocument"
+                "ssm:CreateDocument",
+                "s3:GetObject"
             ]
         },
         "read": {
@@ -220,7 +221,8 @@
         },
         "update": {
             "permissions": [
-                "ssm:UpdateDocument"
+                "ssm:UpdateDocument",
+                "s3:GetObject"
             ]
         },
         "delete": {

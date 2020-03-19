@@ -23,6 +23,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "s3:GetObject"
                 - "ssm:CreateDocument"
                 - "ssm:DeleteDocument"
                 - "ssm:GetDocument"
