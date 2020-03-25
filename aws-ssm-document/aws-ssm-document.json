@@ -84,7 +84,7 @@
                 },
                 "Size": {
                     "description": "The size of an attachment in bytes.",
-                    "type": "number"
+                    "type": "integer"
                 },
                 "Hash": {
                     "description": "The cryptographic hash value of the document content.",

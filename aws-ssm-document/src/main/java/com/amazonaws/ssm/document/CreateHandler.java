@@ -25,8 +25,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
     private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 10 * 60 / CALLBACK_DELAY_SECONDS;
 
-    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
-    private static final String RESOURCE_MODEL_CREATING_STATE = "Creating";
     private static final String OPERATION_NAME = "CreateDocument";
 
     @NonNull

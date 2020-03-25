@@ -24,6 +24,8 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 @RequiredArgsConstructor
 public class ReadHandler extends BaseHandler<CallbackContext> {
 
+    private static final String OPERATION_NAME = "AWS::SSM::GetDocument";
+
     @NonNull
     private final DocumentModelTranslator documentModelTranslator;
 
@@ -33,9 +35,13 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
     @NonNull
     private final SsmClient ssmClient;
 
+    @NonNull
+    private final DocumentExceptionTranslator exceptionTranslator;
+
     @VisibleForTesting
     public ReadHandler() {
-        this(new DocumentModelTranslator(), new DocumentResponseModelTranslator(), SsmClient.create());
+        this(DocumentModelTranslator.getInstance(), DocumentResponseModelTranslator.getInstance(), ClientBuilder.getClient(),
+                DocumentExceptionTranslator.getInstance());
     }
 
     @Override
@@ -58,12 +64,8 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     .resourceModel(resourceInformation.getResourceModel())
                     .status(OperationStatus.SUCCESS)
                     .build();
-        } catch (final InvalidDocumentException e) {
-            throw new CfnNotFoundException(e);
-        } catch (final InvalidDocumentVersionException e) {
-            throw new CfnInvalidRequestException(e);
         } catch (final SsmException e) {
-            throw new CfnGeneralServiceException(e);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
     }
 }

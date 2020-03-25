@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
 
+    private static final String OPERATION_NAME = "AWS::SSM::GetDocument";
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_DOCUMENT_CONTENT = "sampleDocumentContent";
     private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).build();
@@ -61,11 +62,20 @@ public class ReadHandlerTest {
     @Mock
     private SsmClient ssmClient;
 
+    @Mock
+    private DocumentExceptionTranslator exceptionTranslator;
+
+    @Mock
+    private SsmException ssmException;
+
+    @Mock
+    private CfnGeneralServiceException cfnException;
+
     private ReadHandler unitUnderTest;
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new ReadHandler(documentModelTranslator, documentResponseModelTranslator, ssmClient);
+        unitUnderTest = new ReadHandler(documentModelTranslator, documentResponseModelTranslator, ssmClient, exceptionTranslator);
     }
 
     @Test
@@ -91,25 +101,10 @@ public class ReadHandlerTest {
     }
 
     @Test
-    public void testHandleRequest_ReadThrowsInvalidDocumentException_verifyExceptionReturned() {
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentException.class);
-
-        Assertions.assertThrows(CfnNotFoundException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void testHandleRequest_ReadThrowsInvalidDocumentVersionException_verifyExceptionReturned() {
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentVersionException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
     public void testHandleRequest_ReadThrowsSsmException_verifyExceptionReturned() {
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(SsmException.class);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
     }

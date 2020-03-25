@@ -18,9 +18,6 @@ import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
 @RequiredArgsConstructor
 class StabilizationProgressRetriever {
 
-    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
-    private static final String RESOURCE_MODEL_UPDATING_STATE = "Updating";
-
     private static StabilizationProgressRetriever INSTANCE;
 
     @NonNull
