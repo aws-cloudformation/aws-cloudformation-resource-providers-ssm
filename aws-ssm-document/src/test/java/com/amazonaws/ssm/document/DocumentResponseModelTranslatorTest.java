@@ -54,7 +54,7 @@ public class DocumentResponseModelTranslatorTest {
                 .build();
 
         final ResourceInformation resourceInformation =
-                unitUnderTest.generateResourceModel(createGetDocumentResponseWithAllAttributes());
+                unitUnderTest.generateResourceInformation(createGetDocumentResponseWithAllAttributes());
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
@@ -74,7 +74,7 @@ public class DocumentResponseModelTranslatorTest {
                 .attachmentsContent((Collection<software.amazon.awssdk.services.ssm.model.AttachmentContent>) null).build();
 
         final ResourceInformation resourceInformation =
-                unitUnderTest.generateResourceModel(getDocumentResponse);
+                unitUnderTest.generateResourceInformation(getDocumentResponse);
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
@@ -93,7 +93,7 @@ public class DocumentResponseModelTranslatorTest {
                 .requires((Collection<software.amazon.awssdk.services.ssm.model.DocumentRequires>)null).build();
 
         final ResourceInformation resourceInformation =
-                unitUnderTest.generateResourceModel(getDocumentResponse);
+                unitUnderTest.generateResourceInformation(getDocumentResponse);
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
@@ -108,7 +108,7 @@ public class DocumentResponseModelTranslatorTest {
 
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceModel(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
     }
 
     @Test
@@ -125,7 +125,7 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceModel(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
     }
 
     @Test
@@ -142,7 +142,7 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceModel(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
     }
 
     @Test
@@ -159,7 +159,7 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceModel(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
     }
 
     @Test
@@ -176,7 +176,7 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceModel(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
     }
 
     private ResourceModel createResourceModelWithAllAttributes() {

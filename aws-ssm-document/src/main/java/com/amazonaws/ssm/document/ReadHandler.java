@@ -6,12 +6,7 @@ import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -58,7 +53,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             final GetDocumentResponse getDocumentResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
 
-            final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceModel(getDocumentResponse);
+            final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceInformation(getDocumentResponse);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(resourceInformation.getResourceModel())

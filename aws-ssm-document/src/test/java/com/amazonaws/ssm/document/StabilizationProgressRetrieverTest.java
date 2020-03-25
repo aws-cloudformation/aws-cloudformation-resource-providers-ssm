@@ -11,11 +11,8 @@ import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
-import software.amazon.cloudformation.exceptions.ResourceAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -93,7 +90,7 @@ public class StabilizationProgressRetrieverTest {
 
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(getDocumentResponse);
-        when(responseModelTranslator.generateResourceModel(getDocumentResponse)).thenReturn(expectedResourceInformation);
+        when(responseModelTranslator.generateResourceInformation(getDocumentResponse)).thenReturn(expectedResourceInformation);
 
         final GetProgressResponse response
                 = unitUnderTest.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger);

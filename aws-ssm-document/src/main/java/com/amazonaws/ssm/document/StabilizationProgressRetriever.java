@@ -60,7 +60,7 @@ class StabilizationProgressRetriever {
         final GetDocumentResponse response =
                 proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::getDocument);
 
-        final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceModel(response);
+        final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceInformation(response);
 
         return GetProgressResponse.builder()
                 .resourceInformation(resourceInformation)

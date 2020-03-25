@@ -21,7 +21,7 @@ class DocumentResponseModelTranslator {
         return INSTANCE;
     }
 
-    ResourceInformation generateResourceModel(@NonNull final GetDocumentResponse response) {
+    ResourceInformation generateResourceInformation(@NonNull final GetDocumentResponse response) {
         final ResourceModel model = ResourceModel.builder()
                 .name(response.name())
                 .versionName(response.versionName())
