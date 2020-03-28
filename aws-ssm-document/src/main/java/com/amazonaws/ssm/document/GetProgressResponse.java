@@ -2,11 +2,15 @@ package com.amazonaws.ssm.document;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 
 @Data
 @Builder
 class GetProgressResponse {
-    private final ResourceModel resourceModel;
 
+    @NonNull
+    private final ResourceInformation resourceInformation;
+
+    @NonNull
     private final CallbackContext callbackContext;
 }

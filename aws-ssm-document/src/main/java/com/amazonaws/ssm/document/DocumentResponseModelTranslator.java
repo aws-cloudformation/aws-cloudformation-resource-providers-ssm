@@ -2,6 +2,7 @@ package com.amazonaws.ssm.document;
 
 import lombok.NonNull;
 import org.apache.commons.collections.CollectionUtils;
+import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 
 import javax.annotation.Nullable;
@@ -20,26 +21,50 @@ class DocumentResponseModelTranslator {
         return INSTANCE;
     }
 
-    ResourceModel generateResourceModel(@NonNull final GetDocumentResponse response) {
-        return ResourceModel.builder()
+    ResourceInformation generateResourceInformation(@NonNull final GetDocumentResponse response) {
+        final ResourceModel model = ResourceModel.builder()
                 .name(response.name())
                 .versionName(response.versionName())
                 .documentFormat(response.documentFormatAsString())
                 .documentType(response.documentTypeAsString())
                 .documentVersion(response.documentVersion())
-                .status(response.statusAsString())
-                .statusInformation(response.statusInformation())
                 .content(response.content())
-                .requires(translateRequires(response.requires()))
-                .attachmentsContent(translateAttachments(response.attachmentsContent()))
+                .requires(translateRequires(response))
+                .attachmentsContent(translateAttachments(response))
+                .build();
+
+        final ResourceStatus state = translateStatus(response.status());
+
+        return ResourceInformation.builder()
+                .resourceModel(model)
+                .status(state)
+                .statusInformation(response.statusInformation())
                 .build();
     }
 
-    private List<DocumentRequires> translateRequires(
-            @Nullable final List<software.amazon.awssdk.services.ssm.model.DocumentRequires> documentRequiresList) {
-        if (CollectionUtils.isEmpty(documentRequiresList)) {
+    private ResourceStatus translateStatus(final DocumentStatus status) {
+        switch (status) {
+            case ACTIVE:
+                return ResourceStatus.ACTIVE;
+            case CREATING:
+                return ResourceStatus.CREATING;
+            case UPDATING:
+                return ResourceStatus.UPDATING;
+            case DELETING:
+                return ResourceStatus.DELETING;
+            case FAILED:
+                return ResourceStatus.FAILED;
+            default:
+                throw new AssertionError(String.format("unknown Document Status: %s", status));
+        }
+    }
+
+    private List<DocumentRequires> translateRequires(final GetDocumentResponse response) {
+        if (!response.hasRequires()) {
             return null;
         }
+
+        final List<software.amazon.awssdk.services.ssm.model.DocumentRequires> documentRequiresList = response.requires();
 
         return documentRequiresList.stream().map(
                 documentRequires -> DocumentRequires.builder()
@@ -49,8 +74,12 @@ class DocumentResponseModelTranslator {
                 .collect(Collectors.toList());
     }
 
-    private List<AttachmentContent> translateAttachments(
-            @Nullable final List<software.amazon.awssdk.services.ssm.model.AttachmentContent> attachmentContents) {
+    private List<AttachmentContent> translateAttachments(final GetDocumentResponse response) {
+        if (!response.hasAttachmentsContent()) {
+            return null;
+        }
+
+        final List<software.amazon.awssdk.services.ssm.model.AttachmentContent> attachmentContents = response.attachmentsContent();
         if (CollectionUtils.isEmpty(attachmentContents)) {
             return null;
         }
@@ -60,7 +89,7 @@ class DocumentResponseModelTranslator {
                         .name(attachmentContent.name())
                         .hash(attachmentContent.hash())
                         .hashType(attachmentContent.hashTypeAsString())
-                        .size(attachmentContent.size().intValue())
+                        .size(attachmentContent.size().doubleValue())
                         .url(attachmentContent.url())
                         .build())
                 .collect(Collectors.toList());

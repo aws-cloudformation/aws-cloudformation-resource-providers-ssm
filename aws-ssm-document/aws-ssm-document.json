@@ -183,21 +183,6 @@
             "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)",
             "maxLength": 8
         },
-        "Status": {
-            "description": "The status of the Systems Manager document.",
-            "type": "string",
-            "enum": [
-                "Creating",
-                "Active",
-                "Updating",
-                "Deleting",
-                "Failed"
-            ]
-        },
-        "StatusInformation": {
-            "description": "A message returned by AWS Systems Manager that explains the Status value.",
-            "type": "string"
-        },
         "AttachmentsContent": {
             "description": "A description of the document attachments, including names, locations, sizes, etc.",
             "type": "array",
@@ -225,7 +210,8 @@
     "handlers": {
         "create": {
             "permissions": [
-                "ssm:CreateDocument"
+                "ssm:CreateDocument",
+                "s3:GetObject"
             ]
         },
         "read": {
@@ -235,7 +221,8 @@
         },
         "update": {
             "permissions": [
-                "ssm:UpdateDocument"
+                "ssm:UpdateDocument",
+                "s3:GetObject"
             ]
         },
         "delete": {

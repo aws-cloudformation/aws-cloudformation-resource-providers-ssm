@@ -23,7 +23,6 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
     private static final int NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES = 10 * 60 / CALLBACK_DELAY_SECONDS;
 
-    private static final String RESOURCE_MODEL_DELETING_STATE = "Deleting";
     private static final String OPERATION_NAME = "AWS::SSM::DeleteDocument";
 
     @NonNull
@@ -91,12 +90,12 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
 
-        final ResourceModel responseModel = progressResponse.getResourceModel();
+        final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(responseModel)
-                .status(getOperationStatus(responseModel.getStatus()))
-                .message(responseModel.getStatusInformation())
+                .resourceModel(resourceInformation.getResourceModel())
+                .status(getOperationStatus(resourceInformation.getStatus()))
+                .message(resourceInformation.getStatusInformation())
                 .callbackContext(progressResponse.getCallbackContext())
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
@@ -110,8 +109,8 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
     }
 
-    private OperationStatus getOperationStatus(@NonNull final String status) {
-        if (status.equalsIgnoreCase(RESOURCE_MODEL_DELETING_STATE)) {
+    private OperationStatus getOperationStatus(@NonNull final ResourceStatus status) {
+        if (status == ResourceStatus.DELETING) {
             return OperationStatus.IN_PROGRESS;
         }
 

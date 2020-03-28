@@ -56,9 +56,8 @@ public class DeleteHandlerTest {
     private static final int NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES = 20;
     private static final String FAILED_MESSAGE = "failed";
 
-    private static final String RESOURCE_MODEL_ACTIVE_STATE = "Active";
-    private static final String RESOURCE_MODEL_DELETING_STATE = "Deleting";
-    private static final String RESOURCE_MODEL_FAILED_STATE = "Failed";
+    private static final ResourceStatus RESOURCE_MODEL_DELETING_STATE = ResourceStatus.DELETING;
+    private static final ResourceStatus RESOURCE_MODEL_FAILED_STATE = ResourceStatus.FAILED;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
     private static final String OPERATION_NAME = "AWS::SSM::DeleteDocument";
 
@@ -133,15 +132,18 @@ public class DeleteHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_DELETING_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
-
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES-1)
+                .build();
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -150,11 +152,6 @@ public class DeleteHandlerTest {
                 .message(SAMPLE_STATUS_INFO)
                 .callbackContext(expectedCallbackContext)
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
-                .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
@@ -173,15 +170,18 @@ public class DeleteHandlerTest {
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
                 .build();
 
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_FAILED_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
-
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
                 .eventStarted(true)
                 .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES-1)
+                .build();
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceInformation(expectedResourceInformation)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -190,11 +190,6 @@ public class DeleteHandlerTest {
                 .message(SAMPLE_STATUS_INFO)
                 .callbackContext(expectedCallbackContext)
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
-                .callbackContext(expectedCallbackContext)
-                .resourceModel(expectedModel)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))

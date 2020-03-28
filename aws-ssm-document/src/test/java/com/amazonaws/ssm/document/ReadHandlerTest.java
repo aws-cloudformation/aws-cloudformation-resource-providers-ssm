@@ -5,12 +5,8 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -31,6 +27,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
 
+    private static final String OPERATION_NAME = "AWS::SSM::GetDocument";
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_DOCUMENT_CONTENT = "sampleDocumentContent";
     private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).build();
@@ -43,6 +40,8 @@ public class ReadHandlerTest {
     final GetDocumentResponse SAMPLE_GET_DOCUMENT_RESPONSE = GetDocumentResponse.builder()
             .name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE)
             .build();
+    private static final ResourceStatus SAMPLE_RESOURCE_STATE = ResourceStatus.ACTIVE;
+    private static final String SAMPLE_STATUS_INFO = "resource status info";
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -59,18 +58,28 @@ public class ReadHandlerTest {
     @Mock
     private SsmClient ssmClient;
 
+    @Mock
+    private DocumentExceptionTranslator exceptionTranslator;
+
+    @Mock
+    private SsmException ssmException;
+
+    @Mock
+    private CfnGeneralServiceException cfnException;
+
     private ReadHandler unitUnderTest;
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new ReadHandler(documentModelTranslator, documentResponseModelTranslator, ssmClient);
+        unitUnderTest = new ReadHandler(documentModelTranslator, documentResponseModelTranslator, ssmClient, exceptionTranslator);
     }
 
     @Test
     public void testHandleRequest_ReadSuccess_verifyResult() {
-        final ResourceModel expectedModel = ResourceModel.builder()
-                .name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
+                .status(SAMPLE_RESOURCE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(expectedModel)
@@ -79,7 +88,7 @@ public class ReadHandlerTest {
 
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
-        when(documentResponseModelTranslator.generateResourceModel(SAMPLE_GET_DOCUMENT_RESPONSE)).thenReturn(expectedModel);
+        when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE)).thenReturn(expectedResourceInformation);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
@@ -88,25 +97,10 @@ public class ReadHandlerTest {
     }
 
     @Test
-    public void testHandleRequest_ReadThrowsInvalidDocumentException_verifyExceptionReturned() {
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentException.class);
-
-        Assertions.assertThrows(CfnNotFoundException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void testHandleRequest_ReadThrowsInvalidDocumentVersionException_verifyExceptionReturned() {
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentVersionException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
     public void testHandleRequest_ReadThrowsSsmException_verifyExceptionReturned() {
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(SsmException.class);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
     }
