@@ -1,5 +1,7 @@
 package com.amazonaws.ssm.document;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -32,6 +34,8 @@ class DocumentModelTranslator {
     private static final String DOCUMENT_NAME_DELIMITER = "-";
     private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private static DocumentModelTranslator INSTANCE;
 
     static DocumentModelTranslator getInstance() {
@@ -56,10 +60,12 @@ class DocumentModelTranslator {
             documentName = model.getName();
         }
 
+        final String documentContent = processDocumentContent(model.getContent(), model.getContentAsString());
+
         return CreateDocumentRequest.builder()
                 .name(documentName)
                 .versionName(model.getVersionName())
-                .content(model.getContent())
+                .content(documentContent)
                 .documentFormat(model.getDocumentFormat())
                 .documentType(model.getDocumentType())
                 .targetType(model.getTargetType())
@@ -67,19 +73,23 @@ class DocumentModelTranslator {
                 .attachments(translateAttachments(model.getAttachments()))
                 .requires(translateRequires(model.getRequires()))
                 .build();
+
     }
 
     GetDocumentRequest generateGetDocumentRequest(@NonNull final ResourceModel model) {
         return GetDocumentRequest.builder()
                 .name(model.getName())
                 .documentVersion(model.getDocumentVersion())
+                .documentFormat(model.getDocumentFormat())
                 .build();
     }
 
     UpdateDocumentRequest generateUpdateDocumentRequest(@NonNull final ResourceModel model) {
+        final String documentContent = processDocumentContent(model.getContent(), model.getContentAsString());
+
         return UpdateDocumentRequest.builder()
                 .name(model.getName())
-                .content(model.getContent())
+                .content(documentContent)
                 .versionName(model.getVersionName())
                 .documentVersion(LATEST_DOCUMENT_VERSION)
                 .documentFormat(model.getDocumentFormat())
@@ -124,6 +134,18 @@ class DocumentModelTranslator {
                 identifierPrefix.toString(),
                 requestToken,
                 DOCUMENT_NAME_MAX_LENGTH);
+    }
+
+    private String processDocumentContent(final Map<String, Object> jsonContent, final String contentAsString) {
+        if (jsonContent != null && contentAsString != null) {
+            throw new InvalidDocumentContentException("Only one of Content and ContentAsString attributes must be provided");
+        }
+
+        try {
+            return jsonContent != null ? OBJECT_MAPPER.writeValueAsString(jsonContent) : contentAsString;
+        } catch (final JsonProcessingException e) {
+            throw new InvalidDocumentContentException("Document Content is not valid", e);
+        }
     }
 
     private List<Tag> translateTags(@Nullable final List<com.amazonaws.ssm.document.Tag> tags) {

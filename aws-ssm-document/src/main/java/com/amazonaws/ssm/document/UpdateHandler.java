@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -60,7 +61,12 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             return updateProgress(model, context, proxy, logger);
         }
 
-        final UpdateDocumentRequest updateDocumentRequest = documentModelTranslator.generateUpdateDocumentRequest(model);
+        final UpdateDocumentRequest updateDocumentRequest;
+        try {
+            updateDocumentRequest = documentModelTranslator.generateUpdateDocumentRequest(model);
+        } catch (final InvalidDocumentContentException e) {
+            throw new CfnInvalidRequestException(e.getMessage(), e);
+        }
 
         try {
             logger.log("sending update request for document name: " + model.getName());

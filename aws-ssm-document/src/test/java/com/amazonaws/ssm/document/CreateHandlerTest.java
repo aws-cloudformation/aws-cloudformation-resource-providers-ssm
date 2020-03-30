@@ -2,6 +2,7 @@ package com.amazonaws.ssm.document;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
+import org.mockito.Mockito;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.AutomationDefinitionNotFoundException;
 import software.amazon.awssdk.services.ssm.model.AutomationDefinitionVersionNotFoundException;
@@ -13,7 +14,6 @@ import software.amazon.awssdk.services.ssm.model.DocumentLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
 import software.amazon.awssdk.services.ssm.model.MaxDocumentSizeExceededException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
@@ -43,12 +43,16 @@ import static org.mockito.Mockito.when;
 public class CreateHandlerTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
-    private static final String SAMPLE_DOCUMENT_CONTENT = "sampleDocumentContent";
+    private static final String SAMPLE_DOCUMENT_CONTENT_STRING = "sampleDocumentContent";
+    private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
+            "schemaVersion", "1.2",
+            "description", "Join instances to an AWS Directory Service domain."
+    );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final CreateDocumentRequest SAMPLE_CREATE_DOCUMENT_REQUEST = CreateDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
-            .content(SAMPLE_DOCUMENT_CONTENT)
+            .content(SAMPLE_DOCUMENT_CONTENT_STRING)
             .build();
     private static final CreateDocumentResponse SAMPLE_CREATE_DOCUMENT_ACTIVE_RESPONSE = CreateDocumentResponse.builder()
             .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE).build())
@@ -132,6 +136,13 @@ public class CreateHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+    }
+
+    @Test
+    public void handleRequest_NewDocumentCreation_documentTranslatorThrowsInvalidContent_VerifyExpectedException() {
+        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN)).thenThrow(InvalidDocumentContentException.class);
+
+        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
     }
 
     @Test

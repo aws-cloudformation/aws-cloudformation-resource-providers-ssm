@@ -32,7 +32,10 @@ import static org.mockito.Mockito.when;
 public class DeleteHandlerTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
-    private static final String SAMPLE_DOCUMENT_CONTENT = "sampleDocumentContent";
+    private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
+            "schemaVersion", "1.2",
+            "description", "Join instances to an AWS Directory Service domain."
+    );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final DeleteDocumentRequest SAMPLE_DELETE_DOCUMENT_REQUEST = DeleteDocumentRequest.builder()

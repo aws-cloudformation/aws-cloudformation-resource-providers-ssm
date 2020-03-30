@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -32,12 +33,16 @@ import static org.mockito.Mockito.when;
 public class UpdateHandlerTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
-    private static final String SAMPLE_DOCUMENT_CONTENT = "sampleDocumentContent";
+    private static final String SAMPLE_DOCUMENT_CONTENT_STRING = "sampleDocumentContent";
+    private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
+            "schemaVersion", "1.2",
+            "description", "Join instances to an AWS Directory Service domain."
+    );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final UpdateDocumentRequest SAMPLE_UPDATE_DOCUMENT_REQUEST = UpdateDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
-            .content(SAMPLE_DOCUMENT_CONTENT)
+            .content(SAMPLE_DOCUMENT_CONTENT_STRING)
             .build();
     private static final UpdateDocumentResponse SAMPLE_UPDATE_DOCUMENT_ACTIVE_RESPONSE = UpdateDocumentResponse.builder()
             .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE).build())
@@ -251,6 +256,13 @@ public class UpdateHandlerTest {
         when(exceptionTranslator.getCfnException(any(SsmException.class), eq(SAMPLE_DOCUMENT_NAME), eq(OPERATION_NAME))).thenThrow(ResourceNotFoundException.class);
 
         Assertions.assertThrows(ResourceNotFoundException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger));
+    }
+
+    @Test
+    public void handleRequest_DocumentUpdate_DocumentModelTranslatorThrowsInvalidContentException_VerifyExpectedException() {
+        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenThrow(InvalidDocumentContentException.class);
+
+        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
     }
 
     @Test
