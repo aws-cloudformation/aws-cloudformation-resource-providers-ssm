@@ -167,27 +167,36 @@
   "handlers": {
     "create": {
       "permissions": [
-        "ssm:CreatePatchBaseline"
+        "ssm:CreatePatchBaseline",
+        "ssm:RegisterPatchBaselineForPatchGroup",
+        "ssm:AddTagsToResource",
+        "ssm:RemoveTagsFromResource",
+        "ssm:ListTagsForResource"
       ]
     },
     "delete": {
       "permissions": [
-        "ssm:DeletePatchBaseline"
+        "ssm:DeletePatchBaseline",
+        "ssm:GetPatchBaseline",
+        "ssm:DeregisterPatchBaselineForPatchGroup"
       ]
     },
     "list": {
       "permissions": [
-        "ssm:DescribePatchBaselines"
       ]
     },
     "read": {
       "permissions": [
-        "ssm:GetPatchBaseline"
+        "ssm:DescribePatchBaselines"
       ]
     },
     "update": {
       "permissions": [
-        "ssm:UpdatePatchBaseline"
+        "ssm:UpdatePatchBaseline",
+        "ssm:DeregisterPatchBaselineForPatchGroup",
+        "ssm:AddTagsToResource",
+        "ssm:RemoveTagsFromResource",
+        "ssm:ListTagsForResource"
       ]
     }
   }

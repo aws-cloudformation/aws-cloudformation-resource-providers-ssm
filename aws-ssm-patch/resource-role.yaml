@@ -23,10 +23,15 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "ssm:AddTagsToResource"
                 - "ssm:CreatePatchBaseline"
                 - "ssm:DeletePatchBaseline"
+                - "ssm:DeregisterPatchBaselineForPatchGroup"
                 - "ssm:DescribePatchBaselines"
                 - "ssm:GetPatchBaseline"
+                - "ssm:ListTagsForResource"
+                - "ssm:RegisterPatchBaselineForPatchGroup"
+                - "ssm:RemoveTagsFromResource"
                 - "ssm:UpdatePatchBaseline"
                 Resource: "*"
 Outputs:

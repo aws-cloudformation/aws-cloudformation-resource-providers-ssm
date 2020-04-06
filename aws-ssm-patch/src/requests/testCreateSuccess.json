@@ -1,0 +1,75 @@
+{
+  "awsAccountId": "872023530462",
+  "region": "us-west-2",
+  "desiredResourceState": {
+    "Name": "ubuntu",
+    "Description": "pb for ubuntu",
+    "OperatingSystem": "UBUNTU",
+    "ApprovalRules": {
+      "PatchRules": [
+        {
+          "PatchFilterGroup": {
+            "PatchFilters": [
+              {
+                "Key": "PRODUCT",
+                "Values": [
+                  "Ubuntu16.04"
+                ]
+              },
+              {
+                "Key": "SECTION",
+                "Values": [
+                  "python"
+                ]
+              }
+            ]
+          },
+          "EnableNonSecurity" : true,
+          "ApproveAfterDays": 10,
+          "ComplianceLevel": "HIGH"
+        }
+      ]
+    },
+    "ApprovedPatches": [
+      "curl",
+      "apache"
+    ],
+    "ApprovedPatchesComplianceLevel": "CRITICAL",
+    "ApprovedPatchesEnableNonSecurity": true,
+    "RejectedPatches": [
+      "something-bad"
+    ],
+    "RejectedPatchesAction": "BLOCK",
+    "PatchGroups": [
+      "mypatch",
+      "icecream"
+    ],
+    "Sources" : [
+      {
+        "Products" : [ "*" ],
+        "Name" : "main",
+        "Configuration" : "deb http://example.com distro component"
+      },
+      {
+        "Products" : [ "Ubuntu14.04" ],
+        "Name" : "universe",
+        "Configuration" : "deb http://example.com distro universe"
+      }
+    ],
+    "Tags" : [
+      {
+        "Key" : "stage",
+        "Value" : "Gamma"
+      }
+    ]
+  },
+  "desiredResourceTags" :
+    {
+      "Key" : "stage",
+      "Value" : "Gamma"
+    },
+  "systemTags" :
+  {
+    "cfnKey" : "cfnValue"
+  }
+}
