@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatch
 import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupResponse;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
+import software.amazon.ssm.patchbaseline.translator.request.UpdatePatchBaselineRequestTranslator;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
@@ -56,8 +57,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
         try {
             //Build our request
-
-            UpdatePatchBaselineRequest updatePatchBaselineRequest = updatePatchBaseline(model);
+            UpdatePatchBaselineRequest updatePatchBaselineRequest = UpdatePatchBaselineRequestTranslator.updatePatchBaseline(model);
 
             // build request and send SSM
             // final UpdatePatchBaselineRequest updatePatchBaselineRequest = updatePatchBaseline(model);
@@ -75,7 +75,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             List<String> originalGroups = getPatchBaselineResponse.patchGroups();
 
             //Get the new/desired patch groups
-            // List<String> newGroups = (List<String>) model.getPatchGroups();
             List<String> newGroups = Collections.emptyList();
             if (! CollectionUtils.isNullOrEmpty(model.getPatchGroups())) {
                 newGroups = model.getPatchGroups();
@@ -133,23 +132,4 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
     }
 
-    private UpdatePatchBaselineRequest updatePatchBaseline(final ResourceModel model) {
-
-//        return UpdatePatchBaselineRequest.builder()
-//                .baselineId(model.getId())
-//                .name(model.getName())
-//                .globalFilters(ResourceModelPropertyTranslator.translateToRequestGlobalFilters(model.getGlobalFilters()))
-//                .approvalRules(ResourceModelPropertyTranslator.translateToRequestApprovalRules(model.getApprovalRules()))
-//                .approvedPatches(model.getApprovedPatches())
-//                .approvedPatchesComplianceLevel(model.getApprovedPatchesComplianceLevel())
-//                .approvedPatchesEnableNonSecurity(model.getApprovedPatchesEnableNonSecurity())
-//                .rejectedPatches(model.getRejectedPatches())
-//                .rejectedPatchesAction(model.getRejectedPatchesAction())
-//                .description(model.getDescription())
-//                .sources(ResourceModelPropertyTranslator.translateToRequestSources(model.getSources()))
-//                .replace(true)
-//                .build();
-        return null;
-
-    }
 }

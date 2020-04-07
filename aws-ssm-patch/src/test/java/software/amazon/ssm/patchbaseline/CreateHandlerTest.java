@@ -146,11 +146,9 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testSuccess() {
-       // when(ssmClient.createPatchBaseline(any(CreatePatchBaselineRequest.class))).thenReturn(createPatchBaselineResponse);
        when(proxy.injectCredentialsAndInvokeV2(eq(createPatchBaselineRequest),
                 ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any()))
                 .thenReturn(createPatchBaselineResponse);
-
 
         //Invoke the handler
         ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();

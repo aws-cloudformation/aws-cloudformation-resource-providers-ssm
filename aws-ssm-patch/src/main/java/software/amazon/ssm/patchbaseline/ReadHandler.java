@@ -11,12 +11,7 @@ import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-
-import java.util.HashMap;
-import java.util.Map;
-
+import software.amazon.ssm.patchbaseline.translator.resourcemodel.ReadResourceModelTranslator;
 
 public class ReadHandler extends BaseHandler<CallbackContext> {
 
@@ -32,25 +27,36 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         final ResourceModel model = request.getDesiredResourceState();
         final String baselineId = model.getId();
 
-        logger.log(String.format(
-                "INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
+        logger.log(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
+        System.out.print(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
 
         try {
             GetPatchBaselineRequest getPatchBaselineRequest = GetPatchBaselineRequest.builder()
                                                                         .baselineId(baselineId)
                                                                         .build();
 
+            System.out.print(String.format("test before Response %n"));
+
             GetPatchBaselineResponse getPatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
 
-//            //Turn the result into JSON
-//            TypeReference<ResourceModel> typeRef = new TypeReference<ResourceModel>() {};
-//            ObjectMapper om = MapperFactory.buildJsonMapper();
-//            ResourceModel resourcemodel = om.convertValue(getPatchBaselineResponse, typeRef);
+            System.out.print(String.format("test after Response %n"));
+            System.out.print(String.format("test after Response id %s %n", getPatchBaselineResponse.baselineId()));
+            System.out.print(String.format("test after Response description %s %n", getPatchBaselineResponse.description()));
+            System.out.print(String.format("test after Response security %s %n", getPatchBaselineResponse.approvedPatchesEnableNonSecurity()));
+            for (String patch : getPatchBaselineResponse.approvedPatches())
+                System.out.print(String.format("test after Response accepted patches %s %n", patch));
+            for (String patch : getPatchBaselineResponse.rejectedPatches())
+                System.out.print(String.format("test after Response rejected patches %s %n", patch));
+            System.out.print(String.format("test after Response OS %s %n", getPatchBaselineResponse.operatingSystemAsString()));
+
+            ResourceModel resourcemodel = ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
+
+            System.out.print(String.format("test after Response, after translator %s %n", resourcemodel.getId()));
 
             //Send a success response to CloudFormation with the JSON
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
+                    .resourceModel(resourcemodel)
                     .status(OperationStatus.SUCCESS)
                     .build();
         } catch (Exception e) {
@@ -58,39 +64,4 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         }
     }
 
-//    static ResourceModel translateToResourceModel(GetPatchBaselineResponse getPatchBaselineResponse) {
-//        final ResourceModel model = new ResourceModel();
-//
-//        model.setId(getPatchBaselineResponse.baselineId());
-//        model.setName(getPatchBaselineResponse.name());
-//        model.setOperatingSystem(getPatchBaselineResponse.operatingSystemAsString());
-//        model.setDescription(getPatchBaselineResponse.description());
-//        model.setApprovalRules(getPatchBaselineResponse.approvalRules());
-//        model.setSources(getPatchBaselineResponse.sources());
-//        model.setRejectedPatches(getPatchBaselineResponse.rejectedPatches());
-//        model.setApprovedPatches(getPatchBaselineResponse.approvedPatches());
-//        model.setRejectedPatchesAction(getPatchBaselineResponse.rejectedPatchesActionAsString());
-//        model.setPatchGroups(getPatchBaselineResponse.patchGroups());
-//        model.setApprovedPatchesComplianceLevel(getPatchBaselineResponse.approvedPatchesComplianceLevelAsString());
-//        model.setApprovedPatchesEnableNonSecurity(getPatchBaselineResponse.approvedPatchesEnableNonSecurity());
-//        model.setGlobalFilters(getPatchBaselineResponse.globalFilters());
-//
-//        return model;
-//    }
-
-//    /**
-//     * Validates an input String and returns non-empty Optional with the same parameter
-//     * if the validation is passed; otherwise, Optional.empty() is returned.
-//     *
-//     * @param parameter String parameter to validate.
-//     * @return Optional with the same value as the input parameter after validation;
-//     * returns Optional.empty() if the parameter is empty/null.
-//     */
-//    private static Optional<String> getValidatedString(final String parameter) {
-//        if (StringUtils.isNullOrEmpty(parameter)) {
-//            return Optional.empty();
-//        } else {
-//            return Optional.of(parameter);
-//        }
-//    }
 }

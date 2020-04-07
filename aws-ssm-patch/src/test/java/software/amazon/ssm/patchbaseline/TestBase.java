@@ -1,15 +1,25 @@
 package software.amazon.ssm.patchbaseline;
 
 import com.amazonaws.AmazonServiceException;
+import org.junit.jupiter.api.BeforeEach;
 import software.amazon.cloudformation.proxy.*;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.PatchRule;
+import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
+import software.amazon.awssdk.services.ssm.model.PatchFilter;
+import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
+import software.amazon.awssdk.services.ssm.model.PatchSource;
+
+
 
 import software.amazon.awssdk.services.ssm.SsmClient;
 
 import org.mockito.Mock;
 
 import java.util.*;
+
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
 
 public class TestBase {
@@ -21,7 +31,7 @@ public class TestBase {
     protected Logger logger;
 
     protected ResourceHandlerRequest<ResourceModel> buildDefaultInputRequest() {
-        List<software.amazon.ssm.patchbaseline.Tag> tags = tags();
+        List<software.amazon.ssm.patchbaseline.Tag> tags = tags(TAG_KEY, TAG_VALUE);
         List<software.amazon.ssm.patchbaseline.PatchSource> sources = sources();
         software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters = globalFilters();
         software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
@@ -32,40 +42,87 @@ public class TestBase {
         Map<String, String> systemTagsMap = new HashMap<>();
         systemTagsMap.put(TestConstants.SYSTEM_TAG_KEY, TestConstants.BASELINE_NAME);
 
-        ResourceModel model = buildDefaultInputModel(tags, sources, globalFilters, approvalRules);
+        ResourceModel model = buildDefaultInputModel(tags, sources, globalFilters, approvalRules,
+                BASELINE_ID, BASELINE_NAME, OPERATING_SYSTEM, BASELINE_DESCRIPTION,
+                REJECTED_PATCHES, getPatchActionString(PatchAction.BLOCK),
+                ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.CRITICAL), PATCH_GROUPS);
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                                                            .desiredResourceTags(desiredResourceTagsMap)
-                                                            .desiredResourceState(model)
-                                                            .systemTags(systemTagsMap)
-                                                            .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
-                                                            .build();
+                .desiredResourceTags(desiredResourceTagsMap)
+                .desiredResourceState(model)
+                .systemTags(systemTagsMap)
+                .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                .build();
+        return request;
+    }
+
+    protected ResourceHandlerRequest<ResourceModel> buildUpdateDefaultInputRequest() {
+        List<software.amazon.ssm.patchbaseline.Tag> tags = tags(TAG_KEY, TAG_VALUE);
+        List<software.amazon.ssm.patchbaseline.PatchSource> sources = sources();
+        software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters = globalFilters();
+        software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
+
+        List<software.amazon.ssm.patchbaseline.Tag> updatedTags = tags(NEW_TAG_KEY, NEW_TAG_VALUE);
+
+        Map<String, String> updatedDesiredResourceTagsMap = new HashMap<>();
+        updatedDesiredResourceTagsMap.put(UPDATED_CFN_KEY, UPDATED_CFN_VALUE);
+
+        Map<String, String> systemTagsMap = new HashMap<>();
+        systemTagsMap.put(SYSTEM_TAG_KEY, UPDATED_BASELINE_NAME);
+
+        ResourceModel previousModel = buildDefaultInputModel(tags, sources, globalFilters, approvalRules,
+                                                        BASELINE_ID, BASELINE_NAME, OPERATING_SYSTEM, BASELINE_DESCRIPTION,
+                                                        REJECTED_PATCHES, getPatchActionString(PatchAction.BLOCK),
+                                     ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.CRITICAL), PATCH_GROUPS);
+
+        ResourceModel updatedModel = buildDefaultInputModel(updatedTags, sources, globalFilters, approvalRules,
+                                                BASELINE_ID, UPDATED_BASELINE_NAME, OPERATING_SYSTEM, UPDATED_BASELINE_DESC,
+                                                UPDATED_REJECTED_PATCHES, getPatchActionString(PatchAction.ALLOW_AS_DEPENDENCY),
+                                                UPDATED_ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.HIGH), UPDATE_PATCH_GROUPS);
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceTags(updatedDesiredResourceTagsMap)
+                .previousResourceState(previousModel)
+                .desiredResourceState(updatedModel)
+                .systemTags(systemTagsMap)
+                .clientRequestToken(CLIENT_REQUEST_TOKEN)
+                .build();
         return request;
     }
 
     protected ResourceModel buildDefaultInputModel(List<software.amazon.ssm.patchbaseline.Tag> tags,
                                                    List<software.amazon.ssm.patchbaseline.PatchSource> sources,
                                                    software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters,
-                                                   software.amazon.ssm.patchbaseline.RuleGroup approvalRules ) {
+                                                   software.amazon.ssm.patchbaseline.RuleGroup approvalRules,
+                                                   String baselineId,
+                                                   String name,
+                                                   String operatingSystem,
+                                                   String description,
+                                                   List<String> rejectedPatched,
+                                                   String rejectedPatchesAction,
+                                                   List<String> acceptedPatched,
+                                                   String approvedPatchesComplianceLevel,
+                                                   List<String> patchGroups) {
         return ResourceModel.builder()
-                .id(TestConstants.BASELINE_ID)
-                .name(TestConstants.BASELINE_NAME)
-                .operatingSystem(TestConstants.OPERATING_SYSTEM)
-                .description(TestConstants.BASELINE_DESCRIPTION)
-                .rejectedPatches(TestConstants.REJECTED_PATCHES)
-                .rejectedPatchesAction("BLOCK")
-                .approvedPatches(TestConstants.ACCEPTED_PATCHES)
+                .id(baselineId)
+                .name(name)
+                .operatingSystem(operatingSystem)
+                .description(description)
+                .rejectedPatches(rejectedPatched)
+                .rejectedPatchesAction(rejectedPatchesAction)
+                .approvedPatches(acceptedPatched)
                 .approvalRules(approvalRules)
-                .approvedPatchesComplianceLevel(getComplianceString(TestConstants.ComplianceLevel.CRITICAL))
+                .approvedPatchesComplianceLevel(approvedPatchesComplianceLevel)
                 .approvedPatchesEnableNonSecurity(true)
                 .globalFilters(globalFilters)
                 .sources(sources)
                 .tags(tags)
-                .patchGroups(TestConstants.PATCH_GROUPS)
+                .patchGroups(patchGroups)
                 .build();
     }
 
-    protected List<software.amazon.ssm.patchbaseline.Tag> tags() {
-        software.amazon.ssm.patchbaseline.Tag tag = software.amazon.ssm.patchbaseline.Tag.builder().key("stage").value("Gamma").build();
+    protected List<software.amazon.ssm.patchbaseline.Tag> tags( String key, String value) {
+        software.amazon.ssm.patchbaseline.Tag tag =
+                software.amazon.ssm.patchbaseline.Tag.builder().key(key).value(value).build();
         return Collections.singletonList(tag);
     }
 
@@ -102,13 +159,6 @@ public class TestBase {
                 .key("PRODUCT")
                 .values(Collections.singletonList("Ubuntu16.04"))
                 .build();
-//        software.amazon.ssm.patchbaseline.PatchFilter pf2 = software.amazon.ssm.patchbaseline.PatchFilter.builder()
-//                .key("SECTION")
-//                .values(Collections.singletonList("python"))
-//                .build();
-//        List<software.amazon.ssm.patchbaseline.PatchFilter> patchFilterList = Collections.emptyList();
-//        patchFilterList.add(pf1);
-//        patchFilterList.add(pf2);
         software.amazon.ssm.patchbaseline.PatchFilterGroup patchFilterGroup = software.amazon.ssm.patchbaseline.PatchFilterGroup.builder()
                 .patchFilters(Collections.singletonList(pf1))
                 .build();
@@ -119,6 +169,54 @@ public class TestBase {
                 .enableNonSecurity(true)
                 .build();
         software.amazon.ssm.patchbaseline.RuleGroup approvalRules = software.amazon.ssm.patchbaseline.RuleGroup.builder()
+                .patchRules(Collections.singletonList(patchRule))
+                .build();
+        return approvalRules;
+    }
+
+    protected List<PatchSource> requestsources() {
+        PatchSource ps1 = PatchSource.builder()
+                .name("main")
+                .products(Collections.singletonList("*"))
+                .configuration("deb http://example.com distro component")
+                .build();
+        PatchSource ps2 = PatchSource.builder()
+                .name("universe")
+                .products(Collections.singletonList("Ubuntu14.04"))
+                .configuration("deb http://example.com distro universe")
+                .build();
+        List<PatchSource> sourcesList= new ArrayList<>();
+        sourcesList.add(ps1);
+        sourcesList.add(ps2);
+        return sourcesList;
+    }
+
+    protected PatchFilterGroup requestglobalFilters() {
+        PatchFilter pf3 = PatchFilter.builder()
+                .key("PRIORITY")
+                .values(Collections.singletonList("high"))
+                .build();
+        PatchFilterGroup globalFilters = PatchFilterGroup.builder()
+                .patchFilters(Collections.singletonList(pf3))
+                .build();
+        return globalFilters;
+    }
+
+    protected PatchRuleGroup requestapprovalRules() {
+        PatchFilter pf1 = PatchFilter.builder()
+                .key("PRODUCT")
+                .values(Collections.singletonList("Ubuntu16.04"))
+                .build();
+        PatchFilterGroup patchFilterGroup = PatchFilterGroup.builder()
+                .patchFilters(Collections.singletonList(pf1))
+                .build();
+        PatchRule patchRule = PatchRule.builder()
+                .patchFilterGroup(patchFilterGroup)
+                .approveAfterDays(10)
+                .complianceLevel(getComplianceString(ComplianceLevel.HIGH))
+                .enableNonSecurity(true)
+                .build();
+        PatchRuleGroup approvalRules = PatchRuleGroup.builder()
                 .patchRules(Collections.singletonList(patchRule))
                 .build();
         return approvalRules;
@@ -143,7 +241,7 @@ public class TestBase {
         return deregisterPatchBaselineForPatchGroupRequest;
     }
 
-    protected static String getComplianceString(TestConstants.ComplianceLevel cl) {
+    protected static String getComplianceString(ComplianceLevel cl) {
         switch (cl) {
             case INFORMATIONAL:
                 return "INFORMATIONAL";
@@ -161,12 +259,20 @@ public class TestBase {
         }
     }
 
+    protected static String getPatchActionString(PatchAction cl) {
+        switch (cl) {
+            case BLOCK:
+                return "BLOCK";
+            default:
+            case ALLOW_AS_DEPENDENCY:
+                return "ALLOW_AS_DEPENDENCY";
+        }
+    }
+
 //    @AfterAll
 //    public void tearDown() {
 //        verifyNoMoreInteractions(proxy);
 //    }
-
-    protected final String clientRequestToken = TestConstants.CLIENT_REQUEST_TOKEN;
 
     protected final static AmazonServiceException exception500 = new AmazonServiceException("Server error");
     protected final static AmazonServiceException exception400 = new AmazonServiceException("Client error");

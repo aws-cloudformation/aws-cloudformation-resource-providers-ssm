@@ -18,8 +18,8 @@ import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
+import software.amazon.ssm.patchbaseline.translator.request.CreatePatchBaselineRequestTranslator;
 import software.amazon.ssm.patchbaseline.translator.resourcemodel.ResourceModelPropertyTranslator;
-import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
 
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
@@ -59,8 +59,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         System.out.print(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
 
         try {
-            /**Validate, merge, and add 2 sets of Tags to request
-             * Tags added to our specific Patch Baseline resource in the template, which is in desiredResourceTag
+            /**Validate, merge, and add 3 sets of Tags to request
+             * Tags added to our specific Patch Baseline resource in the template, which is in ResourceModel
              * Tags added to the entire CloudFormation Stack, which is in desiredResourceTag
              * System Tags set by CloudFormation service, which is systemTags
              **/
@@ -82,7 +82,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 logger.log("getTags, Key = " + entry.getKey() + ", Value = " + entry.getValue() + String.format("%n"));
             }
 
-            CreatePatchBaselineRequest createPatchBaselineRequest = createPatchBaseline(model, request, logger);
+            CreatePatchBaselineRequest createPatchBaselineRequest =
+                    CreatePatchBaselineRequestTranslator.createPatchBaseline(model, request, logger);
 
             // log tag
             for (Tag tag : createPatchBaselineRequest.tags()) {
@@ -169,78 +170,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 .build() ;
     }
 
-    private CreatePatchBaselineRequest createPatchBaseline(final ResourceModel model,
-                                                           final ResourceHandlerRequest<ResourceModel> request,
-                                                           final Logger logger) {
-
-        logger.log(String.format("test start build create request"));
-        // log tags
-        for (software.amazon.ssm.patchbaseline.Tag tag : model.getTags()) {
-            logger.log(String.format("test convert model tag with key %s, value %s. %n", tag.getKey(), tag.getValue()));
-
-            System.out.print(String.format("test convert model tag with key %s, value %s. %n", tag.getKey(), tag.getValue()));
-        }
-        // log sources
-        for (software.amazon.ssm.patchbaseline.PatchSource source : model.getSources()) {
-            logger.log(String.format("test convert model source with name %s, config %s. %n", source.getName(), source.getConfiguration()));
-
-            System.out.print(String.format("test convert model source with name %s, config %s. %n", source.getName(), source.getConfiguration()));
-
-            for (String product : source.getProducts()) {
-               logger.log(String.format("test convert model source with product %s %n", product));
-
-               System.out.print(String.format("test convert model source with product %s %n", product));
-            }
-        }
-        //log global filters
-        for (software.amazon.ssm.patchbaseline.PatchFilter patchFilter : model.getGlobalFilters().getPatchFilters()) {
-            for (String value : patchFilter.getValues()) {
-                logger.log(String.format("test model getGlobalFilters %s, %s %n", patchFilter.getKey(), value));
-
-                System.out.print(String.format("test model getGlobalFilters %s, %s %n", patchFilter.getKey(), value));
-            }
-        }
-
-        final CreatePatchBaselineRequest.Builder createPatchBaselineRequestBuilder =
-                CreatePatchBaselineRequest.builder()
-                        .name(model.getName())
-                        .approvedPatchesEnableNonSecurity(model.getApprovedPatchesEnableNonSecurity());
-
-        SimpleTypeValidator.getValidatedString(model.getDescription())
-                .ifPresent(createPatchBaselineRequestBuilder::description);
-
-        SimpleTypeValidator.getValidatedString(request.getClientRequestToken())
-                .ifPresent(createPatchBaselineRequestBuilder::clientToken);
-
-        SimpleTypeValidator.getValidatedString(model.getOperatingSystem())
-                .ifPresent(createPatchBaselineRequestBuilder::operatingSystem);
-
-        SimpleTypeValidator.getValidatedString(model.getRejectedPatchesAction())
-                .ifPresent(createPatchBaselineRequestBuilder::rejectedPatchesAction);
-
-        SimpleTypeValidator.getValidatedString(model.getApprovedPatchesComplianceLevel())
-                .ifPresent(createPatchBaselineRequestBuilder::approvedPatchesComplianceLevel);
-
-        SimpleTypeValidator.getValidatedList(model.getApprovedPatches())
-                .ifPresent(createPatchBaselineRequestBuilder::approvedPatches);
-
-        SimpleTypeValidator.getValidatedList(model.getRejectedPatches())
-                .ifPresent(createPatchBaselineRequestBuilder::rejectedPatches);
-
-        ResourceModelPropertyTranslator.translateToRequestTags(model.getTags())
-                .ifPresent(createPatchBaselineRequestBuilder::tags);
-
-        ResourceModelPropertyTranslator.translateToRequestSources(model.getSources())
-                .ifPresent(createPatchBaselineRequestBuilder::sources);
-
-        ResourceModelPropertyTranslator.translateToRequestGlobalFilters(model.getGlobalFilters())
-                .ifPresent(createPatchBaselineRequestBuilder::globalFilters);
-
-        ResourceModelPropertyTranslator.translateToRequestApprovalRules(model.getApprovalRules())
-                .ifPresent(createPatchBaselineRequestBuilder::approvalRules);
-
-        return createPatchBaselineRequestBuilder.build();
-    }
 
 }
 

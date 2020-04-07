@@ -32,7 +32,21 @@ public class TestConstants {
 
     public static final String CFN_VALUE = "cfnvalue";
 
+    public static final String TAG_KEY = "stage";
+
+    public static final String TAG_VALUE = "Gamma";
+
+    public static final String NEW_TAG_KEY = "newStage";
+
+    public static final String NEW_TAG_VALUE = "newGamma";
+
+    public static final String UPDATED_CFN_KEY = "updatedcfnkey";
+
+    public static final String UPDATED_CFN_VALUE = "updatedcfnvalue";
+
     public static final String SYSTEM_TAG_KEY = "aws:cloudformation:stack-name";
+
+    public static final String PATCH_BASELINE_RESOURCE_NAME = "PatchBaseline";
 
     public static final ArrayList<String> ACCEPTED_PATCHES = new ArrayList<String>() {{
         add("curl");
@@ -66,5 +80,7 @@ public class TestConstants {
     }};
 
     public enum ComplianceLevel {UNSPECIFIED, INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL};
+
+    public enum PatchAction {BLOCK, ALLOW_AS_DEPENDENCY};
 
 }
