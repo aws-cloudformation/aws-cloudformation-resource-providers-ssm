@@ -18,6 +18,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -31,11 +32,11 @@
             <version>2.10.15</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/software.amazon.cloudformation/aws-cloudformation-rpdk-java-plugin -->
+        <!-- https://github.com/awslabs/aws-cloudformation-rpdk-java-plugin/ -->
         <dependency>
             <groupId>software.amazon.cloudformation</groupId>
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
-            <version>1.0.2</version>
+            <version>1.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
@@ -116,7 +117,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>cfn</executable>
+                            <executable>cfn-cli</executable>
                             <commandlineArgs>generate</commandlineArgs>
                             <workingDirectory>${project.basedir}</workingDirectory>
                         </configuration>

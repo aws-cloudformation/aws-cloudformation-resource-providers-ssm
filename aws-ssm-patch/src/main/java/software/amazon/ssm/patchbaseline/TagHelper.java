@@ -116,8 +116,15 @@ public class TagHelper {
                                                                         .resourceType(ssmResourceType)
                                                                         .resourceId(baselineId)
                                                                         .build();
+
+        System.out.print(String.format("TagHelper listTagsForResourceRequest ID %s %n", listTagsForResourceRequest.resourceId()));
+
         ListTagsForResourceResponse listTagsForResourceResponse =
                 proxy.injectCredentialsAndInvokeV2(listTagsForResourceRequest, ssmClient::listTagsForResource);
+
+        for (Tag tag : listTagsForResourceResponse.tagList())
+            System.out.print(String.format("TagHelper listTagsForResourceResponse tag key %s, tag value %s %n", tag.key(), tag.value()));
+
         List<Tag> oldTags = listTagsForResourceResponse.tagList();
 
         Map<String, String> newTagsMap = convertRequestTagsToMap(newTags);
@@ -128,6 +135,9 @@ public class TagHelper {
 
         List<String> ssmKeysToRemove = new ArrayList<>(tagsToRemove.keySet());
         List<Tag> ssmTagsToAdd = convertToTagList(tagsToAdd);
+
+        for (Tag tag : ssmTagsToAdd)
+            System.out.print(String.format("TagHelper ssmTagsToAdd tag key %s, tag value %s %n", tag.key(), tag.value()));
 
         if (!ssmKeysToRemove.isEmpty()) {
             RemoveTagsFromResourceRequest removeTagsRequest = RemoveTagsFromResourceRequest.builder()

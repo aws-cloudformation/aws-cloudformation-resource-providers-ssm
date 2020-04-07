@@ -113,7 +113,7 @@ public class CreateHandlerTest extends TestBase {
         sourcesList.add(ps1);
         sourcesList.add(ps2);
         Tag tag1 = Tag.builder().key(TestConstants.CFN_KEY).value(TestConstants.CFN_VALUE).build();
-        Tag tag2 = Tag.builder().key("stage").value("Gamma").build();
+        Tag tag2 = Tag.builder().key(TestConstants.TAG_KEY).value(TestConstants.TAG_VALUE).build();
         Tag tag3 = Tag.builder().key(TestConstants.SYSTEM_TAG_KEY).value(TestConstants.BASELINE_NAME).build();
         List<Tag> tagsList = new ArrayList<>();
         tagsList.add(tag1);

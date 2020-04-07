@@ -9,7 +9,7 @@ import software.amazon.cloudformation.LambdaWrapper;
 public class SsmClientBuilder {
     public static SsmClient getClient() {
         return SsmClient.builder()
-                .httpClient(LambdaWrapper.HTTP_CLIENT)
+                //.httpClient(LambdaWrapper.HTTP_CLIENT)
                 .build();
     }
 }
