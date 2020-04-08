@@ -1,6 +1,6 @@
 package com.amazonaws.ssm.association.translator.property;
 
-import com.amazonaws.ssm.association.ParameterValuesList;
+import com.amazonaws.ssm.association.ParameterValues;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ class ParametersTranslatorTest {
 
     @Test
     void serviceModelPropertyToResourceModel() {
-        final Optional<Map<String, ParameterValuesList>> resourceModelTargets =
+        final Optional<Map<String, ParameterValues>> resourceModelTargets =
             parametersTranslator.serviceModelPropertyToResourceModel(SERVICE_PARAMETERS);
 
         assertThat(resourceModelTargets).isEqualTo(Optional.of(MODEL_PARAMETERS));
@@ -32,7 +32,7 @@ class ParametersTranslatorTest {
 
     @Test
     void serviceModelPropertyToResourceModelReturnsEmptyWithNullInput() {
-        final Optional<Map<String, ParameterValuesList>> resourceModelTargets =
+        final Optional<Map<String, ParameterValues>> resourceModelTargets =
             parametersTranslator.serviceModelPropertyToResourceModel(null);
 
         assertThat(resourceModelTargets).isEqualTo(Optional.empty());
@@ -40,7 +40,7 @@ class ParametersTranslatorTest {
 
     @Test
     void serviceModelPropertyToResourceModelReturnsEmptyWithEmptyInputMap() {
-        final Optional<Map<String, ParameterValuesList>> resourceModelTargets =
+        final Optional<Map<String, ParameterValues>> resourceModelTargets =
             parametersTranslator.serviceModelPropertyToResourceModel(Collections.emptyMap());
 
         assertThat(resourceModelTargets).isEqualTo(Optional.empty());

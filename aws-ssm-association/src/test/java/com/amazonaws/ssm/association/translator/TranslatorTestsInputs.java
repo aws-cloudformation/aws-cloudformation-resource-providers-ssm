@@ -1,7 +1,7 @@
 package com.amazonaws.ssm.association.translator;
 
 import com.amazonaws.ssm.association.InstanceAssociationOutputLocation;
-import com.amazonaws.ssm.association.ParameterValuesList;
+import com.amazonaws.ssm.association.ParameterValues;
 import com.amazonaws.ssm.association.S3OutputLocation;
 import com.amazonaws.ssm.association.Target;
 import com.google.common.collect.ImmutableMap;
@@ -42,9 +42,9 @@ public class TranslatorTestsInputs {
         ImmutableMap.<String, List<String>>builder()
             .put(PARAMETER_KEY, PARAMETER_VALUES_LIST)
             .build();
-    public static final Map<String, ParameterValuesList> MODEL_PARAMETERS =
-        ImmutableMap.<String, ParameterValuesList>builder()
-            .put(PARAMETER_KEY, new ParameterValuesList(PARAMETER_VALUES_LIST))
+    public static final Map<String, ParameterValues> MODEL_PARAMETERS =
+        ImmutableMap.<String, ParameterValues>builder()
+            .put(PARAMETER_KEY, new ParameterValues(PARAMETER_VALUES_LIST))
             .build();
 
     public static final String S3_BUCKET_REGION = "us-east-1";
