@@ -2,6 +2,7 @@ package com.amazonaws.ssm.association.translator.request;
 
 import com.amazonaws.ssm.association.ResourceModel;
 import com.amazonaws.ssm.association.translator.property.InstanceAssociationOutputLocationTranslator;
+import com.amazonaws.ssm.association.translator.property.ParametersTranslator;
 import com.amazonaws.ssm.association.translator.property.TargetsListTranslator;
 import com.amazonaws.ssm.association.util.SimpleTypeValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,8 +23,9 @@ import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.INS
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MAX_CONCURRENCY;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MAX_ERRORS;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_OUTPUT_LOCATION;
+import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_PARAMETERS;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_TARGETS;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.PARAMETERS;
+import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_PARAMETERS;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SCHEDULE_EXPRESSION;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_OUTPUT_LOCATION;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_TARGETS;
@@ -39,6 +41,8 @@ class CreateAssociationTranslatorTest {
     private InstanceAssociationOutputLocationTranslator instanceAssociationOutputLocationTranslator;
     @Mock
     private TargetsListTranslator targetsListTranslator;
+    @Mock
+    private ParametersTranslator parametersTranslator;
 
     private CreateAssociationTranslator createAssociationTranslator;
 
@@ -50,7 +54,8 @@ class CreateAssociationTranslatorTest {
         createAssociationTranslator =
             new CreateAssociationTranslator(simpleTypeValidator,
                 instanceAssociationOutputLocationTranslator,
-                targetsListTranslator);
+                targetsListTranslator,
+                parametersTranslator);
     }
 
     @Test
@@ -59,13 +64,15 @@ class CreateAssociationTranslatorTest {
             .thenReturn(Optional.of(SERVICE_OUTPUT_LOCATION));
         when(targetsListTranslator.resourceModelPropertyToServiceModel(MODEL_TARGETS))
             .thenReturn(Optional.of(SERVICE_TARGETS));
+        when(parametersTranslator.resourceModelPropertyToServiceModel(MODEL_PARAMETERS))
+            .thenReturn(Optional.of(SERVICE_PARAMETERS));
 
         final ResourceModel modelToTranslate =
             ResourceModel.builder()
                 .associationName(ASSOCIATION_NAME)
                 .name(DOCUMENT_NAME)
                 .documentVersion(DOCUMENT_VERSION)
-                .parameters(PARAMETERS)
+                .parameters(MODEL_PARAMETERS)
                 .targets(MODEL_TARGETS)
                 .scheduleExpression(SCHEDULE_EXPRESSION)
                 .complianceSeverity(COMPLIANCE_SEVERITY)
@@ -84,7 +91,7 @@ class CreateAssociationTranslatorTest {
                 .associationName(ASSOCIATION_NAME)
                 .name(DOCUMENT_NAME)
                 .documentVersion(DOCUMENT_VERSION)
-                .parameters(PARAMETERS)
+                .parameters(SERVICE_PARAMETERS)
                 .targets(SERVICE_TARGETS)
                 .scheduleExpression(SCHEDULE_EXPRESSION)
                 .complianceSeverity(COMPLIANCE_SEVERITY)
@@ -104,12 +111,14 @@ class CreateAssociationTranslatorTest {
             .thenReturn(Optional.empty());
         when(targetsListTranslator.resourceModelPropertyToServiceModel(MODEL_TARGETS))
             .thenReturn(Optional.of(SERVICE_TARGETS));
+        when(parametersTranslator.resourceModelPropertyToServiceModel(MODEL_PARAMETERS))
+            .thenReturn(Optional.of(SERVICE_PARAMETERS));
 
         final ResourceModel modelToTranslate =
             ResourceModel.builder()
                 .associationName(ASSOCIATION_NAME)
                 .name(DOCUMENT_NAME)
-                .parameters(PARAMETERS)
+                .parameters(MODEL_PARAMETERS)
                 .targets(MODEL_TARGETS)
                 .scheduleExpression(SCHEDULE_EXPRESSION)
                 .complianceSeverity(COMPLIANCE_SEVERITY)
@@ -126,7 +135,7 @@ class CreateAssociationTranslatorTest {
             CreateAssociationRequest.builder()
                 .associationName(ASSOCIATION_NAME)
                 .name(DOCUMENT_NAME)
-                .parameters(PARAMETERS)
+                .parameters(SERVICE_PARAMETERS)
                 .targets(SERVICE_TARGETS)
                 .scheduleExpression(SCHEDULE_EXPRESSION)
                 .complianceSeverity(COMPLIANCE_SEVERITY)
