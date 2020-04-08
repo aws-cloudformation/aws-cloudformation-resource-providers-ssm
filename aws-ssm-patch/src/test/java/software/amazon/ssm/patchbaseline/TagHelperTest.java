@@ -23,6 +23,7 @@ import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static software.amazon.ssm.patchbaseline.TestConstants.PATCH_BASELINE_RESOURCE_NAME;
 
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
 
@@ -103,12 +104,12 @@ public class TagHelperTest extends TestBase{
         System.out.print(String.format("build request Id from getDesiredResourceState %s %n", request.getDesiredResourceState().getId()));
         System.out.print(String.format("build request Id from getPreviousResourceState %s %n", request.getPreviousResourceState().getId()));
 
-        cfnTagHelper.updateTagsForResource(request, TEST_RESOURCE_TYPE, ssmClient, proxy);
-
         when(proxy.injectCredentialsAndInvokeV2(
                 eq(listTagsForResourceRequest),
                 ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
                 .thenReturn(listTagsForResourceResponse);
+
+        cfnTagHelper.updateTagsForResource(request, TEST_RESOURCE_TYPE, ssmClient, proxy);
 
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
@@ -119,21 +120,23 @@ public class TagHelperTest extends TestBase{
         ArgumentCaptor<RemoveTagsFromResourceRequest> removeTagsRequest = ArgumentCaptor.forClass(RemoveTagsFromResourceRequest.class);
         ArgumentCaptor<AddTagsToResourceRequest> addTagsRequest = ArgumentCaptor.forClass(AddTagsToResourceRequest.class);
 
-        verify(proxy)
+        verify(proxy, atLeastOnce())
                 .injectCredentialsAndInvokeV2(
-                        eq(removeTagsRequest.capture()),
+                        removeTagsRequest.capture(),
                         ArgumentMatchers.<Function<RemoveTagsFromResourceRequest, RemoveTagsFromResourceResponse>>any());
 
-        verify(proxy)
+        verify(proxy, atLeastOnce())
                 .injectCredentialsAndInvokeV2(
-                        eq(addTagsRequest.capture()),
+                        addTagsRequest.capture(),
                         ArgumentMatchers.<Function<AddTagsToResourceRequest, AddTagsToResourceResponse>>any());
 
-//        verify(ssmClient).removeTagsFromResource(removeTagsRequest.capture());
-//        verify(ssmClient).addTagsToResource(addTagsRequest.capture());
+        final List<RemoveTagsFromResourceRequest> capturedRemovedValues = typeCheckedValues(removeTagsRequest.getAllValues(), RemoveTagsFromResourceRequest.class);
+        assertThat(capturedRemovedValues.size()).isEqualTo(1);
+        final RemoveTagsFromResourceRequest actualRemoveTags = capturedRemovedValues.get(0);
 
-        RemoveTagsFromResourceRequest actualRemoveTags = removeTagsRequest.getValue();
-        AddTagsToResourceRequest actualAddTags = addTagsRequest.getValue();
+        final List<AddTagsToResourceRequest> capturedAddedValues = typeCheckedValues(addTagsRequest.getAllValues(), AddTagsToResourceRequest.class);
+        assertThat(capturedAddedValues.size()).isEqualTo(1);
+        final AddTagsToResourceRequest actualAddTags = capturedAddedValues.get(0);
 
         assertThat(TEST_RESOURCE_ID).isEqualTo(actualRemoveTags.resourceId());
         assertThat(TEST_RESOURCE_TYPE).isEqualTo(actualRemoveTags.resourceTypeAsString());
@@ -144,12 +147,22 @@ public class TagHelperTest extends TestBase{
         // Because internally we use a map, list ordering will be unpredictable, so we'll
         // just confirm that lists contain same elements
         Collections.sort(expectedRemoveTags);
-        Collections.sort(actualRemoveTags.tagKeys());
-        assertThat(expectedRemoveTags).isEqualTo(actualRemoveTags.tagKeys());
+        List<String> actualRemoveTagsKeys = actualRemoveTags.tagKeys();
+
+        for (String key : actualRemoveTagsKeys) {
+            System.out.print(String.format("actualRemoveTagsKeys key %s %n", key));
+        }
+        for (String key : expectedRemoveTags) {
+            System.out.print(String.format("expectedRemoveTags key %s %n", key));
+        }
+
+        //Collections.sort(actualRemoveTagsKeys); // why is this reporting error?
+        assertThat(expectedRemoveTags).isEqualTo(actualRemoveTagsKeys);
 
         Collections.sort(expectedAddTags, Comparator.comparing(Tag::key));
-        Collections.sort(actualAddTags.tags(), Comparator.comparing(Tag::key));
-        assertThat(expectedAddTags).isEqualTo(actualAddTags.tags());
+        List<Tag> actualAddTagsList = actualAddTags.tags();
+        //Collections.sort(actualAddTagsList, Comparator.comparing(Tag::key));  // why is this reporting error?
+        assertThat(expectedAddTags).isEqualTo(actualAddTagsList);
     }
 
     private List<software.amazon.ssm.patchbaseline.Tag> buildCfnTagList(Map<String, String> tags) {
@@ -176,6 +189,16 @@ public class TagHelperTest extends TestBase{
             tagPropertiesList.add(newTag);
         }
         return tagPropertiesList;
+    }
+
+    private static <T> List<T> typeCheckedValues(List<T> values, Class<T> clazz) {
+        final List<T> typeCheckedValues = new ArrayList<>();
+        for (final T value : values) {
+            if (clazz.isInstance(value)) {
+                typeCheckedValues.add(value);
+            }
+        }
+        return typeCheckedValues;
     }
 
 

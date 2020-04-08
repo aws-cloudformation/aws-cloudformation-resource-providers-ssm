@@ -121,24 +121,26 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             for (String group : model.getPatchGroups())
                 System.out.print(String.format("INFO new patch groups %s %n", group));
 
+            // why is this not pass test ?
             //Compute the intersection of the two lists (the groups that don't need to be changed)
-//            List<String> intersectingGroups = new ArrayList<>(originalGroups);
-//            intersectingGroups.retainAll(newGroups);
-//
-//            for (String group : intersectingGroups)
-//                System.out.print(String.format("intersecting Groups to remain %s %n", group));
-//
-//            //The groups we need to remove are ORIGINAL - INTERSECT
-//            //The groups we need to add are DESIRED - INTERSECT
-//            newGroups.removeAll(intersectingGroups);
-//
-//            for (String group : newGroups)
-//                System.out.print(String.format("expected new groups to add %s %n", group));
-//
-//            originalGroups.removeAll(intersectingGroups);
-//
-//            for (String group : originalGroups)
-//                System.out.print(String.format("expected original groups to remove %s %n", group));
+            List<String> intersectingGroups = new ArrayList<>(originalGroups);
+            intersectingGroups.retainAll(newGroups);
+
+            for (String group : intersectingGroups)
+                System.out.print(String.format("intersecting Groups to remain %s %n", group));
+
+            //The groups we need to remove are ORIGINAL - INTERSECT
+            //The groups we need to add are DESIRED - INTERSECT
+            newGroups.removeAll(intersectingGroups);
+
+            for (String group : newGroups)
+                System.out.print(String.format("expected new groups to add %s %n", group));
+
+            // why is this now working? 
+            originalGroups.removeAll(intersectingGroups);
+
+            for (String group : originalGroups)
+                System.out.print(String.format("expected original groups to remove %s %n", group));
 
             //Remove the old groups first
             for (String group : originalGroups) {

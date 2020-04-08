@@ -2,6 +2,7 @@ package software.amazon.ssm.patchbaseline;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.services.ssm.model.PatchRule;
@@ -42,6 +43,10 @@ public class UpdateHandlerTest extends TestBase{
     private ListTagsForResourceRequest listTagsForResourceRequest;
     private ListTagsForResourceResponse listTagsForResourceResponse;
     private DeregisterPatchBaselineForPatchGroupResponse deregisterPatchBaselineForPatchGroupResponse;
+    private RemoveTagsFromResourceRequest removeTagsRequest;
+    private AddTagsToResourceRequest addTagsRequest;
+    private RemoveTagsFromResourceResponse removeTagsFromResourceResponse;
+    private AddTagsToResourceResponse addTagsToResourceResponse;
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -49,10 +54,18 @@ public class UpdateHandlerTest extends TestBase{
     @Mock
     private Logger logger;
 
+    @Mock
+    private TagHelper tagHelper;
+
+    @Mock
+    private SsmClient ssmClient;
+
     @BeforeEach
     public void setup() {
         proxy = mock(AmazonWebServicesClientProxy.class);
         logger = mock(Logger.class);
+        tagHelper = mock(TagHelper.class);
+        ssmClient = mock(SsmClient.class);
 
         updateHandler = new UpdateHandler();
         getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
@@ -120,6 +133,22 @@ public class UpdateHandlerTest extends TestBase{
 
     @Test
     public void testSuccess() {
+
+        List<String> expectedRemoveTags = Arrays.asList(CFN_KEY,SYSTEM_TAG_KEY);
+        List<Tag> expectedAddTags = Arrays.asList(
+                Tag.builder().key(UPDATED_CFN_KEY).value(UPDATED_CFN_VALUE).build(),
+                Tag.builder().key(NEW_TAG_KEY).value(NEW_TAG_VALUE).build(),
+                Tag.builder().key(SYSTEM_TAG_KEY).value(UPDATED_BASELINE_NAME).build());
+        List<Tag> existedTags = Arrays.asList(
+                Tag.builder().key(CFN_KEY).value(CFN_VALUE).build(),
+                Tag.builder().key(SYSTEM_TAG_KEY).value(BASELINE_NAME).build()
+        );
+        listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(existedTags).build();
+        removeTagsRequest = RemoveTagsFromResourceRequest.builder().tagKeys(expectedRemoveTags).build();
+        addTagsRequest = AddTagsToResourceRequest.builder().tags(expectedAddTags).build();
+        removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
+        addTagsToResourceResponse = AddTagsToResourceResponse.builder().build();
+
         when(proxy.injectCredentialsAndInvokeV2(eq(updatePatchBaselineRequest),
                 ArgumentMatchers.<Function<UpdatePatchBaselineRequest, UpdatePatchBaselineResponse>>any()))
                 .thenReturn(updatePatchBaselineResponse);
@@ -127,6 +156,11 @@ public class UpdateHandlerTest extends TestBase{
         when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
                 .thenReturn(getPatchBaselineResponse);
+
+        when(proxy.injectCredentialsAndInvokeV2(
+                eq(listTagsForResourceRequest),
+                ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
+                .thenReturn(listTagsForResourceResponse);
 
         //Invoke the handler
         ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
@@ -155,8 +189,8 @@ public class UpdateHandlerTest extends TestBase{
 
         //The groups we need to remove are ORIGINAL - INTERSECT
         //The groups we need to add are DESIRED - INTERSECT
-//        originalGroups.removeAll(intersectingGroups);
-//        newGroups.removeAll(intersectingGroups);
+        originalGroups.removeAll(intersectingGroups);
+        newGroups.removeAll(intersectingGroups);
 
         for (String group : originalGroups) {
             verify(proxy)
@@ -174,49 +208,34 @@ public class UpdateHandlerTest extends TestBase{
             }
         }
 
-        List<String> expectedRemoveTags = Arrays.asList(CFN_KEY,SYSTEM_TAG_KEY);
-
-        for (String key : expectedRemoveTags)
-            System.out.print(String.format("expected removed tag %s %n", key));
-
-        List<Tag> expectedAddTags = Arrays.asList(
-                 Tag.builder().key(UPDATED_CFN_KEY).value(UPDATED_CFN_VALUE).build(),
-                 Tag.builder().key(NEW_TAG_KEY).value(NEW_TAG_VALUE).build(),
-                 Tag.builder().key(SYSTEM_TAG_KEY).value(UPDATED_BASELINE_NAME).build());
-
-        for (Tag tag : expectedAddTags)
-            System.out.print(String.format("expected added tag key %s, tag value %s %n", tag.key(), tag.value()));
-
-        listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(expectedAddTags).build();
-
+        //when(tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy)).thenReturn();
         when(proxy.injectCredentialsAndInvokeV2(
-                eq(listTagsForResourceRequest),
-                ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
-                .thenReturn(listTagsForResourceResponse);
-
+                eq(removeTagsRequest),
+                ArgumentMatchers.<Function<RemoveTagsFromResourceRequest, RemoveTagsFromResourceResponse>>any()))
+                .thenReturn(removeTagsFromResourceResponse);
+        when(proxy.injectCredentialsAndInvokeV2(
+                eq(addTagsRequest),
+                ArgumentMatchers.<Function<AddTagsToResourceRequest, AddTagsToResourceResponse>>any()))
+                .thenReturn(addTagsToResourceResponse);
+        //not working
+        //when(tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy)).thenReturn();
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
                         eq(listTagsForResourceRequest),
                         ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any());
 
-        for (Tag tag : listTagsForResourceResponse.tagList())
-            System.out.print(String.format("listTagsForResourceResponse tag key %s, tag val %s %n", tag.key(), tag.value()));
-
-        ArgumentCaptor<RemoveTagsFromResourceRequest> removeTagsRequest = ArgumentCaptor.forClass(RemoveTagsFromResourceRequest.class);
-        ArgumentCaptor<AddTagsToResourceRequest> addTagsRequest = ArgumentCaptor.forClass(AddTagsToResourceRequest.class);
-
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
-                        eq(removeTagsRequest.capture()),
+                        eq(removeTagsRequest),
                         ArgumentMatchers.<Function<RemoveTagsFromResourceRequest, RemoveTagsFromResourceResponse>>any());
 
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
-                        eq(addTagsRequest.capture()),
+                        eq(addTagsRequest),
                         ArgumentMatchers.<Function<AddTagsToResourceRequest, AddTagsToResourceResponse>>any());
 
-        RemoveTagsFromResourceRequest actualRemoveTags = removeTagsRequest.getValue();
-        AddTagsToResourceRequest actualAddTags = addTagsRequest.getValue();
+        for (Tag tag : listTagsForResourceResponse.tagList())
+            System.out.print(String.format("listTagsForResourceResponse tag key %s, tag val %s %n", tag.key(), tag.value()));
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -226,22 +245,6 @@ public class UpdateHandlerTest extends TestBase{
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-
-        assertThat(response.getResourceModel().getId()).isEqualTo(actualRemoveTags.resourceId());
-        assertThat(PATCH_BASELINE_RESOURCE_NAME).isEqualTo(actualRemoveTags.resourceTypeAsString());
-
-        assertThat(response.getResourceModel().getId()).isEqualTo(actualAddTags.resourceId());
-        assertThat(PATCH_BASELINE_RESOURCE_NAME).isEqualTo(actualAddTags.resourceTypeAsString());
-
-        // Because internally we use a map, list ordering will be unpredictable, so we'll
-        // just confirm that lists contain same elements
-        Collections.sort(expectedRemoveTags);
-        Collections.sort(actualRemoveTags.tagKeys());
-        assertThat(expectedRemoveTags).isEqualTo(actualRemoveTags.tagKeys());
-
-        Collections.sort(expectedAddTags, Comparator.comparing(Tag::key));
-        Collections.sort(actualAddTags.tags(), Comparator.comparing(Tag::key));
-        assertThat(expectedAddTags).isEqualTo(actualAddTags.tags());
     }
 
 
