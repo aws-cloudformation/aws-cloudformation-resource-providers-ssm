@@ -3,6 +3,7 @@ package software.amazon.ssm.patchbaseline;
 import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
+import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -107,7 +108,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
             GetPatchBaselineResponse getPatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
-            List<String> originalGroups = getPatchBaselineResponse.patchGroups();
+            List<String> originalGroupsConvertType = getPatchBaselineResponse.patchGroups();
+            List<String> originalGroups = new ArrayList<>(originalGroupsConvertType);
 
             for (String group : getPatchBaselineResponse.patchGroups())
                 System.out.print(String.format("INFO original patch groups %s %n", group));
@@ -121,7 +123,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             for (String group : model.getPatchGroups())
                 System.out.print(String.format("INFO new patch groups %s %n", group));
 
-            // why is this not pass test ?
             //Compute the intersection of the two lists (the groups that don't need to be changed)
             List<String> intersectingGroups = new ArrayList<>(originalGroups);
             intersectingGroups.retainAll(newGroups);
@@ -136,7 +137,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             for (String group : newGroups)
                 System.out.print(String.format("expected new groups to add %s %n", group));
 
-            // why is this now working? 
             originalGroups.removeAll(intersectingGroups);
 
             for (String group : originalGroups)

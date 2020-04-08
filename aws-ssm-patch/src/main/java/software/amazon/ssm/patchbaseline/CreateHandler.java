@@ -133,11 +133,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             // This is not in the definition for a baseline object but we must receive it from CFN
             // Register the groups for this Patch Baseline
-            // List<String> patchGroups = (List<String>) model.getPatchGroups();
-            List<String> patchGroups = Collections.emptyList();
-            if (! CollectionUtils.isNullOrEmpty(model.getPatchGroups())) {
-                patchGroups = model.getPatchGroups();
-            }
+            List<String> patchGroups = (List<String>) model.getPatchGroups();
 
             for (String group : patchGroups) {
                 //Each group needs its own Register call

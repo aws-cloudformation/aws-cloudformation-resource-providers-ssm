@@ -89,10 +89,10 @@ public class UpdateHandlerTest extends TestBase{
                 .complianceLevel(getComplianceString(TestConstants.ComplianceLevel.HIGH))
                 .enableNonSecurity(true)
                 .build();
-//        List<PatchRule> patchRuleList = Collections.emptyList();
-//        patchRuleList.add(patchRule);
+        List<PatchRule> patchRuleList = new ArrayList<>();
+        patchRuleList.add(patchRule);
         PatchRuleGroup approvalRules = PatchRuleGroup.builder()
-                .patchRules(Collections.singletonList(patchRule))
+                .patchRules(patchRuleList)
                 .build();
         PatchFilterGroup globalFilters = PatchFilterGroup.builder()
                 .patchFilters(Collections.singletonList(pf3))

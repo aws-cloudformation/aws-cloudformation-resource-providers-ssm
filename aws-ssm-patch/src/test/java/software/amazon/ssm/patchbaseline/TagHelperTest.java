@@ -156,13 +156,15 @@ public class TagHelperTest extends TestBase{
             System.out.print(String.format("expectedRemoveTags key %s %n", key));
         }
 
-        //Collections.sort(actualRemoveTagsKeys); // why is this reporting error?
-        assertThat(expectedRemoveTags).isEqualTo(actualRemoveTagsKeys);
+        List<String> actualRemoveTagsKeysConvertType = new ArrayList<>(actualRemoveTagsKeys);
+        Collections.sort(actualRemoveTagsKeysConvertType);
+        assertThat(expectedRemoveTags).isEqualTo(actualRemoveTagsKeysConvertType);
 
         Collections.sort(expectedAddTags, Comparator.comparing(Tag::key));
         List<Tag> actualAddTagsList = actualAddTags.tags();
-        //Collections.sort(actualAddTagsList, Comparator.comparing(Tag::key));  // why is this reporting error?
-        assertThat(expectedAddTags).isEqualTo(actualAddTagsList);
+        List<Tag> actualAddTagsListConvertType = new ArrayList<>(actualAddTagsList);
+        Collections.sort(actualAddTagsListConvertType, Comparator.comparing(Tag::key));  // why is this reporting error?
+        assertThat(expectedAddTags).isEqualTo(actualAddTagsListConvertType);
     }
 
     private List<software.amazon.ssm.patchbaseline.Tag> buildCfnTagList(Map<String, String> tags) {
