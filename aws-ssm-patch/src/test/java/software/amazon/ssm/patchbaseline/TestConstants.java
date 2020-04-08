@@ -63,6 +63,12 @@ public class TestConstants {
         add("icecream");
     }};
 
+    public static final ArrayList<String> UPDATED_PATCH_GROUPS = new ArrayList<String>() {{
+        add("mypatch");
+        add("foo");
+        add("baz");
+    }};
+
     public static final ArrayList<String> UPDATED_ACCEPTED_PATCHES = new ArrayList<String>() {{
         add("python36");
         add("gcc");
@@ -71,12 +77,6 @@ public class TestConstants {
     public static final ArrayList<String> UPDATED_REJECTED_PATCHES = new ArrayList<String>() {{
         add("vim");
         add("aptitude");
-    }};
-
-    public static final ArrayList<String> UPDATE_PATCH_GROUPS = new ArrayList<String>() {{
-        add("mypatch");
-        add("foo");
-        add("baz");
     }};
 
     public enum ComplianceLevel {UNSPECIFIED, INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL};

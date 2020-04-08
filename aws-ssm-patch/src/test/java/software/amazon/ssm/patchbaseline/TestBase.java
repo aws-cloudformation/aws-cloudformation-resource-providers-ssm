@@ -77,7 +77,7 @@ public class TestBase {
         ResourceModel updatedModel = buildDefaultInputModel(updatedTags, sources, globalFilters, approvalRules,
                                                 BASELINE_ID, UPDATED_BASELINE_NAME, OPERATING_SYSTEM, UPDATED_BASELINE_DESC,
                                                 UPDATED_REJECTED_PATCHES, getPatchActionString(PatchAction.ALLOW_AS_DEPENDENCY),
-                                                UPDATED_ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.MEDIUM), UPDATE_PATCH_GROUPS);
+                                                UPDATED_ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.MEDIUM), UPDATED_PATCH_GROUPS);
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceTags(updatedDesiredResourceTagsMap)

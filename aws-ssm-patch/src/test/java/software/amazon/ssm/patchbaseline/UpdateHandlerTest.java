@@ -162,6 +162,10 @@ public class UpdateHandlerTest extends TestBase{
                 ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
                 .thenReturn(listTagsForResourceResponse);
 
+
+        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
+        System.out.print(String.format("%n"));
+
         //Invoke the handler
         ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
 
@@ -169,6 +173,9 @@ public class UpdateHandlerTest extends TestBase{
                 = updateHandler.handleRequest(proxy, request, null, logger);
 
         System.out.print(String.format("Update Handler Response Status %s %n", response.getStatus()));
+
+        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
+        System.out.print(String.format("%n"));
 
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
@@ -181,16 +188,30 @@ public class UpdateHandlerTest extends TestBase{
                         ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any());
 
         List<String> originalGroups = PATCH_GROUPS;
-        List<String> newGroups = UPDATE_PATCH_GROUPS;
+        List<String> newGroups = UPDATED_PATCH_GROUPS;
+
+        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
+        System.out.print("PATCH_GROUPS " + PATCH_GROUPS);
 
         //Compute the intersection of the two lists (the groups that don't need to be changed)
         List<String> intersectingGroups = new ArrayList<>(originalGroups);
         intersectingGroups.retainAll(newGroups);
 
+        System.out.print("originalGroups " + originalGroups);
+        System.out.print("newGroups " + newGroups);
+        System.out.print("intersectingGroups " + intersectingGroups);
+        System.out.print(String.format("%n"));
+
+        for (String group : intersectingGroups)
+            System.out.print(String.format("TEST intersecting Groups to remain %s %n", group));
+
         //The groups we need to remove are ORIGINAL - INTERSECT
         //The groups we need to add are DESIRED - INTERSECT
         originalGroups.removeAll(intersectingGroups);
         newGroups.removeAll(intersectingGroups);
+
+        for (String group : originalGroups)
+            System.out.print(String.format("Test expected original groups to remove %s %n", group));
 
         for (String group : originalGroups) {
             verify(proxy)
@@ -198,6 +219,9 @@ public class UpdateHandlerTest extends TestBase{
                             eq(buildDeregisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
                             ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any());
         }
+
+        for (String group : newGroups)
+            System.out.print(String.format("Test expected new groups to add %s %n", group));
 
         for (String group : newGroups) {
             if (!TestConstants.PATCH_GROUPS.contains(group)) {
