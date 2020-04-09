@@ -24,6 +24,7 @@ import software.amazon.ssm.patchbaseline.translator.resourcemodel.ResourceModelP
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 import java.util.Map;
@@ -68,59 +69,14 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             List<Tag> createTags = tagHelper.validateAndMergeTagsForCreate(request, model.getTags());
             ResourceModelPropertyTranslator.translateToResourceModelTags(createTags).ifPresent(model::setTags);
 
-            // log tag
-            for (Map.Entry<String,String> entry : request.getDesiredResourceTags().entrySet()) {
-                System.out.print("getDesiredResourceTags, Key = " + entry.getKey() + ", Value = " + entry.getValue() + String.format("%n"));
-                logger.log("getDesiredResourceTags, Key = " + entry.getKey() + ", Value = " + entry.getValue() + String.format("%n"));
-            }
-            for (Map.Entry<String,String> entry : request.getSystemTags().entrySet()) {
-                System.out.print("getSystemTags, Key = " + entry.getKey() + ", Value = " + entry.getValue() + String.format("%n"));
-                logger.log("getSystemTags, Key = " + entry.getKey() + ", Value = " + entry.getValue() + String.format("%n"));
-            }
-            for (software.amazon.ssm.patchbaseline.Tag entry : model.getTags()) {
-                System.out.print("getTags, Key = " + entry.getKey() + ", Value = " + entry.getValue() + String.format("%n"));
-                logger.log("getTags, Key = " + entry.getKey() + ", Value = " + entry.getValue() + String.format("%n"));
-            }
-
             CreatePatchBaselineRequest createPatchBaselineRequest =
                     CreatePatchBaselineRequestTranslator.createPatchBaseline(model, request, logger);
 
-            // log tag
-            for (Tag tag : createPatchBaselineRequest.tags()) {
-                System.out.print(String.format("test Request tag key %s,value %s %n", tag.key(), tag.value()));
-                logger.log(String.format("test Request tag key %s,value %s %n", tag.key(), tag.value()));
-            }
-            // log sources
-            for (PatchSource source : createPatchBaselineRequest.sources()) {
-                System.out.print(String.format("test Request convert model source with name %s, config %s. %n", source.name(), source.configuration()));
-                logger.log(String.format("test Request convert model source with name %s, config %s. %n", source.name(), source.configuration()));
-
-                for (String product : source.products()) {
-                    System.out.print(String.format("test Request convert model source with product %s %n", product));
-                    logger.log(String.format("test Request convert model source with product %s %n", product));
-                }
-            }
-            //log global filters
-            for (PatchFilter patchFilter : createPatchBaselineRequest.globalFilters().patchFilters()) {
-                for (String value : patchFilter.values()) {
-                    System.out.print(String.format("test Request model getGlobalFilters %s, %s %n", patchFilter.keyAsString(), value));
-                    logger.log(String.format("test Request model getGlobalFilters %s, %s %n", patchFilter.keyAsString(), value));
-                }
-            }
-            // log approval rules
-            for (PatchRule patchRule : createPatchBaselineRequest.approvalRules().patchRules()) {
-                System.out.print(String.format("test Request enableNonSecurity %b %n", patchRule.enableNonSecurity()));
-                System.out.print(String.format("test Request approval after %d %n", patchRule.approveAfterDays()));
-                System.out.print(String.format("test Request complianceLevelAsString %s %n", patchRule.complianceLevelAsString()));
-                logger.log(String.format("test Request enableNonSecurity %b %n", patchRule.enableNonSecurity()));
-                logger.log(String.format("test Request approval after %d %n", patchRule.approveAfterDays()));
-                logger.log(String.format("test Request complianceLevelAsString %s %n", patchRule.complianceLevelAsString()));
-                for (PatchFilter patchFilter : patchRule.patchFilterGroup().patchFilters()) {
-                    for (String value : patchFilter.values()) {
-                        System.out.print(String.format("test Request approvalRules model patch filter %s, %s %n", patchFilter.keyAsString(), value));
-                        logger.log(String.format("test Request approvalRules model patch filter %s, %s %n", patchFilter.keyAsString(), value));
-                    }
-                }
+            // systemTags
+            Map<String, String> systemTags = request.getSystemTags();
+            for (String key : systemTags.keySet()) {
+                logger.log(String.format("test Request SystemTags key %s value %s %n", key, systemTags.get(key)));
+                System.out.print(String.format("test Request SystemTags key %s value %s %n", key, systemTags.get(key)));
             }
 
             final CreatePatchBaselineResponse createPatchBaselineResponse =
@@ -133,7 +89,12 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             // This is not in the definition for a baseline object but we must receive it from CFN
             // Register the groups for this Patch Baseline
-            List<String> patchGroups = (List<String>) model.getPatchGroups();
+            // List<String> patchGroups = (List<String>) model.getPatchGroups();
+            // List<String> patchGroups = Collections.emptyList();
+            List<String> patchGroups = new ArrayList<>();
+            if (! CollectionUtils.isNullOrEmpty(model.getPatchGroups())) {
+                patchGroups = model.getPatchGroups();
+            }
 
             for (String group : patchGroups) {
                 //Each group needs its own Register call
@@ -165,7 +126,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 .patchGroup(group)
                 .build() ;
     }
-
 
 }
 

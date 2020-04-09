@@ -112,6 +112,10 @@ public class TagHelper {
         String baselineId = model.getId();
 
         List<Tag> newTags = validateAndMergeTagsForCreate(request, request.getDesiredResourceState().getTags());
+
+        for (Tag tag : newTags)
+            System.out.print(String.format("TagHelper validateAndMergeTagsForCreate tag key %s, tag value %s %n", tag.key(), tag.value()));
+
         ListTagsForResourceRequest listTagsForResourceRequest = ListTagsForResourceRequest.builder()
                                                                         .resourceType(ssmResourceType)
                                                                         .resourceId(baselineId)
@@ -129,6 +133,11 @@ public class TagHelper {
 
         Map<String, String> newTagsMap = convertRequestTagsToMap(newTags);
         Map<String, String> oldTagsMap = convertRequestTagsToMap(oldTags);
+
+        for (String key : newTagsMap.keySet())
+            System.out.print(String.format("newTagsMap key %s, value %s %n", key, newTagsMap.get(key)));
+        for (String key : oldTagsMap.keySet())
+            System.out.print(String.format("oldTagsMap key %s, value %s %n", key, oldTagsMap.get(key)));
 
         Map<String, String> tagsToRemove = TagUtils.getTagsToDelete(newTagsMap, oldTagsMap);
         Map<String, String> tagsToAdd = TagUtils.getTagsToCreate(newTagsMap, oldTagsMap);

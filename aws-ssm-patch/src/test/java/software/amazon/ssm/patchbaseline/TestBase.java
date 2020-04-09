@@ -2,15 +2,12 @@ package software.amazon.ssm.patchbaseline;
 
 import com.amazonaws.AmazonServiceException;
 import org.junit.jupiter.api.BeforeEach;
-import software.amazon.cloudformation.proxy.*;
-import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
-import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
-import software.amazon.awssdk.services.ssm.model.PatchRule;
-import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
+import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
-
+import software.amazon.awssdk.services.ssm.model.PatchAction;
+import software.amazon.cloudformation.proxy.*;
 
 
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -77,7 +74,8 @@ public class TestBase {
         ResourceModel updatedModel = buildDefaultInputModel(updatedTags, sources, globalFilters, approvalRules,
                                                 BASELINE_ID, UPDATED_BASELINE_NAME, OPERATING_SYSTEM, UPDATED_BASELINE_DESC,
                                                 UPDATED_REJECTED_PATCHES, getPatchActionString(PatchAction.ALLOW_AS_DEPENDENCY),
-                                                UPDATED_ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.MEDIUM), UPDATED_PATCH_GROUPS);
+                                                UPDATED_ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.MEDIUM),
+                                                new ArrayList<String>(UPDATED_PATCH_GROUPS));
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceTags(updatedDesiredResourceTagsMap)
@@ -282,9 +280,5 @@ public class TestBase {
         exception500.setStatusCode(500);
         exception400.setStatusCode(400);
     }
-
-
-
-
 
 }

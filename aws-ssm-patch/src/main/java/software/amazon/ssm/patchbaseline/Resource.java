@@ -84,8 +84,8 @@ public class Resource {
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.FAILED)
+                .message(ex.getMessage())
                 .build();
-
     }
 
 

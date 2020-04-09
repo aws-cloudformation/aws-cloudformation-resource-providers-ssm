@@ -21,8 +21,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.ssm.patchbaseline.utils.TagUtils;
 
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
+import software.amazon.ssm.patchbaseline.TagHelper;
 
 import java.util.*;
 import java.util.function.Function;
@@ -33,7 +35,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class UpdateHandlerTest extends TestBase{
+public class UpdateHandlerTest extends TestBase {
 
     private UpdateHandler updateHandler;
     private UpdatePatchBaselineRequest updatePatchBaselineRequest;
@@ -42,11 +44,12 @@ public class UpdateHandlerTest extends TestBase{
     private GetPatchBaselineResponse getPatchBaselineResponse;
     private ListTagsForResourceRequest listTagsForResourceRequest;
     private ListTagsForResourceResponse listTagsForResourceResponse;
-    private DeregisterPatchBaselineForPatchGroupResponse deregisterPatchBaselineForPatchGroupResponse;
     private RemoveTagsFromResourceRequest removeTagsRequest;
     private AddTagsToResourceRequest addTagsRequest;
     private RemoveTagsFromResourceResponse removeTagsFromResourceResponse;
     private AddTagsToResourceResponse addTagsToResourceResponse;
+    private DeregisterPatchBaselineForPatchGroupResponse deregisterResponse;
+    private RegisterPatchBaselineForPatchGroupResponse registerResponse;
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -69,9 +72,13 @@ public class UpdateHandlerTest extends TestBase{
 
         updateHandler = new UpdateHandler();
         getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
-        getPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(BASELINE_ID).patchGroups(PATCH_GROUPS).build();
         listTagsForResourceRequest = ListTagsForResourceRequest.builder().resourceType(PATCH_BASELINE_RESOURCE_NAME).resourceId(BASELINE_ID).build();
-        //        deregisterPatchBaselineForPatchGroupResponse = new DeregisterPatchBaselineForPatchGroupResponse();
+        removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
+        addTagsToResourceResponse = AddTagsToResourceResponse.builder().build();
+        deregisterResponse = DeregisterPatchBaselineForPatchGroupResponse.builder().baselineId(BASELINE_ID).build();
+        registerResponse = RegisterPatchBaselineForPatchGroupResponse.builder().baselineId(BASELINE_ID).build();
+        getPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(BASELINE_ID).patchGroups(PATCH_GROUPS).build();
+
         PatchFilter pf1 = PatchFilter.builder()
                 .key("PRODUCT")
                 .values(Collections.singletonList("Ubuntu16.04"))
@@ -134,7 +141,7 @@ public class UpdateHandlerTest extends TestBase{
     @Test
     public void testSuccess() {
 
-        List<String> expectedRemoveTags = Arrays.asList(CFN_KEY,SYSTEM_TAG_KEY);
+        List<String> expectedRemoveTags = Arrays.asList(CFN_KEY, SYSTEM_TAG_KEY);
         List<Tag> expectedAddTags = Arrays.asList(
                 Tag.builder().key(UPDATED_CFN_KEY).value(UPDATED_CFN_VALUE).build(),
                 Tag.builder().key(NEW_TAG_KEY).value(NEW_TAG_VALUE).build(),
@@ -146,8 +153,6 @@ public class UpdateHandlerTest extends TestBase{
         listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(existedTags).build();
         removeTagsRequest = RemoveTagsFromResourceRequest.builder().tagKeys(expectedRemoveTags).build();
         addTagsRequest = AddTagsToResourceRequest.builder().tags(expectedAddTags).build();
-        removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
-        addTagsToResourceResponse = AddTagsToResourceResponse.builder().build();
 
         when(proxy.injectCredentialsAndInvokeV2(eq(updatePatchBaselineRequest),
                 ArgumentMatchers.<Function<UpdatePatchBaselineRequest, UpdatePatchBaselineResponse>>any()))
@@ -162,20 +167,36 @@ public class UpdateHandlerTest extends TestBase{
                 ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
                 .thenReturn(listTagsForResourceResponse);
 
+        when(proxy.injectCredentialsAndInvokeV2(
+                eq(listTagsForResourceRequest),
+                ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
+                .thenReturn(listTagsForResourceResponse);
 
-        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
-        System.out.print(String.format("%n"));
+        for (String group : UPDATED_PATCH_GROUPS) {
+            if (!PATCH_GROUPS.contains(group)) {
+                when(proxy.injectCredentialsAndInvokeV2(
+                        eq(buildRegisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
+                        ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any())).thenReturn(registerResponse);
+            }
+        }
+
+        for (String group : PATCH_GROUPS) {
+            if (!UPDATED_PATCH_GROUPS.contains(group)) {
+                when(proxy.injectCredentialsAndInvokeV2(
+                        eq(buildDeregisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
+                        ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any())).thenReturn(deregisterResponse);
+            }
+        }
 
         //Invoke the handler
-        ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
+        ResourceHandlerRequest<ResourceModel> request = buildUpdateDefaultInputRequest();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = updateHandler.handleRequest(proxy, request, null, logger);
 
-        System.out.print(String.format("Update Handler Response Status %s %n", response.getStatus()));
-
-        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
+        System.out.print("after handler UPDATED_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
         System.out.print(String.format("%n"));
+        System.out.print(String.format("Update Handler Response Status %s %n", response.getStatus()));
 
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
@@ -187,44 +208,19 @@ public class UpdateHandlerTest extends TestBase{
                         eq(getPatchBaselineRequest),
                         ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any());
 
-        List<String> originalGroups = PATCH_GROUPS;
-        List<String> newGroups = UPDATED_PATCH_GROUPS;
-
-        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
-        System.out.print("PATCH_GROUPS " + PATCH_GROUPS);
-
-        //Compute the intersection of the two lists (the groups that don't need to be changed)
-        List<String> intersectingGroups = new ArrayList<>(originalGroups);
-        intersectingGroups.retainAll(newGroups);
-
-        System.out.print("originalGroups " + originalGroups);
-        System.out.print("newGroups " + newGroups);
-        System.out.print("intersectingGroups " + intersectingGroups);
-        System.out.print(String.format("%n"));
-
-        for (String group : intersectingGroups)
-            System.out.print(String.format("TEST intersecting Groups to remain %s %n", group));
-
-        //The groups we need to remove are ORIGINAL - INTERSECT
-        //The groups we need to add are DESIRED - INTERSECT
-        originalGroups.removeAll(intersectingGroups);
-        newGroups.removeAll(intersectingGroups);
-
-        for (String group : originalGroups)
-            System.out.print(String.format("Test expected original groups to remove %s %n", group));
-
-        for (String group : originalGroups) {
-            verify(proxy)
-                    .injectCredentialsAndInvokeV2(
-                            eq(buildDeregisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
-                            ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any());
+        for (String group : PATCH_GROUPS) {
+            if (!UPDATED_PATCH_GROUPS.contains(group)) {
+                System.out.print(String.format("buildDeregisterGroupRequest PATCH_GROUPS with group %s %n", group));
+                verify(proxy)
+                        .injectCredentialsAndInvokeV2(
+                                eq(buildDeregisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
+                                ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any());
+            }
         }
 
-        for (String group : newGroups)
-            System.out.print(String.format("Test expected new groups to add %s %n", group));
-
-        for (String group : newGroups) {
-            if (!TestConstants.PATCH_GROUPS.contains(group)) {
+        for (String group : UPDATED_PATCH_GROUPS) {
+            if (!PATCH_GROUPS.contains(group)) {
+                System.out.print(String.format("buildRegisterGroupRequest UPDATED_PATCH_GROUPS with group %s %n", group));
                 verify(proxy)
                         .injectCredentialsAndInvokeV2(
                                 eq(buildRegisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
@@ -241,8 +237,19 @@ public class UpdateHandlerTest extends TestBase{
                 eq(addTagsRequest),
                 ArgumentMatchers.<Function<AddTagsToResourceRequest, AddTagsToResourceResponse>>any()))
                 .thenReturn(addTagsToResourceResponse);
+
+        when(proxy.injectCredentialsAndInvokeV2(eq(removeTagsRequest),
+                ArgumentMatchers.<Function<RemoveTagsFromResourceRequest, RemoveTagsFromResourceResponse>>any()))
+                .thenReturn(removeTagsFromResourceResponse);
+
+        when(proxy.injectCredentialsAndInvokeV2(eq(addTagsRequest),
+                ArgumentMatchers.<Function<AddTagsToResourceRequest, AddTagsToResourceResponse>>any()))
+                .thenReturn(addTagsToResourceResponse);
+
         //not working
         //when(tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy)).thenReturn();
+        tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy);
+
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
                         eq(listTagsForResourceRequest),
@@ -270,6 +277,5 @@ public class UpdateHandlerTest extends TestBase{
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
-
-
 }
+
