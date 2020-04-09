@@ -1,89 +1,92 @@
 {
-  "typeName" : "AWS::SSM::MaintenanceWindow",
-  "description" : "Resource Type definition for AWS::SSM::MaintenanceWindow",
-  "additionalProperties" : false,
-  "properties" : {
-    "WindowId" : {
-      "description": "Unique identifier of the maintenance window.",
-      "type" : "string",
-      "pattern": "^mw-[0-9a-f]{17}$"
-    },
-    "StartDate" : {
-      "description": "The date and time, in ISO-8601 Extended format, for when the maintenance window is scheduled to become active.",
-      "type" : "string",
-      "minLength": 1,
-      "maxLength": 256
-    },
-    "Description" : {
-      "description": "A description of the maintenance window.",
-      "type" : "string",
-      "minLength": 1,
-      "maxLength": 128
-    },
-    "AllowUnassociatedTargets" : {
-      "description": "Enables a maintenance window task to run on managed instances, even if you have not registered those instances as targets.",
-      "type" : "boolean"
-    },
-    "Cutoff" : {
-      "description": "The number of hours before the end of the maintenance window that Systems Manager stops scheduling new tasks for execution.",
-      "type" : "integer",
-      "minLength": 0,
-      "maxLength": 23
-    },
-    "Schedule" : {
-      "description": "The schedule of the maintenance window in the form of a cron or rate expression.",
-      "type" : "string",
-      "minLength": 1,
-      "maxLength": 256
-    },
-    "Duration" : {
-      "description": "The duration of the maintenance window in hours.",
-      "type" : "integer",
-      "minLength": 1,
-      "maxLength": 24
-    },
-    "EndDate" : {
-      "description": "The date and time, in ISO-8601 Extended format, for when the maintenance window is scheduled to become inactive.",
-      "type" : "string",
-      "minLength": 1,
-      "maxLength": 256
-    },
-    "Tags" : {
-      "description": "Optional metadata that you assign to a resource in the form of an arbitrary set of tags (key-value pairs).",
-      "type" : "array",
-      "uniqueItems" : false,
-      "items" : {
-        "$ref" : "#/definitions/Tag"
-      }
-    },
-    "Name" : {
-      "description": "The name of the maintenance window.",
-      "type" : "string",
-      "minLength": 3,
-      "maxLength": 128
-    },
-    "ScheduleTimezone" : {
-      "description": "The time zone that the scheduled maintenance window executions are based on, in Internet Assigned Numbers Authority (IANA) format.",
-      "type" : "string",
-      "minLength": 1,
-      "maxLength": 128
-    }
-  },
-  "definitions" : {
-    "Tag" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "Key" : {
-          "type" : "string"
+    "typeName": "AWS::SSM::MaintenanceWindow",
+    "description": "Resource Type definition for AWS::SSM::MaintenanceWindow",
+    "additionalProperties": false,
+    "properties": {
+        "WindowId": {
+            "description": "Unique identifier of the maintenance window.",
+            "type": "string",
+            "pattern": "^mw-[0-9a-f]{17}$"
         },
-        "Value" : {
-          "type" : "string"
+        "StartDate": {
+            "description": "The date and time, in ISO-8601 Extended format, for when the maintenance window is scheduled to become active.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+        },
+        "Description": {
+            "description": "A description of the maintenance window.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "AllowUnassociatedTargets": {
+            "description": "Enables a maintenance window task to run on managed instances, even if you have not registered those instances as targets.",
+            "type": "boolean"
+        },
+        "Cutoff": {
+            "description": "The number of hours before the end of the maintenance window that Systems Manager stops scheduling new tasks for execution.",
+            "type": "integer",
+            "minLength": 0,
+            "maxLength": 23
+        },
+        "Schedule": {
+            "description": "The schedule of the maintenance window in the form of a cron or rate expression.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+        },
+        "Duration": {
+            "description": "The duration of the maintenance window in hours.",
+            "type": "integer",
+            "minLength": 1,
+            "maxLength": 24
+        },
+        "EndDate": {
+            "description": "The date and time, in ISO-8601 Extended format, for when the maintenance window is scheduled to become inactive.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+        },
+        "Tags": {
+            "description": "Optional metadata that you assign to a resource in the form of an arbitrary set of tags (key-value pairs).",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "$ref": "#/definitions/Tag"
+            }
+        },
+        "Name": {
+            "description": "The name of the maintenance window.",
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 128
+        },
+        "ScheduleTimezone": {
+            "description": "The time zone that the scheduled maintenance window executions are based on, in Internet Assigned Numbers Authority (IANA) format.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
         }
-      },
-      "required" : [ "Value", "Key" ]
-    }
-  },
+    },
+    "definitions": {
+        "Tag": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Key": {
+                    "type": "string"
+                },
+                "Value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "Value",
+                "Key"
+            ]
+        }
+    },
     "handlers": {
         "create": {
             "permissions": [
@@ -114,9 +117,17 @@
             ]
         }
     },
-  "required" : [ "AllowUnassociatedTargets", "Cutoff", "Schedule", "Duration", "Name" ],
-  "primaryIdentifier" : [ "/properties/WindowId" ],
-  "readOnlyProperties" : [ "/properties/WindowId" ]
+    "required": [
+        "AllowUnassociatedTargets",
+        "Cutoff",
+        "Schedule",
+        "Duration",
+        "Name"
+    ],
+    "primaryIdentifier": [
+        "/properties/WindowId"
+    ],
+    "readOnlyProperties": [
+        "/properties/WindowId"
+    ]
 }
-
-
