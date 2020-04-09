@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::SSM::MaintenanceWindow",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.ssm.maintenancewindow.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.ssm.maintenancewindow.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "ssm",
+            "maintenancewindow"
+        ]
+    }
+}
