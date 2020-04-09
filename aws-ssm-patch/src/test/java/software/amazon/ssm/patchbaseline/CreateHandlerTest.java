@@ -1,5 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
+
 import org.junit.jupiter.api.BeforeAll;
 import software.amazon.ssm.patchbaseline.Resource;
 import software.amazon.awssdk.services.ssm.model.*;
@@ -7,6 +8,7 @@ import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.awssdk.services.ssm.model.ResourceLimitExceededException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -28,17 +30,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.eq;
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
+
+
 import org.mockito.ArgumentMatchers;
+import org.mockito.ArgumentCaptor;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
-
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * test all 5 responses from the create handler.
@@ -125,7 +126,7 @@ public class CreateHandlerTest extends TestBase {
                 .description(TestConstants.BASELINE_DESCRIPTION)
                 .operatingSystem(TestConstants.OPERATING_SYSTEM)
                 .rejectedPatches(TestConstants.REJECTED_PATCHES)
-                .rejectedPatchesAction(PatchAction.BLOCK)
+                .rejectedPatchesAction(software.amazon.awssdk.services.ssm.model.PatchAction.BLOCK)
                 .approvedPatches(TestConstants.ACCEPTED_PATCHES)
                 .clientToken(TestConstants.CLIENT_REQUEST_TOKEN)
                 .approvalRules(approvalRules)
@@ -155,7 +156,7 @@ public class CreateHandlerTest extends TestBase {
 
         System.out.print(String.format("Create Request getClientRequestToken %s %n", request.getClientRequestToken()));
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
+         ProgressEvent<ResourceModel, CallbackContext> response
                 = createHandler.handleRequest(proxy, request, null, logger);
 
         System.out.print(String.format("Create Handler Response Status %s %n", response.getStatus()));
@@ -182,6 +183,162 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+
         verifyZeroInteractions(resource);
     }
+
+    @Test
+    public void testEmptyTagsSuccess() {
+
+        List<software.amazon.ssm.patchbaseline.Tag> tags = new ArrayList<>();
+        List<software.amazon.ssm.patchbaseline.PatchSource> sources = sources();
+        software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters = globalFilters();
+        software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
+
+        Map<String, String> desiredResourceTagsMap = new HashMap<>();
+
+        Map<String, String> systemTagsMap = new HashMap<>();
+
+        ResourceModel model = buildDefaultInputModel(tags, sources, globalFilters, approvalRules,
+                BASELINE_ID, BASELINE_NAME, OPERATING_SYSTEM, BASELINE_DESCRIPTION,
+                REJECTED_PATCHES, getPatchActionString(TestConstants.PatchAction.BLOCK),
+                ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.CRITICAL), PATCH_GROUPS);
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceTags(desiredResourceTagsMap)
+                .desiredResourceState(model)
+                .systemTags(systemTagsMap)
+                .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                .build();
+
+        System.out.print(String.format("Create Request getClientRequestToken %s %n", request.getClientRequestToken()));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = createHandler.handleRequest(proxy, request, null, logger);
+
+        System.out.print(String.format("Create Handler Response Status %s %n", response.getStatus()));
+
+        response = createHandler.handleRequest(proxy, request, null, logger);
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        verifyZeroInteractions(resource);
+    }
+
+    @Test
+    public void testMissingFieldInRequest() {
+        when(proxy.injectCredentialsAndInvokeV2(any(CreatePatchBaselineRequest.class),
+                ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any()))
+                .thenThrow(exception400);
+
+        //This test is a little different in the sense that we want the handler to send a request with a missing name
+        //  to verify the handlers error-catching behavior.
+        ArgumentCaptor<CreatePatchBaselineRequest> captor = ArgumentCaptor.forClass(CreatePatchBaselineRequest.class);
+        List<software.amazon.ssm.patchbaseline.Tag> tags = new ArrayList<>();
+        List<software.amazon.ssm.patchbaseline.PatchSource> sources = sources();
+        software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters = globalFilters();
+        software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
+
+        Map<String, String> desiredResourceTagsMap = new HashMap<>();
+
+        Map<String, String> systemTagsMap = new HashMap<>();
+
+        ResourceModel model = buildDefaultInputModel(tags, sources, globalFilters, approvalRules,
+                BASELINE_ID, BASELINE_NAME, OPERATING_SYSTEM, BASELINE_DESCRIPTION,
+                REJECTED_PATCHES, getPatchActionString(TestConstants.PatchAction.BLOCK),
+                ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.CRITICAL), PATCH_GROUPS);
+        ResourceHandlerRequest<ResourceModel>  request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceTags(desiredResourceTagsMap)
+                .desiredResourceState(model)
+                .systemTags(systemTagsMap)
+                .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                .build();
+        ProgressEvent<ResourceModel, CallbackContext> response = createHandler.handleRequest(proxy, request, null, logger);
+
+        verify(proxy)
+                .injectCredentialsAndInvokeV2(
+                        captor.capture(),
+                        ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any());
+
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(1).isEqualTo( captor.getValue().rejectedPatches().size());
+
+        verifyZeroInteractions(resource);
+    }
+    @Test
+    public void testResourceLimitsExceeded() {
+        when(proxy.injectCredentialsAndInvokeV2(any(CreatePatchBaselineRequest.class),
+                ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any()))
+                .thenThrow( ResourceLimitExceededException.builder().message("Limits Exceeded").build());
+        ArgumentCaptor<CreatePatchBaselineRequest> captor = ArgumentCaptor.forClass(CreatePatchBaselineRequest.class);
+
+        //We want to verify that the create handler sends the appropriate response when the user has too many baselines
+        ResourceHandlerRequest<ResourceModel> request = buildDefaultInputRequest();
+        ProgressEvent<ResourceModel, CallbackContext> response = createHandler.handleRequest(proxy,request, null, logger);
+
+        verify(proxy)
+                //.injectCredentialsAndInvokeV2(any(CreatePatchBaselineRequest.class),
+                  //      ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any());
+            .injectCredentialsAndInvokeV2(captor.capture(),
+                    ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any());
+
+            verify(proxy, never())
+                    .injectCredentialsAndInvokeV2(
+                            eq(buildRegisterGroupRequest(createPatchBaselineResponse.baselineId(),"any")),
+                            ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any());
+
+
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat (response.getMessage().contains("Limits Exceeded"));
+        verifyZeroInteractions(resource);
+    }
+    @Test
+    public void testGroupAlreadyRegistered() {
+        when(proxy.injectCredentialsAndInvokeV2(any(CreatePatchBaselineRequest.class),
+                ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any()))
+                .thenThrow( AlreadyExistsException.builder().message("already registered!").build());
+
+        //We want to verify the handlers response to when there is already a baseline registered to a specific group.
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
+        ProgressEvent<ResourceModel, CallbackContext>  response = createHandler.handleRequest(proxy,request, null, logger);
+
+        verify(proxy)
+                .injectCredentialsAndInvokeV2(any(CreatePatchBaselineRequest.class),
+                        ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any());
+
+
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+
+        assertThat (response.getMessage().contains("already registered!"));
+    }
+    @Test
+    public void testServerError() {
+        when(proxy.injectCredentialsAndInvokeV2(any(CreatePatchBaselineRequest.class),
+                ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any()))
+                .thenThrow(exception500);
+
+        //Finally, verify the handlers response when SSM returns a 5xx error.
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
+
+        System.out.print(String.format("Create Request getClientRequestToken %s %n", request.getClientRequestToken()));
+
+        ProgressEvent<ResourceModel, CallbackContext> response
+                = createHandler.handleRequest(proxy, request, null, logger);
+
+        System.out.print(String.format("Create Handler Response Status %s %n", response.getStatus()));
+
+        // need to check that the createPatchBaseline was invoked with the correct request made from the model
+        verify(proxy)
+                .injectCredentialsAndInvokeV2(
+                        eq(createPatchBaselineRequest),
+                        ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any());
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat (response.getMessage().contains("Server error"));
+    }
+   
+}
+
 }
