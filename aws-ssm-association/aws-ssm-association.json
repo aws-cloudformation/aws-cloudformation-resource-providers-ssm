@@ -3,23 +3,6 @@
     "description": "The AWS::SSM::Association resource associates an SSM document in AWS Systems Manager with EC2 instances that contain a configuration agent to process the document.",
     "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-ssm",
     "definitions": {
-        "ParameterValues": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "ParameterValues": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 65535
-                    }
-                }
-            },
-            "required": [
-                "ParameterValues"
-            ]
-        },
         "Target": {
             "type": "object",
             "properties": {
@@ -124,7 +107,12 @@
             "type": "object",
             "patternProperties": {
                 ".*{1,255}": {
-                    "$ref": "#/definitions/ParameterValues"
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 65535
+                    }
                 }
             },
             "additionalProperties": false
