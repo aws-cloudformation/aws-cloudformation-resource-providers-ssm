@@ -21,7 +21,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static software.amazon.ssm.patchbaseline.TestConstants.BASELINE_ID;
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
 import java.util.function.Function;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,15 +47,15 @@ public class DeleteHandlerTest extends TestBase{
 
         deleteHandler = new DeleteHandler();
 
-        deletePatchBaselineRequest =  DeletePatchBaselineRequest.builder().baselineId(TestConstants.BASELINE_ID).build();
-        deletePatchBaselineResponse =  DeletePatchBaselineResponse.builder().baselineId(TestConstants.BASELINE_ID).build();
-        getPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(TestConstants.BASELINE_ID).patchGroups(TestConstants.PATCH_GROUPS).build();
+        deletePatchBaselineRequest =  DeletePatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
+        deletePatchBaselineResponse =  DeletePatchBaselineResponse.builder().baselineId(BASELINE_ID).build();
+        getPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(BASELINE_ID).patchGroups(PATCH_GROUPS).build();
         deregisterResponse = DeregisterPatchBaselineForPatchGroupResponse.builder().baselineId(BASELINE_ID).build();
     }
 
     @Test
     public void testSuccess() {
-        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(TestConstants.BASELINE_ID).build();
+        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
                 .thenReturn(getPatchBaselineResponse);
@@ -66,10 +66,10 @@ public class DeleteHandlerTest extends TestBase{
         }
 
         //Each delete request sends to SSM (1) get baseline request(n) deregister group requests (1) delete baseline request
-        ResourceModel model = ResourceModel.builder().id(TestConstants.BASELINE_ID).build();
+        ResourceModel model = ResourceModel.builder().id(BASELINE_ID).build();
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                                                             .desiredResourceState(model)
-                                                            .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                                                            .clientRequestToken(CLIENT_REQUEST_TOKEN)
                                                             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -101,16 +101,16 @@ public class DeleteHandlerTest extends TestBase{
 
     @Test
     public void testInvalidBaselineId() {
-        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(TestConstants.BAD_BASELINE_ID).build();
+        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BAD_BASELINE_ID).build();
         when(proxy.injectCredentialsAndInvokeV2(
                 eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any())).thenThrow(exception400);
 
         //Verify handler response when given an invalid baseline id
-        ResourceModel model = ResourceModel.builder().id(TestConstants.BAD_BASELINE_ID).build();
+        ResourceModel model = ResourceModel.builder().id(BAD_BASELINE_ID).build();
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
-                .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .build();
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = deleteHandler.handleRequest(proxy, request, null, logger);
@@ -131,14 +131,13 @@ public class DeleteHandlerTest extends TestBase{
 
     @Test
     public void testDeleteDefaultBasline() {
-        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(TestConstants.BASELINE_ID).build();
+        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
                 .thenReturn(getPatchBaselineResponse);
         when(proxy.injectCredentialsAndInvokeV2(eq(deletePatchBaselineRequest),
                 ArgumentMatchers.<Function<DeletePatchBaselineRequest, DeletePatchBaselineResponse>>any()))
                 .thenThrow(ResourceInUseException.builder().message("Attempted to delete default patch baseline!").build());
-
         for (String group : getPatchBaselineResponse.patchGroups()) {
             when(proxy.injectCredentialsAndInvokeV2(
                     eq(buildDeregisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
@@ -147,10 +146,10 @@ public class DeleteHandlerTest extends TestBase{
 
         //This test case handles the situation when a user manually sets the default baseline (outside of CFN)
         //  and then tries to delete the template. We want to throw an exception.
-        ResourceModel model = ResourceModel.builder().id(TestConstants.BASELINE_ID).patchGroups(TestConstants.PATCH_GROUPS).build();
+        ResourceModel model = ResourceModel.builder().id(BASELINE_ID).patchGroups(PATCH_GROUPS).build();
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
-                .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -182,7 +181,7 @@ public class DeleteHandlerTest extends TestBase{
 
     @Test
     public void testDeleteNonexistentBaseline() {
-        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(TestConstants.BASELINE_ID).build();
+        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
                 .thenThrow(DoesNotExistException.builder().message("Oops, not exist").build());
@@ -193,10 +192,10 @@ public class DeleteHandlerTest extends TestBase{
 
         // This tests the case where a user deleted a baseline outside of CloudFormation. We count this as successful,
         // otherwise stack deletion won't succeed unless the user specifies to ignore the resource.
-        ResourceModel model = ResourceModel.builder().id(TestConstants.BASELINE_ID).build();
+        ResourceModel model = ResourceModel.builder().id(BASELINE_ID).build();
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
-                .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -225,16 +224,16 @@ public class DeleteHandlerTest extends TestBase{
 
     @Test
     public void testServerError() {
-        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(TestConstants.BASELINE_ID).build();
+        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         when(proxy.injectCredentialsAndInvokeV2(
                 eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any())).thenThrow(exception500);
 
         //Verify handler response when we get 5xx error from SSM
-        ResourceModel model = ResourceModel.builder().id(TestConstants.BASELINE_ID).build();
+        ResourceModel model = ResourceModel.builder().id(BASELINE_ID).build();
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
-                .clientRequestToken(TestConstants.CLIENT_REQUEST_TOKEN)
+                .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .build();
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = deleteHandler.handleRequest(proxy, request, null, logger);

@@ -1,11 +1,5 @@
 package software.amazon.ssm.patchbaseline;
 
-
-import software.amazon.awssdk.services.ssm.model.PatchFilter;
-import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
-import software.amazon.awssdk.services.ssm.model.PatchRule;
-import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
-import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -26,7 +20,6 @@ import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 import java.util.Map;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {

@@ -40,6 +40,7 @@ public class TagHelperTest extends TestBase{
 
     private TagHelper cfnTagHelper;
 
+    private static final String TEST_TAG_PROPERTY_NAME = "MyTags";
     private static final String TEST_RESOURCE_TYPE = "AResource";
     private static final String TEST_RESOURCE_ID = "pb-123";
     private ListTagsForResourceRequest listTagsForResourceRequest;
@@ -85,9 +86,9 @@ public class TagHelperTest extends TestBase{
         newStackTags.put("stackkey1", "newstack1");
         newStackTags.put("stackkey3", "newstack3");
 
-        List<Tag> tagList1 = buildRequestTagList(oldResourceTags);
+        List<Tag> tagListResourceTag = buildRequestTagList(oldResourceTags);
         List<Tag> tagList = buildRequestTagList(oldStackTags);
-        tagList.addAll(tagList1);
+        tagList.addAll(tagListResourceTag);
 
         listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(tagList).build();
 
@@ -167,6 +168,41 @@ public class TagHelperTest extends TestBase{
         assertThat(expectedAddTags).isEqualTo(actualAddTagsListConvertType);
     }
 
+    @Test
+    public void testUpdateTagsForResource_SystemTagResource() {
+        Map<String, String> newResourceTags = new HashMap<>();
+        newResourceTags.put("aws:foo", "bar");
+
+        Map<String, Object> oldResourceProperties = new HashMap<>();
+        oldResourceProperties.put(TEST_TAG_PROPERTY_NAME, buildCfnTagList(new HashMap<>()));
+
+        Map<String, Object> newResourceProperties = new HashMap<>();
+        newResourceProperties.put(TEST_TAG_PROPERTY_NAME, buildCfnTagList(newResourceTags));
+
+
+        listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(tagList).build();
+
+        ResourceModel oldResourceModel = ResourceModel.builder().tags(buildCfnTagList(oldResourceTags)).id(TEST_RESOURCE_ID).build();
+
+        ResourceModel newResourceModel = ResourceModel.builder().tags(buildCfnTagList(newResourceTags)).id(TEST_RESOURCE_ID).build();
+
+        RequestData requestData = new RequestData();
+        requestData.setPreviousStackTags(new HashMap<>());
+        requestData.setStackTags(new HashMap<>());
+        requestData.setPreviousResourceProperties(oldResourceProperties);
+        requestData.setResourceProperties(newResourceProperties);
+        requestData.setPhysicalResourceId(TEST_RESOURCE_ID);
+
+        try {
+            cfnTagHelper.updateTagsForResource(requestData, TEST_TAG_PROPERTY_NAME, TEST_RESOURCE_TYPE, ssmClient);
+            fail("Should have thrown an exception");
+        } catch (SsmCfnClientSideException e) {
+            assertEquals(NO_SYSTEM_TAGS, e.getMessage());
+            verifyZeroInteractions(ssmClient);
+        }
+    }
+
+
     private List<software.amazon.ssm.patchbaseline.Tag> buildCfnTagList(Map<String, String> tags) {
         List<software.amazon.ssm.patchbaseline.Tag> tagPropertiesList = new ArrayList<>();
 
@@ -202,7 +238,6 @@ public class TagHelperTest extends TestBase{
         }
         return typeCheckedValues;
     }
-
 
 }
 

@@ -1,24 +1,22 @@
 package software.amazon.ssm.patchbaseline;
 
 import com.amazonaws.AmazonServiceException;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.TestInstance;
 import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.awssdk.services.ssm.model.PatchAction;
 import software.amazon.cloudformation.proxy.*;
-
-
 import software.amazon.awssdk.services.ssm.SsmClient;
 
 import org.mockito.Mock;
-
 import java.util.*;
-
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestBase {
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -267,10 +265,10 @@ public class TestBase {
         }
     }
 
-//    @AfterAll
-//    public void tearDown() {
-//        verifyNoMoreInteractions(proxy);
-//    }
+    @AfterAll
+    public void tearDown() {
+        verifyNoMoreInteractions(proxy);
+    }
 
     protected final static AmazonServiceException exception500 = new AmazonServiceException("Server error");
     protected final static AmazonServiceException exception400 = new AmazonServiceException("Client error");
