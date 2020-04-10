@@ -26,6 +26,14 @@
                 "Values"
             ]
         },
+        "ParameterValues": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 65535
+            }
+        },
         "S3Region": {
             "type": "string",
             "minLength": 3,
@@ -107,12 +115,7 @@
             "type": "object",
             "patternProperties": {
                 ".*{1,255}": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 65535
-                    }
+                    "$ref": "#/definitions/ParameterValues"
                 }
             },
             "additionalProperties": false
