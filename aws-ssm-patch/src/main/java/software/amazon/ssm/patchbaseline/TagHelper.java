@@ -4,24 +4,25 @@ import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.Tag;
-import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceResponse;
 import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.ssm.patchbaseline.utils.TagUtils;
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.collections.MapUtils;
-import com.google.common.collect.Maps;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.HashMap;
 
 public class TagHelper {
     public static final String NO_DUPLICATE_TAGS = "Duplicate TagKeys are not permitted.";
@@ -30,8 +31,6 @@ public class TagHelper {
     public static final String TAG_KEY_NULL = "TagKey cannot be null.";
     public static final String TAG_NULL = "Tag cannot be null.";
     public static final String SYSTEM_TAG_PREFIX = "aws:";
-    public static final String TAG_KEY_PROPERTY = "Key";
-    public static final String TAG_VALUE_PROPERTY = "Value";
 
     /**
      * Validates and merges tags from desiredResourceTags, CloudFormation System Tags and ResourceModel Tags
@@ -108,6 +107,10 @@ public class TagHelper {
                                       String ssmResourceType,
                                       SsmClient ssmClient,
                                       final AmazonWebServicesClientProxy proxy) {
+        if (request.getDesiredResourceState() == null) {
+            return ;
+        }
+        // model is not null
         ResourceModel model = request.getDesiredResourceState();
         String baselineId = model.getId();
 
@@ -221,7 +224,4 @@ public class TagHelper {
 
         return tagSet;
     }
-
-
-
 }
