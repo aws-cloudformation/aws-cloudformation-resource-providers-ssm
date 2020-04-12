@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGr
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
 import software.amazon.ssm.patchbaseline.translator.request.CreatePatchBaselineRequestTranslator;
 import software.amazon.ssm.patchbaseline.translator.resourcemodel.ResourceModelPropertyTranslator;
-
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
@@ -63,7 +62,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             ResourceModelPropertyTranslator.translateToResourceModelTags(createTags).ifPresent(model::setTags);
 
             CreatePatchBaselineRequest createPatchBaselineRequest =
-                    CreatePatchBaselineRequestTranslator.createPatchBaseline(model, request, logger);
+                    CreatePatchBaselineRequestTranslator.createPatchBaseline(model, request.getClientRequestToken());
 
             // systemTags
             Map<String, String> systemTags = request.getSystemTags();

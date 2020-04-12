@@ -10,20 +10,17 @@ import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
 public class CreatePatchBaselineRequestTranslator {
 
     public static CreatePatchBaselineRequest createPatchBaseline(final ResourceModel model,
-                                                           final ResourceHandlerRequest<ResourceModel> request,
-                                                           final Logger logger) {
+                                                           final String clientRequestToken) {
         final CreatePatchBaselineRequest.Builder createPatchBaselineRequestBuilder =
                 CreatePatchBaselineRequest.builder()
-                        .approvedPatchesEnableNonSecurity(model.getApprovedPatchesEnableNonSecurity());
+                        .approvedPatchesEnableNonSecurity(model.getApprovedPatchesEnableNonSecurity())
+                        .clientToken(clientRequestToken);
 
         SimpleTypeValidator.getValidatedString(model.getName())
                 .ifPresent(createPatchBaselineRequestBuilder::name);
 
         SimpleTypeValidator.getValidatedString(model.getDescription())
                 .ifPresent(createPatchBaselineRequestBuilder::description);
-
-        SimpleTypeValidator.getValidatedString(request.getClientRequestToken())
-                .ifPresent(createPatchBaselineRequestBuilder::clientToken);
 
         SimpleTypeValidator.getValidatedString(model.getOperatingSystem())
                 .ifPresent(createPatchBaselineRequestBuilder::operatingSystem);

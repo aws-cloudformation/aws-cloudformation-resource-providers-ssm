@@ -28,10 +28,10 @@ import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
-import static software.amazon.ssm.patchbaseline.TagHelper.NO_DUPLICATE_TAGS;
-import static software.amazon.ssm.patchbaseline.TagHelper.NO_SYSTEM_TAGS;
-import static software.amazon.ssm.patchbaseline.TagHelper.TAG_NULL;
-import static software.amazon.ssm.patchbaseline.TagHelper.TAG_KEY_NULL;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_DUPLICATE_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_SYSTEM_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_KEY_NULL;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_NULL;
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
 
 import java.util.List;

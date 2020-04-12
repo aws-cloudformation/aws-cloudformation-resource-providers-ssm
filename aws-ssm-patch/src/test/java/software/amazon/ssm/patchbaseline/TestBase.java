@@ -1,20 +1,30 @@
 package software.amazon.ssm.patchbaseline;
 
 import com.amazonaws.AmazonServiceException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.TestInstance;
-import software.amazon.awssdk.services.ssm.model.*;
+import software.amazon.awssdk.services.ssm.model.PatchRule;
+import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.awssdk.services.ssm.model.PatchAction;
-import software.amazon.cloudformation.proxy.*;
+import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.awssdk.services.ssm.SsmClient;
-
-import org.mockito.Mock;
-import java.util.*;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.TestInstance;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestBase {
@@ -168,6 +178,11 @@ public class TestBase {
                 .patchRules(Collections.singletonList(patchRule))
                 .build();
         return approvalRules;
+    }
+
+    protected List<Tag> requesttags(String key, String value) {
+        Tag tag = Tag.builder().key(key).value(value).build();
+        return Collections.singletonList(tag);
     }
 
     protected List<PatchSource> requestsources() {

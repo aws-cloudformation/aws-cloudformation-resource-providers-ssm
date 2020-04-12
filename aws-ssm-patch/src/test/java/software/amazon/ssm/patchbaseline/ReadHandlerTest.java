@@ -20,13 +20,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.mockito.ArgumentMatchers;
 
 import java.util.List;
 import java.util.function.Function;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest extends TestBase {

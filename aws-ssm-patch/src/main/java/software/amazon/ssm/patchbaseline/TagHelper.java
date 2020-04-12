@@ -13,6 +13,10 @@ import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.ssm.patchbaseline.utils.TagUtils;
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_DUPLICATE_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_SYSTEM_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_KEY_NULL;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_NULL;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.collections.MapUtils;
@@ -25,11 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class TagHelper {
-    public static final String NO_DUPLICATE_TAGS = "Duplicate TagKeys are not permitted.";
-    public static final String NO_SYSTEM_TAGS = "One or more tag keys uses the system tag prefix 'aws:'. "
-            + "Tag keys with this prefix are for AWS internal use only.";
-    public static final String TAG_KEY_NULL = "TagKey cannot be null.";
-    public static final String TAG_NULL = "Tag cannot be null.";
+
     public static final String SYSTEM_TAG_PREFIX = "aws:";
 
     /**

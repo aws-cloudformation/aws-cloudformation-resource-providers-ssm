@@ -1,12 +1,19 @@
 package software.amazon.ssm.patchbaseline;
 
-import software.amazon.awssdk.services.ssm.model.*;
+import software.amazon.awssdk.services.ssm.model.DeletePatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.DeletePatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupResponse;
 import software.amazon.awssdk.services.ssm.model.ResourceInUseException;
+import software.amazon.awssdk.services.ssm.model.DoesNotExistException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +28,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static software.amazon.ssm.patchbaseline.TestConstants.*;
 import java.util.function.Function;
 
 @ExtendWith(MockitoExtension.class)

@@ -1,18 +1,26 @@
 package software.amazon.ssm.patchbaseline;
 
-import org.junit.jupiter.api.AfterAll;
-import org.mockito.ArgumentCaptor;
-import software.amazon.awssdk.services.ssm.model.*;
+import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.awssdk.services.ssm.model.PatchAction;
+import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
+import software.amazon.awssdk.services.ssm.model.PatchRule;
 import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.awssdk.services.ssm.model.AlreadyExistsException;
+import software.amazon.awssdk.services.ssm.model.ResourceLimitExceededException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,10 +29,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.atLeastOnce;
 import org.mockito.ArgumentMatchers;
-import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
-import static software.amazon.ssm.patchbaseline.TestConstants.*;
+import org.mockito.ArgumentCaptor;
 
 import java.util.function.Function;
 import java.util.ArrayList;
