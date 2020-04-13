@@ -1,5 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
+import org.mockito.InjectMocks;
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
@@ -14,7 +15,6 @@ import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.services.ssm.model.AlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.ResourceLimitExceededException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -38,6 +38,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import org.mockito.ArgumentMatchers;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Arrays;
 import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,26 +49,27 @@ import java.util.List;
  */
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest extends TestBase {
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
 
-    private CreateHandler createHandler;
     private CreatePatchBaselineRequest createPatchBaselineRequest;
     private CreatePatchBaselineRequest createPatchBaselineRequestMissingName;
     private CreatePatchBaselineRequest.Builder createPatchBaselineRequestBuilder;
     private CreatePatchBaselineResponse createPatchBaselineResponse;
     private RegisterPatchBaselineForPatchGroupResponse registerResponse;
+    private List<Tag> tagsList;
+
+
+    @InjectMocks
+    private CreateHandler createHandler;
+    @Mock
+    private TagHelper mockTagHelper;
+    @Mock
+    private AmazonWebServicesClientProxy proxy;
     @Mock
     private Resource resource;
 
+
     @BeforeEach
     public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-        resource = mock(Resource.class);
-
-        createHandler = new CreateHandler();
-
         // This mountain of code is the manual creation of the request in testCreateSuccess.json
         // We pass the one read from the .json and verify it is the same as this one
         //  ensuring the reading process doesn't change any data.
@@ -104,16 +106,11 @@ public class CreateHandlerTest extends TestBase {
                 .products(Collections.singletonList("Ubuntu14.04"))
                 .configuration("deb http://example.com distro universe")
                 .build();
-        List<PatchSource> sourcesList = new ArrayList<>();
-        sourcesList.add(ps1);
-        sourcesList.add(ps2);
+        List<PatchSource> sourcesList = new ArrayList<>(Arrays.asList(ps1, ps2));
         Tag tag1 = Tag.builder().key(CFN_KEY).value(CFN_VALUE).build();
         Tag tag2 = Tag.builder().key(TAG_KEY).value(TAG_VALUE).build();
         Tag tag3 = Tag.builder().key(SYSTEM_TAG_KEY).value(BASELINE_NAME).build();
-        List<Tag> tagsList = new ArrayList<>();
-        tagsList.add(tag1);
-        tagsList.add(tag2);
-        tagsList.add(tag3);
+        tagsList = new ArrayList<>(Arrays.asList(tag1, tag2, tag3));
 
         createPatchBaselineRequestBuilder =
                 CreatePatchBaselineRequest.builder()
@@ -140,11 +137,13 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testSuccess() {
-        createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
+        // set up request
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
 
-       when(proxy.injectCredentialsAndInvokeV2(eq(createPatchBaselineRequest),
-                ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any()))
-                .thenReturn(createPatchBaselineResponse);
+        mockValidateAndMergeTagsForCreate_Success(request);
+        mockInvokeCreatePatchBaseline_Success();
+
+        //mock registerPatchBaselineForPatchGroup
         for (String group : PATCH_GROUPS) {
             when(proxy.injectCredentialsAndInvokeV2(
                     eq(buildRegisterGroupRequest(createPatchBaselineResponse.baselineId(), group)),
@@ -152,8 +151,6 @@ public class CreateHandlerTest extends TestBase {
         }
 
         //Invoke the handler
-        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
-
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = createHandler.handleRequest(proxy, request, null, logger);
 
@@ -177,10 +174,15 @@ public class CreateHandlerTest extends TestBase {
         verifyZeroInteractions(resource);
     }
 
+
     @Test
     public void testMissingFieldInRequest() {
-        createPatchBaselineRequestMissingName = createPatchBaselineRequestBuilder.build();
 
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
+
+        mockValidateAndMergeTagsForCreate_Success(request);
+
+        createPatchBaselineRequestMissingName = createPatchBaselineRequestBuilder.build();
         when(proxy.injectCredentialsAndInvokeV2(
                 eq(createPatchBaselineRequestMissingName),
                 ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any())).thenThrow(exception400);
@@ -191,7 +193,6 @@ public class CreateHandlerTest extends TestBase {
         //  to verify the handlers error-catching behavior.
         ArgumentCaptor<CreatePatchBaselineRequest> captor = ArgumentCaptor.forClass(CreatePatchBaselineRequest.class);
 
-        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         request.getDesiredResourceState().setName(null);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -204,6 +205,7 @@ public class CreateHandlerTest extends TestBase {
 
         final List<CreatePatchBaselineRequest> capturedValues = typeCheckedValues(captor.getAllValues(), CreatePatchBaselineRequest.class);
         assertThat(capturedValues.size()).isEqualTo(1);
+
         final CreatePatchBaselineRequest actualCreatePatchBaselineRequest = capturedValues.get(0);
 
         verify(proxy, never()).injectCredentialsAndInvokeV2(
@@ -221,14 +223,17 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testResourceLimitsExceeded() {
-        createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
 
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
+
+        mockValidateAndMergeTagsForCreate_Success(request);
+
+        createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
         when(proxy.injectCredentialsAndInvokeV2(
                 eq(createPatchBaselineRequest),
                 ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any())).thenThrow(ResourceLimitExceededException.builder().message("limit exceeded").build());
 
         //We want to verify that the create handler sends the appropriate response when the user has too many baselines
-        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = createHandler.handleRequest(proxy, request, null, logger);
 
@@ -251,6 +256,10 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testGroupAlreadyRegistered() {
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
+
+        mockValidateAndMergeTagsForCreate_Success(request);
+
         createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
 
         when(proxy.injectCredentialsAndInvokeV2(
@@ -258,7 +267,6 @@ public class CreateHandlerTest extends TestBase {
                 ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any())).thenThrow(AlreadyExistsException.builder().message("already registered!").build());
 
         //We want to verify the handlers response to when there is already a baseline registered to a specific group.
-        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = createHandler.handleRequest(proxy, request, null, logger);
 
@@ -281,15 +289,14 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testTooManyPatchGroups() {
-        createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
 
-        when(proxy.injectCredentialsAndInvokeV2(
-                eq(createPatchBaselineRequest),
-                ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any())).thenReturn(createPatchBaselineResponse);
+        mockValidateAndMergeTagsForCreate_Success(request);
+        mockInvokeCreatePatchBaseline_Success();
+
         when(proxy.injectCredentialsAndInvokeV2(
                 any(RegisterPatchBaselineForPatchGroupRequest.class), any())).thenThrow(ResourceLimitExceededException.builder().message("Too many patch groups!").build());;
 
-        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = createHandler.handleRequest(proxy, request, null, logger);
 
@@ -316,15 +323,18 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testServerError() {
-        createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
 
+        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
+
+        mockValidateAndMergeTagsForCreate_Success(request);
+
+        createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
         when(proxy.injectCredentialsAndInvokeV2(
                 eq(createPatchBaselineRequest),
                 ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any())).thenThrow(exception500);
 
 
         // verify the handlers response when SSM returns a 5xx error.
-        ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = createHandler.handleRequest(proxy, request, null, logger);
 
@@ -347,9 +357,7 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testSsmCfnClientSideException() {
-        TagHelper cfnTagHelper = mock(TagHelper.class);
-        createHandler = new CreateHandler(cfnTagHelper);
-        when(cfnTagHelper.validateAndMergeTagsForCreate(any(), any())).thenThrow(new SsmCfnClientSideException("Bad data"));
+        when(mockTagHelper.validateAndMergeTagsForCreate(any(), any())).thenThrow(new SsmCfnClientSideException("Bad data"));
 
         ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -365,6 +373,22 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getResourceModels()).isNull();
         assert (response.getMessage().contains("Bad data"));
     }
+
+
+    private void mockInvokeCreatePatchBaseline_Success() {
+        //mock createPatchBaseline
+        createPatchBaselineRequest = createPatchBaselineRequestBuilder.name(BASELINE_NAME).build();
+        when(proxy.injectCredentialsAndInvokeV2(eq(createPatchBaselineRequest),
+                ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any()))
+                .thenReturn(createPatchBaselineResponse);
+    }
+
+    private void mockValidateAndMergeTagsForCreate_Success(ResourceHandlerRequest<ResourceModel> request) {
+        //mock validateAndMergeTagsForCreate
+        when(mockTagHelper.validateAndMergeTagsForCreate(request, request.getDesiredResourceState().getTags()))
+                .thenReturn(tagsList);
+    }
+
 
     private static <T> List<T> typeCheckedValues(List<T> values, Class<T> clazz) {
         final List<T> typeCheckedValues = new ArrayList<>();

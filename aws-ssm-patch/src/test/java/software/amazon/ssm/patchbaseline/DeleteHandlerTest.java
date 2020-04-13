@@ -1,5 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
+import org.mockito.InjectMocks;
 import software.amazon.awssdk.services.ssm.model.DeletePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.DeletePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
@@ -33,26 +34,21 @@ import java.util.function.Function;
 @ExtendWith(MockitoExtension.class)
 public class DeleteHandlerTest extends TestBase{
 
-    private DeleteHandler deleteHandler;
     private DeletePatchBaselineRequest deletePatchBaselineRequest;
     private GetPatchBaselineRequest getPatchBaselineRequest;
     private GetPatchBaselineResponse getPatchBaselineResponse;
     private DeletePatchBaselineResponse deletePatchBaselineResponse;
     private DeregisterPatchBaselineForPatchGroupResponse deregisterResponse;
 
+    @InjectMocks
+    private DeleteHandler deleteHandler;
     @Mock
     private AmazonWebServicesClientProxy proxy;
-
     @Mock
     private Resource resource;
 
     @BeforeEach
     public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        resource = mock(Resource.class);
-
-        deleteHandler = new DeleteHandler();
-
         deletePatchBaselineRequest =  DeletePatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         deletePatchBaselineResponse =  DeletePatchBaselineResponse.builder().baselineId(BASELINE_ID).build();
         getPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(BASELINE_ID).patchGroups(PATCH_GROUPS).build();

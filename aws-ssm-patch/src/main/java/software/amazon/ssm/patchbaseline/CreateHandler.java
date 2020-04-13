@@ -34,7 +34,6 @@ import java.util.Map;
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient ssmClient = SsmClientBuilder.getClient();
-
     private TagHelper tagHelper;
 
     @Override
@@ -72,12 +71,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             // This is not in the definition for a baseline object but we must receive it from CFN
             // Register the groups for this Patch Baseline
-            // List<String> patchGroups = (List<String>) model.getPatchGroups();
-            // List<String> patchGroups = Collections.emptyList();
-            List<String> patchGroups = new ArrayList<>();
-            if (! CollectionUtils.isNullOrEmpty(model.getPatchGroups())) {
-                patchGroups = model.getPatchGroups();
-            }
+            List<String> patchGroups = CollectionUtils.isNullOrEmpty(model.getPatchGroups()) ? new ArrayList<>() : model.getPatchGroups();
 
             for (String group : patchGroups) {
                 //Each group needs its own Register call

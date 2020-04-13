@@ -40,10 +40,8 @@ public class UpdateHandlerTest extends TestBase{
 
     @InjectMocks
     private UpdateHandler updateHandler;
-
     @Mock
     private TagHelper mockTagHelper;
-
     @Mock
     private AmazonWebServicesClientProxy proxy;
 

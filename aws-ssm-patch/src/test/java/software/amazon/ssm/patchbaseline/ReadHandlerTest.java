@@ -1,5 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
+import org.mockito.InjectMocks;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -29,22 +30,18 @@ import java.util.function.Function;
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest extends TestBase {
 
-    private ReadHandler readHandler;
     private GetPatchBaselineRequest getPatchBaselineRequest;
     private GetPatchBaselineResponse getPatchBaselineResponse;
 
+    @InjectMocks
+    private ReadHandler readHandler;
     @Mock
     private AmazonWebServicesClientProxy proxy;
-
     @Mock
     private Resource resource;
 
     @BeforeEach
-    public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        resource = mock(Resource.class);
-        readHandler = new ReadHandler();
-    }
+    public void setup() { }
 
     @Test
     public void testSuccess() {

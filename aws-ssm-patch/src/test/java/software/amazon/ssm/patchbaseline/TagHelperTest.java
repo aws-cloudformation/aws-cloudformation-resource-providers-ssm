@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,25 +47,21 @@ import java.util.Comparator;
 @ExtendWith(MockitoExtension.class)
 public class TagHelperTest extends TestBase{
 
-    private SimpleTypeValidator simpleTypeValidator;
-
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
-
-    private TagHelper cfnTagHelper;
-
     private static final String TEST_RESOURCE_TYPE = "AResource";
     private static final String TEST_RESOURCE_ID = "pb-123";
     private ListTagsForResourceRequest listTagsForResourceRequest;
     private ListTagsForResourceResponse listTagsForResourceResponse;
 
+    private SimpleTypeValidator simpleTypeValidator;
+
+    @InjectMocks
+    private TagHelper cfnTagHelper;
+    @Mock
+    private AmazonWebServicesClientProxy proxy;
+
     @BeforeEach
     void setUp() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-        ssmClient = mock(SsmClient.class);
         simpleTypeValidator = new SimpleTypeValidator();
-        cfnTagHelper = new TagHelper();
     }
 
     @Test
