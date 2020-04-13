@@ -1,75 +1,109 @@
 {
-  "awsAccountId": "872023530462",
-  "region": "us-west-2",
-  "desiredResourceState": {
-    "Name": "ubuntu",
-    "Description": "pb for ubuntu",
-    "OperatingSystem": "UBUNTU",
-    "ApprovalRules": {
-      "PatchRules": [
-        {
-          "PatchFilterGroup": {
-            "PatchFilters": [
-              {
-                "Key": "PRODUCT",
-                "Values": [
-                  "Ubuntu16.04"
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "1b1de70d-6a42-406a-b104-d703f870225d": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 248,
+          "y": 85
+        },
+        "z": 0
+      }
+    }
+  },
+  "Resources": {
+    "myPatchBaseline": {
+      "Type": "AWS::SSM::PatchBaseline",
+      "Properties": {
+        "Name": "myPatchBaseline",
+        "Description": "Baseline containing all updates approved for Windows instances",
+        "OperatingSystem": "WINDOWS",
+        "PatchGroups": [
+          "myPatchGroup"
+        ],
+        "ApprovalRules": {
+          "PatchRules": [
+            {
+              "PatchFilterGroup": {
+                "PatchFilters": [
+                  {
+                    "Values": [
+                      "Critical",
+                      "Important",
+                      "Moderate"
+                    ],
+                    "Key": "MSRC_SEVERITY"
+                  },
+                  {
+                    "Values": [
+                      "SecurityUpdates",
+                      "CriticalUpdates"
+                    ],
+                    "Key": "CLASSIFICATION"
+                  },
+                  {
+                    "Values": [
+                      "WindowsServer2019"
+                    ],
+                    "Key": "PRODUCT"
+                  }
                 ]
               },
-              {
-                "Key": "SECTION",
-                "Values": [
-                  "python"
+              "ApproveAfterDays": 7,
+              "ComplianceLevel": "CRITICAL"
+            },
+            {
+              "PatchFilterGroup": {
+                "PatchFilters": [
+                  {
+                    "Values": [
+                      "Critical",
+                      "Important",
+                      "Moderate"
+                    ],
+                    "Key": "MSRC_SEVERITY"
+                  },
+                  {
+                    "Values": [
+                      "*"
+                    ],
+                    "Key": "CLASSIFICATION"
+                  },
+                  {
+                    "Values": [
+                      "APPLICATION"
+                    ],
+                    "Key": "PATCH_SET"
+                  },
+                  {
+                    "Values": [
+                      "Active Directory Rights Management Services Client 2.0"
+                    ],
+                    "Key": "PRODUCT"
+                  },
+                  {
+                    "Values": [
+                      "Active Directory"
+                    ],
+                    "Key": "PRODUCT_FAMILY"
+                  }
                 ]
-              }
-            ]
-          },
-          "EnableNonSecurity" : true,
-          "ApproveAfterDays": 10,
-          "ComplianceLevel": "HIGH"
+              },
+              "ApproveAfterDays": 7,
+              "ComplianceLevel": "CRITICAL"
+            }
+          ]
         }
-      ]
-    },
-    "ApprovedPatches": [
-      "curl",
-      "apache"
-    ],
-    "ApprovedPatchesComplianceLevel": "CRITICAL",
-    "ApprovedPatchesEnableNonSecurity": true,
-    "RejectedPatches": [
-      "something-bad"
-    ],
-    "RejectedPatchesAction": "BLOCK",
-    "PatchGroups": [
-      "mypatch",
-      "icecream"
-    ],
-    "Sources" : [
-      {
-        "Products" : [ "*" ],
-        "Name" : "main",
-        "Configuration" : "deb http://example.com distro component"
       },
-      {
-        "Products" : [ "Ubuntu14.04" ],
-        "Name" : "universe",
-        "Configuration" : "deb http://example.com distro universe"
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "1b1de70d-6a42-406a-b104-d703f870225d"
+        }
       }
-    ],
-    "Tags" : [
-      {
-        "Key" : "stage",
-        "Value" : "Gamma"
-      }
-    ]
-  },
-  "desiredResourceTags" :
-    {
-      "Key" : "stage",
-      "Value" : "Gamma"
-    },
-  "systemTags" :
-  {
-    "cfnKey" : "cfnValue"
+    }
   }
 }

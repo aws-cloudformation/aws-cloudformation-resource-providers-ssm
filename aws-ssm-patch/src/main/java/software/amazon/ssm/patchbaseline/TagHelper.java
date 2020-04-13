@@ -4,34 +4,33 @@ import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.Tag;
-import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceResponse;
 import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.ssm.patchbaseline.utils.TagUtils;
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_DUPLICATE_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_SYSTEM_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_KEY_NULL;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_NULL;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.collections.MapUtils;
-import com.google.common.collect.Maps;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.HashMap;
 
 public class TagHelper {
-    public static final String NO_DUPLICATE_TAGS = "Duplicate TagKeys are not permitted.";
-    public static final String NO_SYSTEM_TAGS = "One or more tag keys uses the system tag prefix 'aws:'. "
-            + "Tag keys with this prefix are for AWS internal use only.";
-    public static final String TAG_KEY_NULL = "TagKey cannot be null.";
-    public static final String TAG_NULL = "Tag cannot be null.";
+
     public static final String SYSTEM_TAG_PREFIX = "aws:";
-    public static final String TAG_KEY_PROPERTY = "Key";
-    public static final String TAG_VALUE_PROPERTY = "Value";
 
     /**
      * Validates and merges tags from desiredResourceTags, CloudFormation System Tags and ResourceModel Tags
@@ -108,10 +107,18 @@ public class TagHelper {
                                       String ssmResourceType,
                                       SsmClient ssmClient,
                                       final AmazonWebServicesClientProxy proxy) {
+        if (request.getDesiredResourceState() == null) {
+            return ;
+        }
+        // model is not null
         ResourceModel model = request.getDesiredResourceState();
         String baselineId = model.getId();
 
         List<Tag> newTags = validateAndMergeTagsForCreate(request, request.getDesiredResourceState().getTags());
+
+        for (Tag tag : newTags)
+            System.out.print(String.format("TagHelper validateAndMergeTagsForCreate tag key %s, tag value %s %n", tag.key(), tag.value()));
+
         ListTagsForResourceRequest listTagsForResourceRequest = ListTagsForResourceRequest.builder()
                                                                         .resourceType(ssmResourceType)
                                                                         .resourceId(baselineId)
@@ -129,6 +136,11 @@ public class TagHelper {
 
         Map<String, String> newTagsMap = convertRequestTagsToMap(newTags);
         Map<String, String> oldTagsMap = convertRequestTagsToMap(oldTags);
+
+        for (String key : newTagsMap.keySet())
+            System.out.print(String.format("newTagsMap key %s, value %s %n", key, newTagsMap.get(key)));
+        for (String key : oldTagsMap.keySet())
+            System.out.print(String.format("oldTagsMap key %s, value %s %n", key, oldTagsMap.get(key)));
 
         Map<String, String> tagsToRemove = TagUtils.getTagsToDelete(newTagsMap, oldTagsMap);
         Map<String, String> tagsToAdd = TagUtils.getTagsToCreate(newTagsMap, oldTagsMap);
@@ -212,7 +224,4 @@ public class TagHelper {
 
         return tagSet;
     }
-
-
-
 }

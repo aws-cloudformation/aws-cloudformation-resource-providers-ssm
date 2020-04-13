@@ -2,6 +2,7 @@ package software.amazon.ssm.patchbaseline.utils;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,11 +21,11 @@ public class TagUtils {
                                                       final Map<String, String> systemTags,
                                                       final Map<String, String> tags) {
         Map<String, String> consolidatedTags = Maps.newHashMap();
-        if (desiredResourceTags != null)
-            consolidatedTags.putAll(desiredResourceTags);
-        if (systemTags != null)
-            consolidatedTags.putAll(systemTags); //This will overwrite tags with same keys but different values.
-        if (tags != null)
+        if (!CollectionUtils.isNullOrEmpty(systemTags))
+            consolidatedTags.putAll(systemTags);
+        if (!CollectionUtils.isNullOrEmpty(desiredResourceTags))
+            consolidatedTags.putAll(desiredResourceTags); //This will overwrite tags with same keys but different values.
+        if (!CollectionUtils.isNullOrEmpty(tags))
             consolidatedTags.putAll(tags); //This will overwrite tags with same keys but different values.
         return consolidatedTags;
     }

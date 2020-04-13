@@ -1,27 +1,32 @@
 package software.amazon.ssm.patchbaseline;
 
 import com.amazonaws.AmazonServiceException;
-import org.junit.jupiter.api.BeforeEach;
-import software.amazon.cloudformation.proxy.*;
-import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
-import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.PatchRule;
 import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
-
-
-
+import software.amazon.awssdk.services.ssm.model.PatchAction;
+import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.awssdk.services.ssm.SsmClient;
-
-import org.mockito.Mock;
-
-import java.util.*;
-
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.TestInstance;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestBase {
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -77,7 +82,8 @@ public class TestBase {
         ResourceModel updatedModel = buildDefaultInputModel(updatedTags, sources, globalFilters, approvalRules,
                                                 BASELINE_ID, UPDATED_BASELINE_NAME, OPERATING_SYSTEM, UPDATED_BASELINE_DESC,
                                                 UPDATED_REJECTED_PATCHES, getPatchActionString(PatchAction.ALLOW_AS_DEPENDENCY),
-                                                UPDATED_ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.MEDIUM), UPDATED_PATCH_GROUPS);
+                                                UPDATED_ACCEPTED_PATCHES, getComplianceString(ComplianceLevel.MEDIUM),
+                                                new ArrayList<String>(UPDATED_PATCH_GROUPS));
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceTags(updatedDesiredResourceTagsMap)
@@ -172,6 +178,11 @@ public class TestBase {
                 .patchRules(Collections.singletonList(patchRule))
                 .build();
         return approvalRules;
+    }
+
+    protected List<Tag> requesttags(String key, String value) {
+        Tag tag = Tag.builder().key(key).value(value).build();
+        return Collections.singletonList(tag);
     }
 
     protected List<PatchSource> requestsources() {
@@ -269,10 +280,10 @@ public class TestBase {
         }
     }
 
-//    @AfterAll
-//    public void tearDown() {
-//        verifyNoMoreInteractions(proxy);
-//    }
+    @AfterAll
+    public void tearDown() {
+        verifyNoMoreInteractions(proxy);
+    }
 
     protected final static AmazonServiceException exception500 = new AmazonServiceException("Server error");
     protected final static AmazonServiceException exception400 = new AmazonServiceException("Client error");
@@ -282,9 +293,5 @@ public class TestBase {
         exception500.setStatusCode(500);
         exception400.setStatusCode(400);
     }
-
-
-
-
 
 }
