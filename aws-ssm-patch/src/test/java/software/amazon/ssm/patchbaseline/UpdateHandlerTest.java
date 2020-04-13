@@ -1,6 +1,7 @@
 package software.amazon.ssm.patchbaseline;
 
 import org.mockito.*;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.awssdk.services.ssm.model.Tag;
@@ -38,10 +39,13 @@ import static org.mockito.Mockito.verify;
 public class UpdateHandlerTest extends TestBase{
 
     @InjectMocks
-    UpdateHandler updateHandler;
+    private UpdateHandler updateHandler;
 
     @Mock
     private TagHelper mockTagHelper;
+
+    @Mock
+    private AmazonWebServicesClientProxy proxy;
 
     private UpdatePatchBaselineRequest mockUpdatePatchBaselineRequest;
     private GetPatchBaselineRequest mockGetPatchBaselineRequest;
@@ -50,30 +54,29 @@ public class UpdateHandlerTest extends TestBase{
     private RegisterPatchBaselineForPatchGroupResponse mockRegisterGroupResponse;
     private DeregisterPatchBaselineForPatchGroupResponse mockDeregisterGroupResponse;
 
-    @BeforeEach
-    public void setup() {
-
+    public void setupSuccessMocks() {
+        proxy = mock(AmazonWebServicesClientProxy.class);
         //set up mock for UpdatePatchBaseline
         mockUpdatePatchBaselineRequest = setUpExpectedUpdatePatchBaselineRequest();
         mockUpdatePatchBaselineResponse = UpdatePatchBaselineResponse.builder().baselineId(BASELINE_ID).build();
-        when(mockProxy.injectCredentialsAndInvokeV2 (
+        when(proxy.injectCredentialsAndInvokeV2 (
             eq(mockUpdatePatchBaselineRequest), ArgumentMatchers.<Function<UpdatePatchBaselineRequest,UpdatePatchBaselineResponse>>any()))
         .thenReturn(mockUpdatePatchBaselineResponse);
 
         //set up mock for GetPatchBaseline
         mockGetPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         mockGetPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(BASELINE_ID).patchGroups(PATCH_GROUPS).build();
-        when(mockProxy.injectCredentialsAndInvokeV2(
+        when(proxy.injectCredentialsAndInvokeV2(
             eq(mockGetPatchBaselineRequest), ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
         .thenReturn(mockGetPatchBaselineResponse);
 
         //set up mock for RegisterGroup
-        when(mockProxy.injectCredentialsAndInvokeV2(
+        when(proxy.injectCredentialsAndInvokeV2(
             any(RegisterPatchBaselineForPatchGroupRequest.class), ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any()))
         .thenReturn(mockRegisterGroupResponse);
 
         //set up mock for DeregisterGroup
-        when(mockProxy.injectCredentialsAndInvokeV2(
+        when(proxy.injectCredentialsAndInvokeV2(
             any(DeregisterPatchBaselineForPatchGroupRequest.class), ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any()))
         .thenReturn(mockDeregisterGroupResponse);
 
@@ -85,57 +88,40 @@ public class UpdateHandlerTest extends TestBase{
     }
 
     @Test
-    public void testUpdateHandler_failure(){
-        ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
-
-    when(mockTagHelper).updateTagsForResource(
-                ArgumentMatchers.<ResourceHandlerRequest<ResourceModel>>any(), any(String.class), any(SsmClient.class), any(AmazonWebServicesClientProxy.class))
-            .thenthrow(new Exception());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = updateHandler.handleRequest(mockProxy, null, null, mockLogger);
-
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getPreviousResourceState());
-        assertThat(response.getResourceModel()).isNotEqualTo(request.getDesiredResourceState());
-    }
-
-
-    @Test
     public void testUpdateHandler_success(){
+        setupSuccessMocks();
+
         //Invoke updateHandler
         ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = updateHandler.handleRequest(mockProxy, request, null, mockLogger);
+                = updateHandler.handleRequest(proxy, request, null, logger);
 
-        verify(mockProxy).injectCredentialsAndInvokeV2(
-            eq(mockUpdatePatchBaselineRequest),
-            ArgumentMatchers.<Function<UpdatePatchBaselineRequest, UpdatePatchBaselineResponse>>any());
+        verify(proxy).injectCredentialsAndInvokeV2(
+                eq(mockUpdatePatchBaselineRequest),
+                ArgumentMatchers.<Function<UpdatePatchBaselineRequest, UpdatePatchBaselineResponse>>any());
 
-        verify(mockProxy).injectCredentialsAndInvokeV2(
-            eq(mockGetPatchBaselineRequest),
-            ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any());
+        verify(proxy).injectCredentialsAndInvokeV2(
+                eq(mockGetPatchBaselineRequest),
+                ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any());
 
 
         List<String> expectedOriginalGroups = new ArrayList<>(Arrays.asList("icecream"));
         List<String> expectedNewGroups = new ArrayList<>(Arrays.asList("foo", "baz"));
 
         for (String group : expectedOriginalGroups) {
-            verify(mockProxy)
-                .injectCredentialsAndInvokeV2(
-                    eq(buildDeregisterGroupRequest(mockGetPatchBaselineResponse.baselineId(), group)),
-                    ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any());
+            verify(proxy)
+                    .injectCredentialsAndInvokeV2(
+                            eq(buildDeregisterGroupRequest(mockGetPatchBaselineResponse.baselineId(), group)),
+                            ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any());
         }
 
         for (String group : expectedNewGroups) {
             if (!TestConstants.PATCH_GROUPS.contains(group)) {
-                verify(mockProxy)
-                    .injectCredentialsAndInvokeV2(
-                        eq(buildRegisterGroupRequest(mockGetPatchBaselineResponse.baselineId(), group)),
-                        ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any());
+                verify(proxy)
+                        .injectCredentialsAndInvokeV2(
+                                eq(buildRegisterGroupRequest(mockGetPatchBaselineResponse.baselineId(), group)),
+                                ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any());
             }
         }
 
@@ -143,7 +129,7 @@ public class UpdateHandlerTest extends TestBase{
         verify(mockTagHelper).updateTagsForResource(
                 ArgumentMatchers.<ResourceHandlerRequest<ResourceModel>>any(), any(String.class), any(SsmClient.class), any(AmazonWebServicesClientProxy.class));
 
-                assertThat(response).isNotNull();
+        assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
@@ -154,6 +140,24 @@ public class UpdateHandlerTest extends TestBase{
     }
 
 
+    @Test
+    public void testUpdateHandler_failure(){
+        ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
+
+        mockUpdatePatchBaselineRequest = setUpExpectedUpdatePatchBaselineRequest();
+        when(proxy.injectCredentialsAndInvokeV2 (
+                eq(mockUpdatePatchBaselineRequest), ArgumentMatchers.<Function<UpdatePatchBaselineRequest,UpdatePatchBaselineResponse>>any()))
+                .thenThrow(AwsServiceException.class);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = updateHandler.handleRequest(proxy, request, null, logger);
+
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getResourceModel()).isEqualTo(request.getPreviousResourceState());
+        assertThat(response.getResourceModel()).isNotEqualTo(request.getDesiredResourceState());
+    }
 
     private UpdatePatchBaselineRequest setUpExpectedUpdatePatchBaselineRequest() {
         PatchFilter pf1 = PatchFilter.builder()

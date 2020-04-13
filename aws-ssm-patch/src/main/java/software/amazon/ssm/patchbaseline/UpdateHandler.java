@@ -66,9 +66,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
             List<String> originalGroups = new ArrayList<>(getPatchBaselineResponse.patchGroups());
 
-            for (String group : getPatchBaselineResponse.patchGroups())
-                System.out.print(String.format("INFO original patch groups %s %n", group));
-
             //Get the new/desired patch groups
             List<String> newGroups = CollectionUtils.isNullOrEmpty(model.getPatchGroups()) ? new ArrayList<>() : model.getPatchGroups();
 
@@ -83,9 +80,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
                 //Remove the old groups first
             for (String group : originalGroups) {
-
-                System.out.print(String.format("in Update Hander originalGroups with group %s %n", group));
-
                 DeregisterPatchBaselineForPatchGroupRequest deregisterRequest =
                          DeregisterPatchBaselineForPatchGroupRequest.builder()
                                     .baselineId(baselineId)
@@ -93,17 +87,12 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                                     .build();
                 DeregisterPatchBaselineForPatchGroupResponse deregisterResponse =
                         proxy.injectCredentialsAndInvokeV2(deregisterRequest, ssmClient::deregisterPatchBaselineForPatchGroup);
-
-                System.out.print(String.format("deregisterResponse baseline Id %s %n", deregisterResponse.baselineId()));
             }
             logger.log(String.format("INFO Deregistered old group(s) from patch baseline %s %n", getPatchBaselineResponse.baselineId()));
 
 
             //Add the new groups after
             for (String group : newGroups) {
-
-                System.out.print(String.format("in Update Hander new Groups with group %s %n", group));
-
                 RegisterPatchBaselineForPatchGroupRequest groupRequest =
                          RegisterPatchBaselineForPatchGroupRequest.builder()
                                     .baselineId(baselineId)
