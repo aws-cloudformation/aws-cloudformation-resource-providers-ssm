@@ -422,13 +422,6 @@ public class TagHelperTest extends TestBase{
         Collections.sort(expectedRemoveTags);
         List<String> actualRemoveTagsKeys = actualRemoveTags.tagKeys();
 
-        for (String key : actualRemoveTagsKeys) {
-            System.out.print(String.format("actualRemoveTagsKeys key %s %n", key));
-        }
-        for (String key : expectedRemoveTags) {
-            System.out.print(String.format("expectedRemoveTags key %s %n", key));
-        }
-
         List<String> actualRemoveTagsKeysConvertType = new ArrayList<>(actualRemoveTagsKeys);
         Collections.sort(actualRemoveTagsKeysConvertType);
         assertThat(expectedRemoveTags).isEqualTo(actualRemoveTagsKeysConvertType);
