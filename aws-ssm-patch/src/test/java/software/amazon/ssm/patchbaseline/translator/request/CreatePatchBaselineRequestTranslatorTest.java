@@ -29,14 +29,12 @@ import java.util.ArrayList;
 public class CreatePatchBaselineRequestTranslatorTest extends TestBase{
 
     private SimpleTypeValidator simpleTypeValidator;
-    private CreatePatchBaselineRequestTranslator createPatchBaselineRequestTranslator;
     private CreatePatchBaselineRequest createPatchBaselineRequest;
 
     @BeforeEach
     void setUp() {
         // not mocking out SimpleTypeValidator because of the simplicity of its logic
         simpleTypeValidator = new SimpleTypeValidator();
-        createPatchBaselineRequestTranslator = new CreatePatchBaselineRequestTranslator();
     }
 
     @Test
@@ -46,7 +44,7 @@ public class CreatePatchBaselineRequestTranslatorTest extends TestBase{
         ResourceModel model = request.getDesiredResourceState();
 
         createPatchBaselineRequest =
-                createPatchBaselineRequestTranslator.createPatchBaseline(model, TestConstants.CLIENT_REQUEST_TOKEN);
+                CreatePatchBaselineRequestTranslator.createPatchBaseline(model, TestConstants.CLIENT_REQUEST_TOKEN);
 
         PatchFilter pf1 = PatchFilter.builder()
                 .key("PRODUCT")
@@ -112,7 +110,7 @@ public class CreatePatchBaselineRequestTranslatorTest extends TestBase{
         ResourceModel model = ResourceModel.builder().name(BASELINE_NAME).build();
 
         createPatchBaselineRequest =
-                createPatchBaselineRequestTranslator.createPatchBaseline(model, null);
+                CreatePatchBaselineRequestTranslator.createPatchBaseline(model, null);
 
         CreatePatchBaselineRequest createPatchBaselineRequestExpected =
                 CreatePatchBaselineRequest.builder().name(BASELINE_NAME).build();
@@ -133,7 +131,7 @@ public class CreatePatchBaselineRequestTranslatorTest extends TestBase{
                 .build();
 
         createPatchBaselineRequest =
-                createPatchBaselineRequestTranslator.createPatchBaseline(model, null);
+                CreatePatchBaselineRequestTranslator.createPatchBaseline(model, null);
 
         CreatePatchBaselineRequest createPatchBaselineRequestExpected =
                 CreatePatchBaselineRequest.builder().name(BASELINE_NAME).build();
@@ -146,7 +144,7 @@ public class CreatePatchBaselineRequestTranslatorTest extends TestBase{
         ResourceModel model = ResourceModel.builder().build();
 
         createPatchBaselineRequest =
-                createPatchBaselineRequestTranslator.createPatchBaseline(model, null);
+                CreatePatchBaselineRequestTranslator.createPatchBaseline(model, null);
 
         CreatePatchBaselineRequest createPatchBaselineRequestExpected =
                 CreatePatchBaselineRequest.builder().build();

@@ -154,12 +154,8 @@ public class CreateHandlerTest extends TestBase {
         //Invoke the handler
         ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
 
-        System.out.print(String.format("Create Request getClientRequestToken %s %n", request.getClientRequestToken()));
-
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = createHandler.handleRequest(proxy, request, null, logger);
-
-        System.out.print(String.format("Create Handler Response Status %s %n", response.getStatus()));
 
         // need to check that the createPatchBaseline was invoked with the correct request made from the model
         verify(proxy)

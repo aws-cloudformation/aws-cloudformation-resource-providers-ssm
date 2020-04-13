@@ -22,21 +22,17 @@ public class ResourceTest {
     private ResourceModel model;
 
     @Mock
-    private Resource resource;
-    @Mock
     private Logger logger;
 
     @BeforeEach
     public void setup() {
-        resource = new Resource();
-        logger = mock(Logger.class);
         model = ResourceModel.builder().id(BASELINE_ID).build();
     }
 
     @Test
     public void testKnownNonretriableException() {
         ProgressEvent<ResourceModel, CallbackContext> response =
-                resource.handleException(new IllegalArgumentException(EXCEPTION_MESSAGE), model, BASELINE_ID, logger);
+                Resource.handleException(new IllegalArgumentException(EXCEPTION_MESSAGE), model, BASELINE_ID, logger);
 
         assertThat(response.getMessage()).isEqualTo(EXCEPTION_MESSAGE);
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
@@ -45,7 +41,7 @@ public class ResourceTest {
     @Test
     public void testUnknownException() {
         ProgressEvent<ResourceModel, CallbackContext> response =
-                resource.handleException(new RuntimeException(EXCEPTION_MESSAGE), model, BASELINE_ID, logger);
+                Resource.handleException(new RuntimeException(EXCEPTION_MESSAGE), model, BASELINE_ID, logger);
 
         assertThat(response.getMessage()).isEqualTo(EXCEPTION_MESSAGE);
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
@@ -58,7 +54,7 @@ public class ResourceTest {
         ex.setStatusCode(Resource.STATUS_CODE_400);
 
         ProgressEvent<ResourceModel, CallbackContext> response =
-                resource.handleException(ex, model, BASELINE_ID, logger);
+                Resource.handleException(ex, model, BASELINE_ID, logger);
 
         assertTrue(response.getMessage().contains(EXCEPTION_MESSAGE));
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
@@ -72,7 +68,7 @@ public class ResourceTest {
         ex.setErrorCode(Resource.RETRIABLE_400_ERROR_CODES.get(0));
 
         ProgressEvent<ResourceModel, CallbackContext> response =
-                resource.handleException(ex, model, BASELINE_ID, logger);
+                Resource.handleException(ex, model, BASELINE_ID, logger);
 
         assertTrue(response.getMessage().contains(EXCEPTION_MESSAGE));
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
@@ -84,7 +80,7 @@ public class ResourceTest {
         ex.setStatusCode(Resource.STATUS_CODE_500);
 
         ProgressEvent<ResourceModel, CallbackContext> response =
-                resource.handleException(ex, model, BASELINE_ID, logger);
+                Resource.handleException(ex, model, BASELINE_ID, logger);
 
         assertTrue(response.getMessage().contains(EXCEPTION_MESSAGE));
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);

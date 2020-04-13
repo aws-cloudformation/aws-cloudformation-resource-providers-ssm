@@ -23,33 +23,31 @@ import java.util.Optional;
 public class ResourceModelPropertyTranslatorTest extends TestBase {
 
     private SimpleTypeValidator simpleTypeValidator;
-    private ResourceModelPropertyTranslator resourceModelPropertyTranslator;
 
     @BeforeEach
     void setUp() {
         // not mocking out SimpleTypeValidator because of the simplicity of its logic
         simpleTypeValidator = new SimpleTypeValidator();
-        resourceModelPropertyTranslator = new ResourceModelPropertyTranslator();
     }
 
     @Test
     void testTranslateToRequestTags() {
         final List<Tag> expectedTags = requesttags(TAG_KEY, TAG_VALUE);
         List<software.amazon.ssm.patchbaseline.Tag> tags = tags(TAG_KEY, TAG_VALUE);
-        Optional<List<Tag>> requestTags = resourceModelPropertyTranslator.translateToRequestTags(tags);
+        Optional<List<Tag>> requestTags = ResourceModelPropertyTranslator.translateToRequestTags(tags);
         assertThat(requestTags).isEqualTo(Optional.of(expectedTags));
     }
 
     @Test
     void testTranslateToRequestTags_emptyList() {
         List<software.amazon.ssm.patchbaseline.Tag> tags = new ArrayList<>();
-        Optional<List<Tag>> requestTags = resourceModelPropertyTranslator.translateToRequestTags(tags);
+        Optional<List<Tag>> requestTags = ResourceModelPropertyTranslator.translateToRequestTags(tags);
         assertThat(requestTags).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToRequestTags_null() {
-        Optional<List<Tag>> requestTags = resourceModelPropertyTranslator.translateToRequestTags(null);
+        Optional<List<Tag>> requestTags = ResourceModelPropertyTranslator.translateToRequestTags(null);
         assertThat(requestTags).isEqualTo(Optional.empty());
     }
 
@@ -58,7 +56,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final List<Tag> tags = requesttags(TAG_KEY, TAG_VALUE);
         List<software.amazon.ssm.patchbaseline.Tag> expectedTags = tags(TAG_KEY, TAG_VALUE);
         Optional<List<software.amazon.ssm.patchbaseline.Tag>> resourceModelTags =
-                resourceModelPropertyTranslator.translateToResourceModelTags(tags);
+                ResourceModelPropertyTranslator.translateToResourceModelTags(tags);
         assertThat(resourceModelTags).isEqualTo(Optional.of(expectedTags));
     }
 
@@ -66,14 +64,14 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
     void testTranslateToResourceModelTags_emptyList() {
         final List<Tag> tags = new ArrayList<>();
         Optional<List<software.amazon.ssm.patchbaseline.Tag>> resourceModelTags =
-                resourceModelPropertyTranslator.translateToResourceModelTags(tags);
+                ResourceModelPropertyTranslator.translateToResourceModelTags(tags);
         assertThat(resourceModelTags).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToResourceModelTags_null() {
         Optional<List<software.amazon.ssm.patchbaseline.Tag>> resourceModelTags =
-                resourceModelPropertyTranslator.translateToResourceModelTags(null);
+                ResourceModelPropertyTranslator.translateToResourceModelTags(null);
         assertThat(resourceModelTags).isEqualTo(Optional.empty());
     }
 
@@ -83,7 +81,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final List<PatchSource> sources = requestsources();
         List<software.amazon.ssm.patchbaseline.PatchSource> expectedSources = sources();
         Optional<List<software.amazon.ssm.patchbaseline.PatchSource>> resourceModelSources =
-                resourceModelPropertyTranslator.translateToResourceModelSources(sources);
+                ResourceModelPropertyTranslator.translateToResourceModelSources(sources);
         assertThat(resourceModelSources).isEqualTo(Optional.of(expectedSources));
     }
 
@@ -91,14 +89,14 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
     void testTranslateToResourceModelSources_emptyList() {
         final List<PatchSource> sources = new ArrayList<>();
         Optional<List<software.amazon.ssm.patchbaseline.PatchSource>> resourceModelSources =
-                resourceModelPropertyTranslator.translateToResourceModelSources(sources);
+                ResourceModelPropertyTranslator.translateToResourceModelSources(sources);
         assertThat(resourceModelSources).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToResourceModelSources_null() {
         Optional<List<software.amazon.ssm.patchbaseline.PatchSource>> resourceModelSources =
-                resourceModelPropertyTranslator.translateToResourceModelSources(null);
+                ResourceModelPropertyTranslator.translateToResourceModelSources(null);
         assertThat(resourceModelSources).isEqualTo(Optional.empty());
     }
 
@@ -107,7 +105,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final List<PatchSource> expectedSources = requestsources();
         List<software.amazon.ssm.patchbaseline.PatchSource> sources = sources();
         Optional<List<PatchSource>> requestSources =
-                resourceModelPropertyTranslator.translateToRequestSources(sources);
+                ResourceModelPropertyTranslator.translateToRequestSources(sources);
         assertThat(requestSources).isEqualTo(Optional.of(expectedSources));
     }
 
@@ -115,14 +113,14 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
     void testTranslateToRequestSources_emptyList() {
         List<software.amazon.ssm.patchbaseline.PatchSource> sources = new ArrayList<>();
         Optional<List<PatchSource>> requestSources =
-                resourceModelPropertyTranslator.translateToRequestSources(sources);
+                ResourceModelPropertyTranslator.translateToRequestSources(sources);
         assertThat(requestSources).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToRequestSources_null() {
         Optional<List<PatchSource>> requestSources =
-                resourceModelPropertyTranslator.translateToRequestSources(null);
+                ResourceModelPropertyTranslator.translateToRequestSources(null);
         assertThat(requestSources).isEqualTo(Optional.empty());
     }
 
@@ -131,7 +129,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final PatchFilterGroup globalFilters = requestglobalFilters();
         final software.amazon.ssm.patchbaseline.PatchFilterGroup expectedGlobalFilters = globalFilters();
         final Optional<software.amazon.ssm.patchbaseline.PatchFilterGroup> resourceModelGlobalFilters =
-                resourceModelPropertyTranslator.translateToResourceModelGlobalFilters(globalFilters);
+                ResourceModelPropertyTranslator.translateToResourceModelGlobalFilters(globalFilters);
         assertThat(resourceModelGlobalFilters).isEqualTo(Optional.of(expectedGlobalFilters));
     }
 
@@ -139,14 +137,14 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
     void testTranslateToResourceModelGlobalFilters_empty() {
         final PatchFilterGroup globalFilters = PatchFilterGroup.builder().build();
         final Optional<software.amazon.ssm.patchbaseline.PatchFilterGroup> resourceModelGlobalFilters =
-                resourceModelPropertyTranslator.translateToResourceModelGlobalFilters(globalFilters);
+                ResourceModelPropertyTranslator.translateToResourceModelGlobalFilters(globalFilters);
         assertThat(resourceModelGlobalFilters).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToResourceModelGlobalFilters_null() {
         final Optional<software.amazon.ssm.patchbaseline.PatchFilterGroup> resourceModelGlobalFilters =
-                resourceModelPropertyTranslator.translateToResourceModelGlobalFilters(null);
+                ResourceModelPropertyTranslator.translateToResourceModelGlobalFilters(null);
         assertThat(resourceModelGlobalFilters).isEqualTo(Optional.empty());
     }
 
@@ -155,7 +153,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final PatchFilterGroup expectedGlobalFilters = requestglobalFilters();
         final software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters = globalFilters();
         final Optional<PatchFilterGroup> requestGlobalFilters =
-                resourceModelPropertyTranslator.translateToRequestGlobalFilters(globalFilters);
+                ResourceModelPropertyTranslator.translateToRequestGlobalFilters(globalFilters);
         assertThat(requestGlobalFilters).isEqualTo(Optional.of(expectedGlobalFilters));
     }
 
@@ -164,14 +162,14 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters =
                 software.amazon.ssm.patchbaseline.PatchFilterGroup.builder().build();
         final Optional<PatchFilterGroup> requestGlobalFilters =
-                resourceModelPropertyTranslator.translateToRequestGlobalFilters(globalFilters);
+                ResourceModelPropertyTranslator.translateToRequestGlobalFilters(globalFilters);
         assertThat(requestGlobalFilters).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToRequestGlobalFilters_null() {
         final Optional<PatchFilterGroup> requestGlobalFilters =
-                resourceModelPropertyTranslator.translateToRequestGlobalFilters(null);
+                ResourceModelPropertyTranslator.translateToRequestGlobalFilters(null);
         assertThat(requestGlobalFilters).isEqualTo(Optional.empty());
     }
 
@@ -180,7 +178,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final PatchRuleGroup approvalRules = requestapprovalRules();
         final software.amazon.ssm.patchbaseline.RuleGroup expectedApprovalRules = approvalRules();
         final Optional<software.amazon.ssm.patchbaseline.RuleGroup> resourceModelApprovalRules =
-                resourceModelPropertyTranslator.translateToResourceModelApprovalRules(approvalRules);
+                ResourceModelPropertyTranslator.translateToResourceModelApprovalRules(approvalRules);
         assertThat(resourceModelApprovalRules).isEqualTo(Optional.of(expectedApprovalRules));
     }
 
@@ -188,14 +186,14 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
     void testTranslateToResourceModelApprovalRules_empty() {
         final PatchRuleGroup approvalRules = PatchRuleGroup.builder().build();
         final Optional<software.amazon.ssm.patchbaseline.RuleGroup> resourceModelApprovalRules =
-                resourceModelPropertyTranslator.translateToResourceModelApprovalRules(approvalRules);
+                ResourceModelPropertyTranslator.translateToResourceModelApprovalRules(approvalRules);
         assertThat(resourceModelApprovalRules).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToResourceModelApprovalRules_null() {
         final Optional<software.amazon.ssm.patchbaseline.RuleGroup> resourceModelApprovalRules =
-                resourceModelPropertyTranslator.translateToResourceModelApprovalRules(null);
+                ResourceModelPropertyTranslator.translateToResourceModelApprovalRules(null);
         assertThat(resourceModelApprovalRules).isEqualTo(Optional.empty());
     }
 
@@ -204,7 +202,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final PatchRuleGroup expectedApprovalRules = requestapprovalRules();
         final software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
         final Optional<PatchRuleGroup> requestApprovalRules =
-                resourceModelPropertyTranslator.translateToRequestApprovalRules(approvalRules);
+                ResourceModelPropertyTranslator.translateToRequestApprovalRules(approvalRules);
         assertThat(requestApprovalRules).isEqualTo(Optional.of(expectedApprovalRules));
     }
 
@@ -213,14 +211,14 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
         final software.amazon.ssm.patchbaseline.RuleGroup approvalRules =
                 software.amazon.ssm.patchbaseline.RuleGroup.builder().build();
         final Optional<PatchRuleGroup> requestApprovalRules =
-                resourceModelPropertyTranslator.translateToRequestApprovalRules(approvalRules);
+                ResourceModelPropertyTranslator.translateToRequestApprovalRules(approvalRules);
         assertThat(requestApprovalRules).isEqualTo(Optional.empty());
     }
 
     @Test
     void testTranslateToRequestApprovalRules_null() {
         final Optional<PatchRuleGroup> requestApprovalRules =
-                resourceModelPropertyTranslator.translateToRequestApprovalRules(null);
+                ResourceModelPropertyTranslator.translateToRequestApprovalRules(null);
         assertThat(requestApprovalRules).isEqualTo(Optional.empty());
     }
 

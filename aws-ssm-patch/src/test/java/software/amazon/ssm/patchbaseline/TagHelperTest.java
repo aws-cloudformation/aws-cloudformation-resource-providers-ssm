@@ -204,7 +204,7 @@ public class TagHelperTest extends TestBase{
                  Tag.builder().key("fizz").value("buzz").build()
         );
 
-        List<Tag> actual = cfnTagHelper.convertToTagList(input);
+        List<Tag> actual = TagHelper.convertToTagList(input);
 
         // Because internally we use a map, list ordering will be unpredictable, so we'll
         // just confirm that lists contain same elements
@@ -222,13 +222,13 @@ public class TagHelperTest extends TestBase{
                  Tag.builder().key(null).value("buzz").build()
         );
 
-        List<Tag> actual = cfnTagHelper.convertToTagList(input);
+        List<Tag> actual = TagHelper.convertToTagList(input);
         assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     public void testConvertToTagList_Empty() {
-        assertThat(cfnTagHelper.convertToTagList(new HashMap<>())).isEqualTo(new ArrayList<>());
+        assertThat(TagHelper.convertToTagList(new HashMap<>())).isEqualTo(new ArrayList<>());
     }
 
     @Test

@@ -116,40 +116,24 @@ public class TagHelper {
 
         List<Tag> newTags = validateAndMergeTagsForCreate(request, request.getDesiredResourceState().getTags());
 
-        for (Tag tag : newTags)
-            System.out.print(String.format("TagHelper validateAndMergeTagsForCreate tag key %s, tag value %s %n", tag.key(), tag.value()));
-
         ListTagsForResourceRequest listTagsForResourceRequest = ListTagsForResourceRequest.builder()
                                                                         .resourceType(ssmResourceType)
                                                                         .resourceId(baselineId)
                                                                         .build();
 
-        System.out.print(String.format("TagHelper listTagsForResourceRequest ID %s %n", listTagsForResourceRequest.resourceId()));
-
         ListTagsForResourceResponse listTagsForResourceResponse =
                 proxy.injectCredentialsAndInvokeV2(listTagsForResourceRequest, ssmClient::listTagsForResource);
-
-        for (Tag tag : listTagsForResourceResponse.tagList())
-            System.out.print(String.format("TagHelper listTagsForResourceResponse tag key %s, tag value %s %n", tag.key(), tag.value()));
 
         List<Tag> oldTags = listTagsForResourceResponse.tagList();
 
         Map<String, String> newTagsMap = convertRequestTagsToMap(newTags);
         Map<String, String> oldTagsMap = convertRequestTagsToMap(oldTags);
 
-        for (String key : newTagsMap.keySet())
-            System.out.print(String.format("newTagsMap key %s, value %s %n", key, newTagsMap.get(key)));
-        for (String key : oldTagsMap.keySet())
-            System.out.print(String.format("oldTagsMap key %s, value %s %n", key, oldTagsMap.get(key)));
-
         Map<String, String> tagsToRemove = TagUtils.getTagsToDelete(newTagsMap, oldTagsMap);
         Map<String, String> tagsToAdd = TagUtils.getTagsToCreate(newTagsMap, oldTagsMap);
 
         List<String> ssmKeysToRemove = new ArrayList<>(tagsToRemove.keySet());
         List<Tag> ssmTagsToAdd = convertToTagList(tagsToAdd);
-
-        for (Tag tag : ssmTagsToAdd)
-            System.out.print(String.format("TagHelper ssmTagsToAdd tag key %s, tag value %s %n", tag.key(), tag.value()));
 
         if (!ssmKeysToRemove.isEmpty()) {
             RemoveTagsFromResourceRequest removeTagsRequest = RemoveTagsFromResourceRequest.builder()

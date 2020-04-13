@@ -29,14 +29,12 @@ import java.util.ArrayList;
 public class UpdatePatchBaselineRequestTranslatorTest extends TestBase{
 
     private SimpleTypeValidator simpleTypeValidator;
-    private UpdatePatchBaselineRequestTranslator updatePatchBaselineRequestTranslator;
     private UpdatePatchBaselineRequest updatePatchBaselineRequest;
 
     @BeforeEach
     void setUp() {
         // not mocking out SimpleTypeValidator because of the simplicity of its logic
         simpleTypeValidator = new SimpleTypeValidator();
-        updatePatchBaselineRequestTranslator = new UpdatePatchBaselineRequestTranslator();
     }
 
     @Test
@@ -45,7 +43,7 @@ public class UpdatePatchBaselineRequestTranslatorTest extends TestBase{
         ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         ResourceModel model = request.getDesiredResourceState();
 
-        updatePatchBaselineRequest = updatePatchBaselineRequestTranslator.updatePatchBaseline(model);
+        updatePatchBaselineRequest = UpdatePatchBaselineRequestTranslator.updatePatchBaseline(model);
 
         PatchFilter pf1 = PatchFilter.builder()
                 .key("PRODUCT")
@@ -111,7 +109,7 @@ public class UpdatePatchBaselineRequestTranslatorTest extends TestBase{
         ResourceModel model = ResourceModel.builder().build();
 
         updatePatchBaselineRequest =
-                updatePatchBaselineRequestTranslator.updatePatchBaseline(model);
+                UpdatePatchBaselineRequestTranslator.updatePatchBaseline(model);
 
         UpdatePatchBaselineRequest updatePatchBaselineRequestExpected =
                 UpdatePatchBaselineRequest.builder().replace(true).build();
@@ -132,7 +130,7 @@ public class UpdatePatchBaselineRequestTranslatorTest extends TestBase{
                 .build();;
 
         updatePatchBaselineRequest =
-                updatePatchBaselineRequestTranslator.updatePatchBaseline(model);
+                UpdatePatchBaselineRequestTranslator.updatePatchBaseline(model);
 
         UpdatePatchBaselineRequest updatePatchBaselineRequestExpected =
                 UpdatePatchBaselineRequest.builder().replace(true).build();

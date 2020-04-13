@@ -50,8 +50,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         logger.log(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
 
-        System.out.print(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
-
         try {
             /**Validate, merge, and add 3 sets of Tags to request
              * Tags added to our specific Patch Baseline resource in the template, which is in ResourceModel
@@ -65,20 +63,12 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             CreatePatchBaselineRequest createPatchBaselineRequest =
                     CreatePatchBaselineRequestTranslator.createPatchBaseline(model, request.getClientRequestToken());
 
-            // systemTags
-            Map<String, String> systemTags = request.getSystemTags();
-            for (String key : systemTags.keySet()) {
-                logger.log(String.format("test Request SystemTags key %s value %s %n", key, systemTags.get(key)));
-                System.out.print(String.format("test Request SystemTags key %s value %s %n", key, systemTags.get(key)));
-            }
-
             final CreatePatchBaselineResponse createPatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(createPatchBaselineRequest, ssmClient::createPatchBaseline);
 
             baselineId = createPatchBaselineResponse.baselineId();
 
             logger.log(String.format("INFO Created patch baseline %s successfully. Adding groups (if any) %n", baselineId));
-            System.out.print(String.format("INFO Created patch baseline %s successfully. Adding groups (if any) %n", baselineId));
 
             // This is not in the definition for a baseline object but we must receive it from CFN
             // Register the groups for this Patch Baseline
@@ -99,7 +89,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             //If we made it here, no exceptions related to the requests were thrown. Success.
             logger.log(String.format("INFO Registered groups to patch baseline %s successfully %n", baselineId));
-            System.out.print(String.format("INFO Registered groups to patch baseline %s successfully %n", baselineId));
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

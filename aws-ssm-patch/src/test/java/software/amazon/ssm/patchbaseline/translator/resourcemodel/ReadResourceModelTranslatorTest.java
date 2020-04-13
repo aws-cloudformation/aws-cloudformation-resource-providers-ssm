@@ -22,14 +22,12 @@ import java.util.ArrayList;
 public class ReadResourceModelTranslatorTest extends TestBase {
 
     private SimpleTypeValidator simpleTypeValidator;
-    private ReadResourceModelTranslator readResourceModelTranslator;
     private GetPatchBaselineResponse getPatchBaselineResponse;
 
     @BeforeEach
     void setUp() {
         // not mocking out SimpleTypeValidator because of the simplicity of its logic
         simpleTypeValidator = new SimpleTypeValidator();
-        readResourceModelTranslator = new ReadResourceModelTranslator();
     }
 
     @Test
@@ -55,7 +53,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
                 .build();
 
         final ResourceModel resultModel =
-                readResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
+                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
 
         final ResourceModel expectedModel = buildDefaultInputRequest().getDesiredResourceState();
         expectedModel.setTags(null);
@@ -71,7 +69,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
                 .build();
 
         final ResourceModel resultModel =
-                readResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
+                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
 
         final ResourceModel expectedModel = ResourceModel.builder().id(TestConstants.BASELINE_ID).build();
 
@@ -92,7 +90,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
                 .build();
 
         final ResourceModel resultModel =
-                readResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
+                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
 
         final ResourceModel expectedModel = ResourceModel.builder().id(TestConstants.BASELINE_ID).build();
 
