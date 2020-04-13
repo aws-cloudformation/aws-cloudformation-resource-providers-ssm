@@ -1,0 +1,85 @@
+{
+  "Resources": {
+    "AMAZONLINUX4": {
+      "Type": "AWS::SSM::PatchBaseline",
+      "Properties": {
+        "Name": "myPatchBaseline",
+        "Description": "My approval rules patch baseline for Amazon Linux 2017.09 instances",
+        "OperatingSystem": "AMAZON_LINUX",
+        "RejectedPatchesAction": "ALLOW_AS_DEPENDENCY",
+        "ApprovedPatchesComplianceLevel": "CRITICAL",
+        "ApprovedPatchesEnableNonSecurity": "true",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "Production"
+          }
+        ],
+        "ApprovedPatches": [
+          "KB2032588",
+          "KB2092914"
+        ],
+        "RejectedPatches": [
+          "KB2006634",
+          "KB2006634"
+        ],
+        "PatchGroups": [
+          "AMAZONLINUXGROUP4"
+        ],
+        "ApprovalRules": {
+          "PatchRules": [
+            {
+              "PatchFilterGroup": {
+                "PatchFilters": [
+                  {
+                    "Key": "SEVERITY",
+                    "Values": [
+                      "Important",
+                      "Critical"
+                    ]
+                  },
+                  {
+                    "Key": "CLASSIFICATION",
+                    "Values": [
+                      "Security",
+                      "Bugfix"
+                    ]
+                  },
+                  {
+                    "Key": "PRODUCT",
+                    "Values": [
+                      "AmazonLinux2017.09"
+                    ]
+                  }
+                ]
+              },
+              "ApproveAfterDays": 7,
+              "ComplianceLevel": "CRITICAL",
+              "EnableNonSecurity": true,
+            }
+          ]
+        },
+        "Sources": [
+          {
+            "Name": "My-AL2017.09",
+            "Products": [
+              "AmazonLinux2017.09"
+            ],
+            "Configuration": "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+          }
+        ],
+        "GlobalFilters": {
+          "PatchFilters": [
+            {
+              "Key": "SEVERITY",
+              "Values": [
+                "Important",
+                "Critical"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

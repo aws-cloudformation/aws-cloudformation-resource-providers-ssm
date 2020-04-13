@@ -8,7 +8,9 @@ import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.awssdk.utils.CollectionUtils;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -97,7 +99,7 @@ public class ResourceModelPropertyTranslator {
      */
     public  static Optional<PatchFilterGroup> translateToRequestGlobalFilters(final software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilter) {
 
-        if (!CollectionUtils.isNullOrEmpty(globalFilter.getPatchFilters())) {
+        if (globalFilter != null && !CollectionUtils.isNullOrEmpty(globalFilter.getPatchFilters())) {
             List<software.amazon.ssm.patchbaseline.PatchFilter> patchFilters = globalFilter.getPatchFilters();
             List<PatchFilter> requestPatchFilters = translateToRequestPatchFilters(patchFilters);
             PatchFilterGroup requestGlobalFilter = PatchFilterGroup.builder()
@@ -132,7 +134,7 @@ public class ResourceModelPropertyTranslator {
      */
     public  static Optional<software.amazon.ssm.patchbaseline.PatchFilterGroup> translateToResourceModelGlobalFilters(final PatchFilterGroup globalFilter) {
 
-        if (!CollectionUtils.isNullOrEmpty(globalFilter.patchFilters())) {
+        if (globalFilter != null && !CollectionUtils.isNullOrEmpty(globalFilter.patchFilters())) {
             List<PatchFilter> patchFilters = globalFilter.patchFilters();
             List<software.amazon.ssm.patchbaseline.PatchFilter> resourceModelPatchFilters = translateToResourceModelPatchFilters(patchFilters);
             software.amazon.ssm.patchbaseline.PatchFilterGroup resourceModelGlobalFilter =
@@ -169,7 +171,7 @@ public class ResourceModelPropertyTranslator {
      */
     public  static Optional<PatchRuleGroup> translateToRequestApprovalRules(final software.amazon.ssm.patchbaseline.RuleGroup approvalRules) {
 
-        if (!CollectionUtils.isNullOrEmpty(approvalRules.getPatchRules())) {
+        if (approvalRules != null && !CollectionUtils.isNullOrEmpty(approvalRules.getPatchRules())) {
             List<software.amazon.ssm.patchbaseline.Rule> rules = approvalRules.getPatchRules();
             List<PatchRule> requestPatchRules = translateToRequestPatchRules(rules);
             PatchRuleGroup requestApprovalRules = PatchRuleGroup.builder()
@@ -207,7 +209,7 @@ public class ResourceModelPropertyTranslator {
      */
     public static Optional<software.amazon.ssm.patchbaseline.RuleGroup> translateToResourceModelApprovalRules(final PatchRuleGroup approvalRules) {
 
-        if (!CollectionUtils.isNullOrEmpty(approvalRules.patchRules())) {
+        if (approvalRules != null && !CollectionUtils.isNullOrEmpty(approvalRules.patchRules())) {
             List<PatchRule> patchRules = approvalRules.patchRules();
             List<software.amazon.ssm.patchbaseline.Rule> requestPatchRules = translateToResourceModelPatchRules(patchRules);
             software.amazon.ssm.patchbaseline.RuleGroup resourceModelApprovalRules =

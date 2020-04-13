@@ -28,31 +28,16 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         final String baselineId = model.getId();
 
         logger.log(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
-        System.out.print(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
 
         try {
             GetPatchBaselineRequest getPatchBaselineRequest = GetPatchBaselineRequest.builder()
                                                                         .baselineId(baselineId)
                                                                         .build();
 
-            System.out.print(String.format("test before Response %n"));
-
             GetPatchBaselineResponse getPatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
 
-            System.out.print(String.format("test after Response %n"));
-            System.out.print(String.format("test after Response id %s %n", getPatchBaselineResponse.baselineId()));
-            System.out.print(String.format("test after Response description %s %n", getPatchBaselineResponse.description()));
-            System.out.print(String.format("test after Response security %s %n", getPatchBaselineResponse.approvedPatchesEnableNonSecurity()));
-            for (String patch : getPatchBaselineResponse.approvedPatches())
-                System.out.print(String.format("test after Response accepted patches %s %n", patch));
-            for (String patch : getPatchBaselineResponse.rejectedPatches())
-                System.out.print(String.format("test after Response rejected patches %s %n", patch));
-            System.out.print(String.format("test after Response OS %s %n", getPatchBaselineResponse.operatingSystemAsString()));
-
             ResourceModel resourcemodel = ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
-
-            System.out.print(String.format("test after Response, after translator %s %n", resourcemodel.getId()));
 
             //Send a success response to CloudFormation with the JSON
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -63,5 +48,4 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
             return Resource.handleException(e, model, baselineId, logger);
         }
     }
-
 }

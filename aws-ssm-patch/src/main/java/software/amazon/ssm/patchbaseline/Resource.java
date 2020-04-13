@@ -1,17 +1,14 @@
 package software.amazon.ssm.patchbaseline;
 
-
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.Logger;
-
 import software.amazon.awssdk.services.ssm.model.ResourceLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.ResourceInUseException;
 import software.amazon.awssdk.services.ssm.model.InvalidResourceIdException;
 import software.amazon.awssdk.services.ssm.model.AlreadyExistsException;
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
 import com.amazonaws.AmazonServiceException;
-
 
 import java.util.Arrays;
 import java.util.List;
@@ -65,16 +62,14 @@ public class Resource {
                 logger.log(String.format("WARN SSM returned a 4xx error code! Exception details: %s %n", ex.getMessage()));
 
                 if (RETRIABLE_400_ERROR_CODES.contains(ase.getErrorCode())) {
-                    // Per https://t.corp.amazon.com/V104531859, a lot of HTTP timeout exceptions will appear as an
+                    // a lot of HTTP timeout exceptions will appear as an
                     // AmazonServiceException with Status Code 400, but we want to retry these, as they aren't actually
                     // client-side errors.
-                    logger.log(String.format("INFO Detected HttpTimeoutException. Setting CloudFormation status to RETRY"));
-                    // response.setStatus(Status.RETRY);
+                    logger.log(String.format("INFO Detected HttpTimeoutException. Please RETRY"));
                 }
             } else {
                 // >= 500s default to RETRY
-                // response.setStatus(Status.RETRY);
-                logger.log(String.format("ERROR SSM returned a 5xx error code! Exception details: %s %n", ex.getMessage()));
+                logger.log(String.format("ERROR SSM returned a 5xx error code! Please RETRY! Exception details: %s %n", ex.getMessage()));
             }
         } else {
             // response.setMessage(String.format("Internal Failure: %s", ex.getMessage()));
@@ -84,18 +79,14 @@ public class Resource {
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .status(OperationStatus.FAILED)
+                .message(ex.getMessage())
                 .build();
-
     }
 
-
     /**
-     * Log the exception chain of an exception. This was introduced to help diagnose the issue in https://t.corp.amazon.com/V104531859
+     * Log the exception chain of an exception. This was introduced to help diagnose the issue
      * where DNS timeouts are wrapped in an AmazonServiceException, so we don't have enough information to handle these in a type-safe
      * way.
-     *
-     * TODO: Consider upgrading to log4j on top of the Lamda logger for our logging so we can be more consistent
-     * about log levels and stacktraces
      *
      * @param thrown   Exception object
      * @param logger  log

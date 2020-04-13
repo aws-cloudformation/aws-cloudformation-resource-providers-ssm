@@ -1,5 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
+import org.mockito.InjectMocks;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -17,22 +18,18 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(MockitoExtension.class)
 public class ListHandlerTest {
 
+    @InjectMocks
+    private ListHandler handler;
     @Mock
     private AmazonWebServicesClientProxy proxy;
-
     @Mock
     private Logger logger;
 
     @BeforeEach
-    public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-    }
+    public void setup() { }
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        final ListHandler handler = new ListHandler();
-
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
