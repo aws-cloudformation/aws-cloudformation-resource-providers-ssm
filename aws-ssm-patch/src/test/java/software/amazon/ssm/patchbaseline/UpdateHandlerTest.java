@@ -1,7 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
+import org.mockito.*;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.awssdk.services.ssm.model.Tag;
@@ -11,8 +10,9 @@ import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchAction;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
+import software.amazon.ssm.patchbaseline.ResourceModel;
+import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -21,57 +21,141 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
-import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
 import java.util.*;
 import java.util.function.Function;
 
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest extends TestBase{
 
-    private UpdateHandler updateHandler;
-    private UpdatePatchBaselineRequest updatePatchBaselineRequest;
-    private UpdatePatchBaselineResponse updatePatchBaselineResponse;
-    private GetPatchBaselineRequest getPatchBaselineRequest;
-    private GetPatchBaselineResponse getPatchBaselineResponse;
-    private ListTagsForResourceRequest listTagsForResourceRequest;
-    private ListTagsForResourceResponse listTagsForResourceResponse;
-    private DeregisterPatchBaselineForPatchGroupResponse deregisterPatchBaselineForPatchGroupResponse;
-    private RemoveTagsFromResourceRequest removeTagsRequest;
-    private AddTagsToResourceRequest addTagsRequest;
-    private RemoveTagsFromResourceResponse removeTagsFromResourceResponse;
-    private AddTagsToResourceResponse addTagsToResourceResponse;
+    @InjectMocks
+    UpdateHandler updateHandler;
 
     @Mock
-    private AmazonWebServicesClientProxy proxy;
+    private TagHelper mockTagHelper;
 
-    @Mock
-    private Logger logger;
-
-    @Mock
-    private TagHelper tagHelper;
-
-    @Mock
-    private SsmClient ssmClient;
+    private UpdatePatchBaselineRequest mockUpdatePatchBaselineRequest;
+    private GetPatchBaselineRequest mockGetPatchBaselineRequest;
+    private UpdatePatchBaselineResponse mockUpdatePatchBaselineResponse;
+    private GetPatchBaselineResponse mockGetPatchBaselineResponse;
+    private RegisterPatchBaselineForPatchGroupResponse mockRegisterGroupResponse;
+    private DeregisterPatchBaselineForPatchGroupResponse mockDeregisterGroupResponse;
 
     @BeforeEach
     public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-        tagHelper = mock(TagHelper.class);
-        ssmClient = mock(SsmClient.class);
 
-        updateHandler = new UpdateHandler();
-        getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
-        getPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(BASELINE_ID).patchGroups(PATCH_GROUPS).build();
-        listTagsForResourceRequest = ListTagsForResourceRequest.builder().resourceType(PATCH_BASELINE_RESOURCE_NAME).resourceId(BASELINE_ID).build();
-        //        deregisterPatchBaselineForPatchGroupResponse = new DeregisterPatchBaselineForPatchGroupResponse();
+        //set up mock for UpdatePatchBaseline
+        mockUpdatePatchBaselineRequest = setUpExpectedUpdatePatchBaselineRequest();
+        mockUpdatePatchBaselineResponse = UpdatePatchBaselineResponse.builder().baselineId(BASELINE_ID).build();
+        when(mockProxy.injectCredentialsAndInvokeV2 (
+            eq(mockUpdatePatchBaselineRequest), ArgumentMatchers.<Function<UpdatePatchBaselineRequest,UpdatePatchBaselineResponse>>any()))
+        .thenReturn(mockUpdatePatchBaselineResponse);
+
+        //set up mock for GetPatchBaseline
+        mockGetPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
+        mockGetPatchBaselineResponse = GetPatchBaselineResponse.builder().baselineId(BASELINE_ID).patchGroups(PATCH_GROUPS).build();
+        when(mockProxy.injectCredentialsAndInvokeV2(
+            eq(mockGetPatchBaselineRequest), ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
+        .thenReturn(mockGetPatchBaselineResponse);
+
+        //set up mock for RegisterGroup
+        when(mockProxy.injectCredentialsAndInvokeV2(
+            any(RegisterPatchBaselineForPatchGroupRequest.class), ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any()))
+        .thenReturn(mockRegisterGroupResponse);
+
+        //set up mock for DeregisterGroup
+        when(mockProxy.injectCredentialsAndInvokeV2(
+            any(DeregisterPatchBaselineForPatchGroupRequest.class), ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any()))
+        .thenReturn(mockDeregisterGroupResponse);
+
+        //set up mock for TagHelper.updateTagsForResource()
+        doNothing().when(mockTagHelper).updateTagsForResource(
+                ArgumentMatchers.<ResourceHandlerRequest<ResourceModel>>any(), any(String.class), any(SsmClient.class), any(AmazonWebServicesClientProxy.class)
+        );
+
+    }
+
+    @Test
+    public void testUpdateHandler_failure(){
+        ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
+
+    when(mockTagHelper).updateTagsForResource(
+                ArgumentMatchers.<ResourceHandlerRequest<ResourceModel>>any(), any(String.class), any(SsmClient.class), any(AmazonWebServicesClientProxy.class))
+            .thenthrow(new Exception());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = updateHandler.handleRequest(mockProxy, null, null, mockLogger);
+
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getResourceModel()).isEqualTo(request.getPreviousResourceState());
+        assertThat(response.getResourceModel()).isNotEqualTo(request.getDesiredResourceState());
+    }
+
+
+    @Test
+    public void testUpdateHandler_success(){
+        //Invoke updateHandler
+        ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = updateHandler.handleRequest(mockProxy, request, null, mockLogger);
+
+        verify(mockProxy).injectCredentialsAndInvokeV2(
+            eq(mockUpdatePatchBaselineRequest),
+            ArgumentMatchers.<Function<UpdatePatchBaselineRequest, UpdatePatchBaselineResponse>>any());
+
+        verify(mockProxy).injectCredentialsAndInvokeV2(
+            eq(mockGetPatchBaselineRequest),
+            ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any());
+
+
+        List<String> expectedOriginalGroups = new ArrayList<>(Arrays.asList("icecream"));
+        List<String> expectedNewGroups = new ArrayList<>(Arrays.asList("foo", "baz"));
+
+        for (String group : expectedOriginalGroups) {
+            verify(mockProxy)
+                .injectCredentialsAndInvokeV2(
+                    eq(buildDeregisterGroupRequest(mockGetPatchBaselineResponse.baselineId(), group)),
+                    ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any());
+        }
+
+        for (String group : expectedNewGroups) {
+            if (!TestConstants.PATCH_GROUPS.contains(group)) {
+                verify(mockProxy)
+                    .injectCredentialsAndInvokeV2(
+                        eq(buildRegisterGroupRequest(mockGetPatchBaselineResponse.baselineId(), group)),
+                        ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any());
+            }
+        }
+
+
+        verify(mockTagHelper).updateTagsForResource(
+                ArgumentMatchers.<ResourceHandlerRequest<ResourceModel>>any(), any(String.class), any(SsmClient.class), any(AmazonWebServicesClientProxy.class));
+
+                assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+
+
+    private UpdatePatchBaselineRequest setUpExpectedUpdatePatchBaselineRequest() {
         PatchFilter pf1 = PatchFilter.builder()
                 .key("PRODUCT")
                 .values(Collections.singletonList("Ubuntu16.04"))
@@ -86,11 +170,10 @@ public class UpdateHandlerTest extends TestBase{
         PatchRule patchRule = PatchRule.builder()
                 .patchFilterGroup(patchFilterGroup)
                 .approveAfterDays(10)
-                .complianceLevel(getComplianceString(TestConstants.ComplianceLevel.HIGH))
+                .complianceLevel(getComplianceString(ComplianceLevel.HIGH))
                 .enableNonSecurity(true)
                 .build();
-        List<PatchRule> patchRuleList = new ArrayList<>();
-        patchRuleList.add(patchRule);
+        List<PatchRule> patchRuleList = new ArrayList<>(Arrays.asList(patchRule));
         PatchRuleGroup approvalRules = PatchRuleGroup.builder()
                 .patchRules(patchRuleList)
                 .build();
@@ -107,12 +190,10 @@ public class UpdateHandlerTest extends TestBase{
                 .products(Collections.singletonList("Ubuntu14.04"))
                 .configuration("deb http://example.com distro universe")
                 .build();
-        List<PatchSource> sourcesList = new ArrayList<>();
-        sourcesList.add(ps1);
-        sourcesList.add(ps2);
+        List<PatchSource> sourcesList = new ArrayList<PatchSource>(Arrays.asList(ps1, ps2));
 
         //Build update request. It takes a lot of space because of all the nesting.
-        updatePatchBaselineRequest = UpdatePatchBaselineRequest.builder()
+        return UpdatePatchBaselineRequest.builder()
                 .name(UPDATED_BASELINE_NAME)
                 .description(UPDATED_BASELINE_DESC)
                 .baselineId(BASELINE_ID)
@@ -126,150 +207,6 @@ public class UpdateHandlerTest extends TestBase{
                 .globalFilters(globalFilters)
                 .replace(true)
                 .build();
-
-        updatePatchBaselineResponse = UpdatePatchBaselineResponse.builder().baselineId(BASELINE_ID).build();
-
     }
-
-    @Test
-    public void testSuccess() {
-
-        List<String> expectedRemoveTags = Arrays.asList(CFN_KEY,SYSTEM_TAG_KEY);
-        List<Tag> expectedAddTags = Arrays.asList(
-                Tag.builder().key(UPDATED_CFN_KEY).value(UPDATED_CFN_VALUE).build(),
-                Tag.builder().key(NEW_TAG_KEY).value(NEW_TAG_VALUE).build(),
-                Tag.builder().key(SYSTEM_TAG_KEY).value(UPDATED_BASELINE_NAME).build());
-        List<Tag> existedTags = Arrays.asList(
-                Tag.builder().key(CFN_KEY).value(CFN_VALUE).build(),
-                Tag.builder().key(SYSTEM_TAG_KEY).value(BASELINE_NAME).build()
-        );
-        listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(existedTags).build();
-        removeTagsRequest = RemoveTagsFromResourceRequest.builder().tagKeys(expectedRemoveTags).build();
-        addTagsRequest = AddTagsToResourceRequest.builder().tags(expectedAddTags).build();
-        removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
-        addTagsToResourceResponse = AddTagsToResourceResponse.builder().build();
-
-        when(proxy.injectCredentialsAndInvokeV2(eq(updatePatchBaselineRequest),
-                ArgumentMatchers.<Function<UpdatePatchBaselineRequest, UpdatePatchBaselineResponse>>any()))
-                .thenReturn(updatePatchBaselineResponse);
-
-        when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
-                ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
-                .thenReturn(getPatchBaselineResponse);
-
-        when(proxy.injectCredentialsAndInvokeV2(
-                eq(listTagsForResourceRequest),
-                ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
-                .thenReturn(listTagsForResourceResponse);
-
-
-        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
-        System.out.print(String.format("%n"));
-
-        //Invoke the handler
-        ResourceHandlerRequest<ResourceModel>  request = buildUpdateDefaultInputRequest();
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = updateHandler.handleRequest(proxy, request, null, logger);
-
-        System.out.print(String.format("Update Handler Response Status %s %n", response.getStatus()));
-
-        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
-        System.out.print(String.format("%n"));
-
-        verify(proxy)
-                .injectCredentialsAndInvokeV2(
-                        eq(updatePatchBaselineRequest),
-                        ArgumentMatchers.<Function<UpdatePatchBaselineRequest, UpdatePatchBaselineResponse>>any());
-
-        verify(proxy)
-                .injectCredentialsAndInvokeV2(
-                        eq(getPatchBaselineRequest),
-                        ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any());
-
-        List<String> originalGroups = PATCH_GROUPS;
-        List<String> newGroups = UPDATED_PATCH_GROUPS;
-
-        System.out.print("UPDATE_PATCH_GROUPS " + UPDATED_PATCH_GROUPS);
-        System.out.print("PATCH_GROUPS " + PATCH_GROUPS);
-
-        //Compute the intersection of the two lists (the groups that don't need to be changed)
-        List<String> intersectingGroups = new ArrayList<>(originalGroups);
-        intersectingGroups.retainAll(newGroups);
-
-        System.out.print("originalGroups " + originalGroups);
-        System.out.print("newGroups " + newGroups);
-        System.out.print("intersectingGroups " + intersectingGroups);
-        System.out.print(String.format("%n"));
-
-        for (String group : intersectingGroups)
-            System.out.print(String.format("TEST intersecting Groups to remain %s %n", group));
-
-        //The groups we need to remove are ORIGINAL - INTERSECT
-        //The groups we need to add are DESIRED - INTERSECT
-        originalGroups.removeAll(intersectingGroups);
-        newGroups.removeAll(intersectingGroups);
-
-        for (String group : originalGroups)
-            System.out.print(String.format("Test expected original groups to remove %s %n", group));
-
-        for (String group : originalGroups) {
-            verify(proxy)
-                    .injectCredentialsAndInvokeV2(
-                            eq(buildDeregisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
-                            ArgumentMatchers.<Function<DeregisterPatchBaselineForPatchGroupRequest, DeregisterPatchBaselineForPatchGroupResponse>>any());
-        }
-
-        for (String group : newGroups)
-            System.out.print(String.format("Test expected new groups to add %s %n", group));
-
-        for (String group : newGroups) {
-            if (!TestConstants.PATCH_GROUPS.contains(group)) {
-                verify(proxy)
-                        .injectCredentialsAndInvokeV2(
-                                eq(buildRegisterGroupRequest(getPatchBaselineResponse.baselineId(), group)),
-                                ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any());
-            }
-        }
-
-        //when(tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy)).thenReturn();
-        when(proxy.injectCredentialsAndInvokeV2(
-                eq(removeTagsRequest),
-                ArgumentMatchers.<Function<RemoveTagsFromResourceRequest, RemoveTagsFromResourceResponse>>any()))
-                .thenReturn(removeTagsFromResourceResponse);
-        when(proxy.injectCredentialsAndInvokeV2(
-                eq(addTagsRequest),
-                ArgumentMatchers.<Function<AddTagsToResourceRequest, AddTagsToResourceResponse>>any()))
-                .thenReturn(addTagsToResourceResponse);
-        //not working
-        //when(tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy)).thenReturn();
-        verify(proxy)
-                .injectCredentialsAndInvokeV2(
-                        eq(listTagsForResourceRequest),
-                        ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any());
-
-        verify(proxy)
-                .injectCredentialsAndInvokeV2(
-                        eq(removeTagsRequest),
-                        ArgumentMatchers.<Function<RemoveTagsFromResourceRequest, RemoveTagsFromResourceResponse>>any());
-
-        verify(proxy)
-                .injectCredentialsAndInvokeV2(
-                        eq(addTagsRequest),
-                        ArgumentMatchers.<Function<AddTagsToResourceRequest, AddTagsToResourceResponse>>any());
-
-        for (Tag tag : listTagsForResourceResponse.tagList())
-            System.out.print(String.format("listTagsForResourceResponse tag key %s, tag val %s %n", tag.key(), tag.value()));
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        //assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-    }
-
 
 }
