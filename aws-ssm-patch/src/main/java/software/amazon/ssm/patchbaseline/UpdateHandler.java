@@ -2,30 +2,27 @@ package software.amazon.ssm.patchbaseline;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import software.amazon.awssdk.services.ssm.model.*;
-import software.amazon.awssdk.services.ssm.model.PatchFilter;
-import software.amazon.awssdk.services.ssm.model.PatchSource;
-import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.awssdk.services.ssm.model.UpdatePatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.UpdatePatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupResponse;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.ssm.patchbaseline.translator.request.UpdatePatchBaselineRequestTranslator;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
-
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
-import software.amazon.ssm.patchbaseline.translator.resourcemodel.ResourceModelPropertyTranslator;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor

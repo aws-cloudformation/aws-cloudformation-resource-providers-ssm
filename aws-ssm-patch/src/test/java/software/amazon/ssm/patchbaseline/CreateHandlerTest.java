@@ -1,6 +1,5 @@
 package software.amazon.ssm.patchbaseline;
 
-import org.mockito.InjectMocks;
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
@@ -24,12 +23,12 @@ import static software.amazon.ssm.patchbaseline.TestConstants.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
@@ -57,7 +56,6 @@ public class CreateHandlerTest extends TestBase {
     private RegisterPatchBaselineForPatchGroupResponse registerResponse;
     private List<Tag> tagsList;
 
-
     @InjectMocks
     private CreateHandler createHandler;
     @Mock
@@ -66,7 +64,6 @@ public class CreateHandlerTest extends TestBase {
     private AmazonWebServicesClientProxy proxy;
     @Mock
     private Resource resource;
-
 
     @BeforeEach
     public void setup() {
@@ -186,8 +183,6 @@ public class CreateHandlerTest extends TestBase {
         when(proxy.injectCredentialsAndInvokeV2(
                 eq(createPatchBaselineRequestMissingName),
                 ArgumentMatchers.<Function<CreatePatchBaselineRequest, CreatePatchBaselineResponse>>any())).thenThrow(exception400);
-
-       // when(ssmClient.createPatchBaseline(any(CreatePatchBaselineRequest.class))).thenThrow(exception400);
 
         //This test is a little different in the sense that we want the handler to send a request with a missing name
         //  to verify the handlers error-catching behavior.

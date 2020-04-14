@@ -6,11 +6,9 @@ import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.ssm.patchbaseline.ResourceModel;
 import software.amazon.ssm.patchbaseline.TestBase;
-import software.amazon.ssm.patchbaseline.TestConstants;
-import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,35 +19,28 @@ import java.util.ArrayList;
 @ExtendWith(MockitoExtension.class)
 public class ReadResourceModelTranslatorTest extends TestBase {
 
-    private SimpleTypeValidator simpleTypeValidator;
     private GetPatchBaselineResponse getPatchBaselineResponse;
-
-    @BeforeEach
-    void setUp() {
-        // not mocking out SimpleTypeValidator because of the simplicity of its logic
-        simpleTypeValidator = new SimpleTypeValidator();
-    }
 
     @Test
     void testReadResourceModelTranslatorWith_Nominal() {
 
-        List<PatchSource> sources = requestsources();
-        PatchFilterGroup globalFilters = requestglobalFilters();
-        PatchRuleGroup approvalRules = requestapprovalRules();
+        List<PatchSource> sources = requestSources();
+        PatchFilterGroup globalFilters = requestGlobalFilters();
+        PatchRuleGroup approvalRules = requestApprovalRules();
         getPatchBaselineResponse = GetPatchBaselineResponse.builder()
-                .baselineId(TestConstants.BASELINE_ID)
-                .name(TestConstants.BASELINE_NAME)
-                .operatingSystem(TestConstants.OPERATING_SYSTEM)
-                .description(TestConstants.BASELINE_DESCRIPTION)
-                .rejectedPatches(TestConstants.REJECTED_PATCHES)
+                .baselineId(BASELINE_ID)
+                .name(BASELINE_NAME)
+                .operatingSystem(OPERATING_SYSTEM)
+                .description(BASELINE_DESCRIPTION)
+                .rejectedPatches(REJECTED_PATCHES)
                 .rejectedPatchesAction("BLOCK")
-                .approvedPatches(TestConstants.ACCEPTED_PATCHES)
+                .approvedPatches(ACCEPTED_PATCHES)
                 .approvalRules(approvalRules)
-                .approvedPatchesComplianceLevel(getComplianceString(TestConstants.ComplianceLevel.CRITICAL))
+                .approvedPatchesComplianceLevel(getComplianceString(ComplianceLevel.CRITICAL))
                 .approvedPatchesEnableNonSecurity(true)
                 .globalFilters(globalFilters)
                 .sources(sources)
-                .patchGroups(TestConstants.PATCH_GROUPS)
+                .patchGroups(PATCH_GROUPS)
                 .build();
 
         final ResourceModel resultModel =
@@ -65,13 +56,13 @@ public class ReadResourceModelTranslatorTest extends TestBase {
     void testReadResourceModelTranslator_Null() {
 
         getPatchBaselineResponse = GetPatchBaselineResponse.builder()
-                .baselineId(TestConstants.BASELINE_ID)
+                .baselineId(BASELINE_ID)
                 .build();
 
         final ResourceModel resultModel =
                 ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
 
-        final ResourceModel expectedModel = ResourceModel.builder().id(TestConstants.BASELINE_ID).build();
+        final ResourceModel expectedModel = ResourceModel.builder().id(BASELINE_ID).build();
 
         assertThat(resultModel).isEqualTo(expectedModel);
     }
@@ -80,7 +71,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
     void testReadResourceModelTranslator_Empty() {
 
         getPatchBaselineResponse = GetPatchBaselineResponse.builder()
-                .baselineId(TestConstants.BASELINE_ID)
+                .baselineId(BASELINE_ID)
                 .rejectedPatches(new ArrayList<>())
                 .approvedPatches(new ArrayList<>())
                 .approvalRules(PatchRuleGroup.builder().build())
@@ -92,9 +83,11 @@ public class ReadResourceModelTranslatorTest extends TestBase {
         final ResourceModel resultModel =
                 ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
 
-        final ResourceModel expectedModel = ResourceModel.builder().id(TestConstants.BASELINE_ID).build();
+        final ResourceModel expectedModel = ResourceModel.builder().id(BASELINE_ID).build();
 
         assertThat(resultModel).isEqualTo(expectedModel);
     }
+
+
 
 }

@@ -1,39 +1,46 @@
 package software.amazon.ssm.patchbaseline;
 
-import org.mockito.*;
+import software.amazon.awssdk.services.ssm.model.UpdatePatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.UpdatePatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupResponse;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
+import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.*;
-import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.services.ssm.model.PatchRule;
 import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchAction;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
-import software.amazon.ssm.patchbaseline.ResourceModel;
-import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import org.junit.jupiter.api.BeforeEach;
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.ArgumentMatchers;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
-
-
-import java.util.*;
-import java.util.function.Function;
-
-import static software.amazon.ssm.patchbaseline.TestConstants.*;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.function.Function;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest extends TestBase{
@@ -122,7 +129,6 @@ public class UpdateHandlerTest extends TestBase{
                                 ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any());
             }
         }
-
 
         verify(mockTagHelper).updateTagsForResource(
                 ArgumentMatchers.<ResourceHandlerRequest<ResourceModel>>any(), any(String.class), any(SsmClient.class), any(AmazonWebServicesClientProxy.class));

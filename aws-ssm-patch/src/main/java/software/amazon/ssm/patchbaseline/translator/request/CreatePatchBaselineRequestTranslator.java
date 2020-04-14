@@ -1,8 +1,6 @@
 package software.amazon.ssm.patchbaseline.translator.request;
 
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineRequest;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.ssm.patchbaseline.ResourceModel;
 import software.amazon.ssm.patchbaseline.translator.resourcemodel.ResourceModelPropertyTranslator;
 import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;

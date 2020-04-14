@@ -4,8 +4,6 @@ import java.util.ArrayList;
 
 public class TestConstants {
 
-    private static final long serialVersionUID = 1L;
-
     public static final String BASELINE_ID = "pb-12345678901234567";
 
     public static final String BASELINE_NAME = "ubuntu";
@@ -13,12 +11,6 @@ public class TestConstants {
     public static final String BASELINE_DESCRIPTION = "pb for ubuntu";
 
     public static final String OPERATING_SYSTEM = "UBUNTU";
-
-    public static final String DEFAULT_REGION = "us-east-1";
-
-    public static final String DUMMY_ACCESS_KEY = "dummyAccessKey";
-
-    public static final String DUMMY_SECRET_KEY = "dummySecretKey";
 
     public static final String BAD_BASELINE_ID = "pb____0987654321";
 
@@ -45,8 +37,6 @@ public class TestConstants {
     public static final String UPDATED_CFN_VALUE = "updatedcfnvalue";
 
     public static final String SYSTEM_TAG_KEY = "aws:cloudformation:stack-name";
-
-    public static final String PATCH_BASELINE_RESOURCE_NAME = "PatchBaseline";
 
     public static final ArrayList<String> ACCEPTED_PATCHES = new ArrayList<String>() {{
         add("curl");
@@ -80,7 +70,5 @@ public class TestConstants {
     }};
 
     public enum ComplianceLevel {UNSPECIFIED, INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL};
-
-    public enum PatchAction {BLOCK, ALLOW_AS_DEPENDENCY};
 
 }

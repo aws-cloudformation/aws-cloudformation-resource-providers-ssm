@@ -5,13 +5,12 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
-import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
-
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
 import software.amazon.ssm.patchbaseline.translator.resourcemodel.ReadResourceModelTranslator;
+import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
+import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
 public class ReadHandler extends BaseHandler<CallbackContext> {
 

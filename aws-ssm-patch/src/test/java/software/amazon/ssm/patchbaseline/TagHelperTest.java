@@ -1,7 +1,21 @@
 package software.amazon.ssm.patchbaseline;
 
+import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
+import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
+import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceResponse;
+import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
+import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
+import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_DUPLICATE_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_SYSTEM_TAGS;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_KEY_NULL;
+import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_NULL;
+import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
+
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -14,26 +28,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
-import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
-import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceResponse;
-import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
-import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
-import software.amazon.awssdk.services.ssm.model.Tag;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
-import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_DUPLICATE_TAGS;
-import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_SYSTEM_TAGS;
-import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_KEY_NULL;
-import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_NULL;
-import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
 
 import java.util.List;
 import java.util.Map;
@@ -52,17 +48,10 @@ public class TagHelperTest extends TestBase{
     private ListTagsForResourceRequest listTagsForResourceRequest;
     private ListTagsForResourceResponse listTagsForResourceResponse;
 
-    private SimpleTypeValidator simpleTypeValidator;
-
     @InjectMocks
     private TagHelper cfnTagHelper;
     @Mock
     private AmazonWebServicesClientProxy proxy;
-
-    @BeforeEach
-    void setUp() {
-        simpleTypeValidator = new SimpleTypeValidator();
-    }
 
     @Test
     public void testConvertRequestTagsToMap_Nominal() {
@@ -543,4 +532,3 @@ public class TagHelperTest extends TestBase{
     }
 
 }
-

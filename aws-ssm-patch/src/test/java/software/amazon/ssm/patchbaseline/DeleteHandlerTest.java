@@ -1,6 +1,5 @@
 package software.amazon.ssm.patchbaseline;
 
-import org.mockito.InjectMocks;
 import software.amazon.awssdk.services.ssm.model.DeletePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.DeletePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
@@ -19,10 +18,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.ArgumentMatchers;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
@@ -132,7 +131,7 @@ public class DeleteHandlerTest extends TestBase{
     }
 
     @Test
-    public void testDeleteDefaultBasline() {
+    public void testDeleteDefaultBaseline() {
         getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))

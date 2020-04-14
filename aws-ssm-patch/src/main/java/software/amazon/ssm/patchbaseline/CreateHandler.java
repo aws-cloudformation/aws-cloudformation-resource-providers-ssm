@@ -1,13 +1,7 @@
 package software.amazon.ssm.patchbaseline;
 
-
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import software.amazon.awssdk.services.ssm.model.PatchFilter;
-import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
-import software.amazon.awssdk.services.ssm.model.PatchRule;
-import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
-import software.amazon.awssdk.services.ssm.model.PatchSource;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -27,7 +21,6 @@ import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -43,7 +36,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        //final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         String baselineId = null;
         final ResourceModel model = request.getDesiredResourceState();
 
@@ -81,9 +73,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                         proxy.injectCredentialsAndInvokeV2(groupRequest, ssmClient::registerPatchBaselineForPatchGroup);
             }
 
-            //If we made it here, no exceptions related to the requests were thrown. Success.
+            // If we made it here, no exceptions related to the requests were thrown. Success.
             logger.log(String.format("INFO Registered groups to patch baseline %s successfully %n", baselineId));
-
+            // put physical ID to model
+            model.setId(baselineId);
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.SUCCESS)
@@ -104,4 +97,3 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
     }
 
 }
-

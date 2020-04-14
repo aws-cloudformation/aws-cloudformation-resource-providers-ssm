@@ -1,19 +1,18 @@
 package software.amazon.ssm.patchbaseline;
 
 import com.amazonaws.AmazonServiceException;
+import static software.amazon.ssm.patchbaseline.TestConstants.BASELINE_ID;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-
 import static junit.framework.Assert.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static software.amazon.ssm.patchbaseline.TestConstants.BASELINE_ID;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
 
 @ExtendWith(MockitoExtension.class)
 public class ResourceTest {

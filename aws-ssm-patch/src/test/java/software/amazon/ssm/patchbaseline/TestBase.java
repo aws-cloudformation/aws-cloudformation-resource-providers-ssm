@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -180,12 +181,12 @@ public class TestBase {
         return approvalRules;
     }
 
-    protected List<Tag> requesttags(String key, String value) {
+    protected List<Tag> requestTags(String key, String value) {
         Tag tag = Tag.builder().key(key).value(value).build();
         return Collections.singletonList(tag);
     }
 
-    protected List<PatchSource> requestsources() {
+    protected List<PatchSource> requestSources() {
         PatchSource ps1 = PatchSource.builder()
                 .name("main")
                 .products(Collections.singletonList("*"))
@@ -202,7 +203,7 @@ public class TestBase {
         return sourcesList;
     }
 
-    protected PatchFilterGroup requestglobalFilters() {
+    protected PatchFilterGroup requestGlobalFilters() {
         PatchFilter pf3 = PatchFilter.builder()
                 .key("PRIORITY")
                 .values(Collections.singletonList("high"))
@@ -213,7 +214,7 @@ public class TestBase {
         return globalFilters;
     }
 
-    protected PatchRuleGroup requestapprovalRules() {
+    protected PatchRuleGroup requestApprovalRules() {
         PatchFilter pf1 = PatchFilter.builder()
                 .key("PRODUCT")
                 .values(Collections.singletonList("Ubuntu16.04"))
