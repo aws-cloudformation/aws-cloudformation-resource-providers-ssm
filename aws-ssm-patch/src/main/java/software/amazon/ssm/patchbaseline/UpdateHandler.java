@@ -1,7 +1,5 @@
 package software.amazon.ssm.patchbaseline;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import software.amazon.awssdk.services.ssm.model.UpdatePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.UpdatePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
@@ -24,14 +22,19 @@ import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor
-@NoArgsConstructor
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient ssmClient = SsmClientBuilder.getClient();
     protected static final String PATCH_BASELINE_RESOURCE_NAME = "PatchBaseline";
+    private final TagHelper tagHelper;
 
-    private TagHelper tagHelper;
+    public UpdateHandler() {
+        this(new TagHelper());
+    }
+
+    public UpdateHandler(TagHelper tagHelper) {
+        this.tagHelper = tagHelper;
+    }
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(

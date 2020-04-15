@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
@@ -59,7 +60,7 @@ public class CreateHandlerTest extends TestBase {
     @InjectMocks
     private CreateHandler createHandler;
     @Mock
-    private TagHelper mockTagHelper;
+    private TagHelper cfnTagHelper;
     @Mock
     private AmazonWebServicesClientProxy proxy;
     @Mock
@@ -67,62 +68,10 @@ public class CreateHandlerTest extends TestBase {
 
     @BeforeEach
     public void setup() {
-        // This mountain of code is the manual creation of the request in testCreateSuccess.json
-        // We pass the one read from the .json and verify it is the same as this one
-        //  ensuring the reading process doesn't change any data.
-        PatchFilter pf1 = PatchFilter.builder()
-                .key("PRODUCT")
-                .values(Collections.singletonList("Ubuntu16.04"))
-                .build();
-        PatchFilter pf2 = PatchFilter.builder()
-                .key("PRIORITY")
-                .values(Collections.singletonList("high"))
-                .build();
-        PatchFilterGroup patchFilterGroup = PatchFilterGroup.builder()
-                .patchFilters(Collections.singletonList(pf1))
-                .build();
-        PatchRule patchRule = PatchRule.builder()
-                .patchFilterGroup(patchFilterGroup)
-                .approveAfterDays(10)
-                .complianceLevel(getComplianceString(ComplianceLevel.HIGH))
-                .enableNonSecurity(true)
-                .build();
-        PatchRuleGroup approvalRules = PatchRuleGroup.builder()
-                .patchRules(Collections.singletonList(patchRule))
-                .build();
-        PatchFilterGroup globalFilters = PatchFilterGroup.builder()
-                .patchFilters(Collections.singletonList(pf2))
-                .build();
-        PatchSource ps1 = PatchSource.builder()
-                .name("main")
-                .products(Collections.singletonList("*"))
-                .configuration("deb http://example.com distro component")
-                .build();
-        PatchSource ps2 = PatchSource.builder()
-                .name("universe")
-                .products(Collections.singletonList("Ubuntu14.04"))
-                .configuration("deb http://example.com distro universe")
-                .build();
-        List<PatchSource> sourcesList = new ArrayList<>(Arrays.asList(ps1, ps2));
-        Tag tag1 = Tag.builder().key(CFN_KEY).value(CFN_VALUE).build();
-        Tag tag2 = Tag.builder().key(TAG_KEY).value(TAG_VALUE).build();
-        Tag tag3 = Tag.builder().key(SYSTEM_TAG_KEY).value(BASELINE_NAME).build();
-        tagsList = new ArrayList<>(Arrays.asList(tag1, tag2, tag3));
+        cfnTagHelper = mock(TagHelper.class);
+        createHandler = new CreateHandler(cfnTagHelper);
 
-        createPatchBaselineRequestBuilder =
-                CreatePatchBaselineRequest.builder()
-                .description(BASELINE_DESCRIPTION)
-                .operatingSystem(OPERATING_SYSTEM)
-                .rejectedPatches(REJECTED_PATCHES)
-                .rejectedPatchesAction(PatchAction.BLOCK)
-                .approvedPatches(ACCEPTED_PATCHES)
-                .clientToken(CLIENT_REQUEST_TOKEN)
-                .approvalRules(approvalRules)
-                .approvedPatchesComplianceLevel(getComplianceString(ComplianceLevel.CRITICAL))
-                .approvedPatchesEnableNonSecurity(true)
-                .globalFilters(globalFilters)
-                .sources(sourcesList)
-                .tags(tagsList);
+        createPatchBaselineRequestBuilder = setUpCreatePatchBaselineRequestBuilder();
 
         createPatchBaselineResponse =  CreatePatchBaselineResponse.builder()
                 .baselineId(BASELINE_ID)
@@ -352,7 +301,7 @@ public class CreateHandlerTest extends TestBase {
 
     @Test
     public void testSsmCfnClientSideException() {
-        when(mockTagHelper.validateAndMergeTagsForCreate(any(), any())).thenThrow(new SsmCfnClientSideException("Bad data"));
+        when(cfnTagHelper.validateAndMergeTagsForCreate(any(), any())).thenThrow(new SsmCfnClientSideException("Bad data"));
 
         ResourceHandlerRequest<ResourceModel>  request = buildDefaultInputRequest();
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -380,7 +329,7 @@ public class CreateHandlerTest extends TestBase {
 
     private void mockValidateAndMergeTagsForCreate_Success(ResourceHandlerRequest<ResourceModel> request) {
         //mock validateAndMergeTagsForCreate
-        when(mockTagHelper.validateAndMergeTagsForCreate(request, request.getDesiredResourceState().getTags()))
+        when(cfnTagHelper.validateAndMergeTagsForCreate(request, request.getDesiredResourceState().getTags()))
                 .thenReturn(tagsList);
     }
 
@@ -393,6 +342,61 @@ public class CreateHandlerTest extends TestBase {
             }
         }
         return typeCheckedValues;
+    }
+
+    private CreatePatchBaselineRequest.Builder setUpCreatePatchBaselineRequestBuilder() {
+        PatchFilter pf1 = PatchFilter.builder()
+                .key("PRODUCT")
+                .values(Collections.singletonList("Ubuntu16.04"))
+                .build();
+        PatchFilter pf2 = PatchFilter.builder()
+                .key("PRIORITY")
+                .values(Collections.singletonList("high"))
+                .build();
+        PatchFilterGroup patchFilterGroup = PatchFilterGroup.builder()
+                .patchFilters(Collections.singletonList(pf1))
+                .build();
+        PatchRule patchRule = PatchRule.builder()
+                .patchFilterGroup(patchFilterGroup)
+                .approveAfterDays(10)
+                .complianceLevel(getComplianceString(ComplianceLevel.HIGH))
+                .enableNonSecurity(true)
+                .build();
+        PatchRuleGroup approvalRules = PatchRuleGroup.builder()
+                .patchRules(Collections.singletonList(patchRule))
+                .build();
+        PatchFilterGroup globalFilters = PatchFilterGroup.builder()
+                .patchFilters(Collections.singletonList(pf2))
+                .build();
+        PatchSource ps1 = PatchSource.builder()
+                .name("main")
+                .products(Collections.singletonList("*"))
+                .configuration("deb http://example.com distro component")
+                .build();
+        PatchSource ps2 = PatchSource.builder()
+                .name("universe")
+                .products(Collections.singletonList("Ubuntu14.04"))
+                .configuration("deb http://example.com distro universe")
+                .build();
+        List<PatchSource> sourcesList = new ArrayList<>(Arrays.asList(ps1, ps2));
+        Tag tag1 = Tag.builder().key(CFN_KEY).value(CFN_VALUE).build();
+        Tag tag2 = Tag.builder().key(TAG_KEY).value(TAG_VALUE).build();
+        Tag tag3 = Tag.builder().key(SYSTEM_TAG_KEY).value(BASELINE_NAME).build();
+        tagsList = new ArrayList<>(Arrays.asList(tag1, tag2, tag3));
+
+        return CreatePatchBaselineRequest.builder()
+                        .description(BASELINE_DESCRIPTION)
+                        .operatingSystem(OPERATING_SYSTEM)
+                        .rejectedPatches(REJECTED_PATCHES)
+                        .rejectedPatchesAction(PatchAction.BLOCK)
+                        .approvedPatches(ACCEPTED_PATCHES)
+                        .clientToken(CLIENT_REQUEST_TOKEN)
+                        .approvalRules(approvalRules)
+                        .approvedPatchesComplianceLevel(getComplianceString(ComplianceLevel.CRITICAL))
+                        .approvedPatchesEnableNonSecurity(true)
+                        .globalFilters(globalFilters)
+                        .sources(sourcesList)
+                        .tags(tagsList);
     }
 
 }

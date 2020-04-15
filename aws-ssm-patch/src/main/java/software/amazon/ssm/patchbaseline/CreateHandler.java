@@ -1,7 +1,5 @@
 package software.amazon.ssm.patchbaseline;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -22,12 +20,18 @@ import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-@NoArgsConstructor
-@AllArgsConstructor
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient ssmClient = SsmClientBuilder.getClient();
-    private TagHelper tagHelper;
+    private final TagHelper tagHelper;
+
+    public CreateHandler() {
+        this(new TagHelper());
+    }
+
+    public CreateHandler(TagHelper tagHelper) {
+        this.tagHelper = tagHelper;
+    }
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
