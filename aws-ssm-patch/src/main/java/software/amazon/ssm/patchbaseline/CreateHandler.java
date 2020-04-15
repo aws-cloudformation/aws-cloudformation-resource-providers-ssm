@@ -65,6 +65,9 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             logger.log(String.format("INFO Created patch baseline %s successfully. Adding groups (if any) %n", baselineId));
 
+            // put physical ID to model
+            model.setId(baselineId);
+
             // This is not in the definition for a baseline object but we must receive it from CFN
             // Register the groups for this Patch Baseline
             List<String> patchGroups = CollectionUtils.isNullOrEmpty(model.getPatchGroups()) ? new ArrayList<>() : model.getPatchGroups();
@@ -79,8 +82,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             // If we made it here, no exceptions related to the requests were thrown. Success.
             logger.log(String.format("INFO Registered groups to patch baseline %s successfully %n", baselineId));
-            // put physical ID to model
-            model.setId(baselineId);
+
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)
                     .status(OperationStatus.SUCCESS)

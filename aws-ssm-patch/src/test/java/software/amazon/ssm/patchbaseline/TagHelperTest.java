@@ -121,21 +121,6 @@ public class TagHelperTest extends TestBase{
     }
 
     @Test
-    public void testConvertRequestTagsToMap_SystemTag() {
-        List<Tag> input = Arrays.asList(
-                 Tag.builder().key("aws:foo").value("bar").build(),
-                 Tag.builder().key("foo").value("blah").build()
-        );
-
-        try {
-            cfnTagHelper.convertRequestTagsToMap(input);
-            Assertions.fail("Should have thrown an exception");
-        } catch (SsmCfnClientSideException e) {
-            assertThat(e.getMessage()).isEqualTo(NO_SYSTEM_TAGS);
-        }
-    }
-
-    @Test
     public void testValidateCustomerSuppliedTags_Nominal() {
         Map<String, String> input = new HashMap<>();
         input.put("foo", "bar");

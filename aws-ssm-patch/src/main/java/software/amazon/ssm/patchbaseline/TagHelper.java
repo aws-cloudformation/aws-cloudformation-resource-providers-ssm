@@ -45,6 +45,7 @@ public class TagHelper {
         Map<String, String> systemTags = request.getSystemTags();
         validateCustomerSuppliedTags(desiredResourceTags);
         Map<String, String> tagsMap = convertResourceModelTagsToMap(tags);
+        validateCustomerSuppliedTags(tagsMap);
 
         Map<String, String> tagsToAdd = TagUtils.consolidateTags(desiredResourceTags, systemTags, tagsMap);
 
@@ -163,7 +164,7 @@ public class TagHelper {
      */
     @VisibleForTesting
     protected Map<String, String> convertRequestTagsToMap(List<Tag> tags) {
-        return convertResourceTagsToMapAndValidate(tags, Tag::key, Tag::value);
+        return convertResourceTagsToMap(tags, Tag::key, Tag::value);
     }
 
     /**
@@ -173,7 +174,7 @@ public class TagHelper {
      */
     @VisibleForTesting
     protected Map<String, String> convertResourceModelTagsToMap(List<software.amazon.ssm.patchbaseline.Tag> tags) {
-        return convertResourceTagsToMapAndValidate(tags, software.amazon.ssm.patchbaseline.Tag::getKey,
+        return convertResourceTagsToMap(tags, software.amazon.ssm.patchbaseline.Tag::getKey,
                 software.amazon.ssm.patchbaseline.Tag::getValue);
     }
     /**
@@ -182,7 +183,7 @@ public class TagHelper {
      * @param tags List of SSM tags
      * @return Tags as a map
      */
-    private <T> Map<String, String> convertResourceTagsToMapAndValidate(
+    private <T> Map<String, String> convertResourceTagsToMap(
             List<T> tags, Function<T, String> keyMapper, Function<T, String> valueMapper) {
         if (CollectionUtils.isNullOrEmpty(tags)) {
             return new HashMap<>();
@@ -197,14 +198,16 @@ public class TagHelper {
 
             String tagKey = keyMapper.apply(tag);
 
+            if (tagKey == null) {
+                throw new SsmCfnClientSideException(TAG_KEY_NULL);
+            }
+
             if (tagSet.containsKey(tagKey)) {
                 throw new SsmCfnClientSideException(NO_DUPLICATE_TAGS);
             }
 
             tagSet.put(tagKey, valueMapper.apply(tag));
         }
-
-        validateCustomerSuppliedTags(tagSet);
 
         return tagSet;
     }
