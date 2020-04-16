@@ -130,6 +130,10 @@ public class TagHelper {
         Map<String, String> newTagsMap = convertRequestTagsToMap(newTags);
         Map<String, String> oldTagsMap = convertRequestTagsToMap(oldTags);
 
+        // request.getSystemTag() is null,
+        // remove systemTags from listTagsForResourceResponse
+        oldTagsMap.keySet().removeIf(key -> key.toLowerCase().startsWith(SYSTEM_TAG_PREFIX));
+
         Map<String, String> tagsToRemove = TagUtils.getTagsToDelete(newTagsMap, oldTagsMap);
         Map<String, String> tagsToAdd = TagUtils.getTagsToCreate(newTagsMap, oldTagsMap);
 

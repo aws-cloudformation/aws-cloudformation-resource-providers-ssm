@@ -103,6 +103,7 @@ public class CreatePatchBaselineRequestTranslatorTest extends TestBase{
         PatchRule patchRule = PatchRule.builder()
                 .patchFilterGroup(patchFilterGroup)
                 .approveAfterDays(10)
+                .approveUntilDate(APPROVE_UNTIL_DATE)
                 .complianceLevel(getComplianceString(ComplianceLevel.HIGH))
                 .enableNonSecurity(true)
                 .build();

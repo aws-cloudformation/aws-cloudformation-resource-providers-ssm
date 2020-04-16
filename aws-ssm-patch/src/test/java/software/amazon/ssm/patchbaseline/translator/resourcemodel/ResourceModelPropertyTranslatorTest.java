@@ -5,10 +5,10 @@ import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.ssm.patchbaseline.TestBase;
-import static software.amazon.ssm.patchbaseline.TestConstants.TAG_KEY;
-import static software.amazon.ssm.patchbaseline.TestConstants.TAG_VALUE;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.amazon.ssm.patchbaseline.TestConstants.*;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -166,7 +166,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
     @Test
     void testTranslateToResourceModelApprovalRules() {
         final PatchRuleGroup approvalRules = requestApprovalRules();
-        final software.amazon.ssm.patchbaseline.RuleGroup expectedApprovalRules = approvalRules();
+        final software.amazon.ssm.patchbaseline.RuleGroup expectedApprovalRules = approvalRules(APPROVE_UNTIL_DATE);
         final Optional<software.amazon.ssm.patchbaseline.RuleGroup> resourceModelApprovalRules =
                 ResourceModelPropertyTranslator.translateToResourceModelApprovalRules(approvalRules);
         assertThat(resourceModelApprovalRules).isEqualTo(Optional.of(expectedApprovalRules));
@@ -190,7 +190,7 @@ public class ResourceModelPropertyTranslatorTest extends TestBase {
     @Test
     void testTranslateToRequestApprovalRules() {
         final PatchRuleGroup expectedApprovalRules = requestApprovalRules();
-        final software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
+        final software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules(APPROVE_UNTIL_DATE);
         final Optional<PatchRuleGroup> requestApprovalRules =
                 ResourceModelPropertyTranslator.translateToRequestApprovalRules(approvalRules);
         assertThat(requestApprovalRules).isEqualTo(Optional.of(expectedApprovalRules));

@@ -105,18 +105,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
             //Remove old tags (except those that are overwritten) then add new tags
             tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy);
-//
-//            //log to be removed
-//            for (String tagKey : request.getSystemTags().keySet()) {
-//                logger.log(String.format("update request system tag key %s, value %s %n", tagKey, request.getSystemTags().get(tagKey)));
-//            }
-
-            for (Tag tag : request.getPreviousResourceState().getTags()) {
-                logger.log(String.format("update getPreviousResourceState tag key %s, value %s %n", tag.getKey(), tag.getValue()));
-            }
-
-            if (CollectionUtils.isNullOrEmpty(request.getSystemTags()))
-                logger.log(String.format("update system tag is null %n"));
 
             logger.log(String.format("INFO Updated tags for patch baseline %s %n", baselineId));
 

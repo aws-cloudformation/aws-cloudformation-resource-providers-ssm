@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.ssm.patchbaseline.ResourceModel;
 import software.amazon.ssm.patchbaseline.TestBase;
-import software.amazon.ssm.patchbaseline.TestConstants;
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,7 +90,8 @@ public class UpdatePatchBaselineRequestTranslatorTest extends TestBase{
         PatchRule patchRule = PatchRule.builder()
                 .patchFilterGroup(patchFilterGroup)
                 .approveAfterDays(10)
-                .complianceLevel(getComplianceString(TestConstants.ComplianceLevel.HIGH))
+                .approveUntilDate(APPROVE_UNTIL_DATE)
+                .complianceLevel(getComplianceString(ComplianceLevel.HIGH))
                 .enableNonSecurity(true)
                 .build();
         PatchRuleGroup approvalRules = PatchRuleGroup.builder()

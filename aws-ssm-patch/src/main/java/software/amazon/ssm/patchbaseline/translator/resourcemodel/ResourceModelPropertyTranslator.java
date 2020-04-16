@@ -194,7 +194,8 @@ public class ResourceModelPropertyTranslator {
                 PatchRule.Builder patchRuleBuilder = PatchRule.builder()
                         .approveAfterDays(entry.getApproveAfterDays())
                         .complianceLevel(entry.getComplianceLevel())
-                        .enableNonSecurity(entry.getEnableNonSecurity());
+                        .enableNonSecurity(entry.getEnableNonSecurity())
+                        .approveUntilDate(entry.getApproveUntilDate());
                 translateToRequestGlobalFilters(entry.getPatchFilterGroup()).ifPresent(patchRuleBuilder::patchFilterGroup);
 
                 requestPatchRules.add(patchRuleBuilder.build());
@@ -233,7 +234,8 @@ public class ResourceModelPropertyTranslator {
                         software.amazon.ssm.patchbaseline.Rule.builder()
                                 .approveAfterDays(entry.approveAfterDays())
                                 .complianceLevel(entry.complianceLevelAsString())
-                                .enableNonSecurity(entry.enableNonSecurity());
+                                .enableNonSecurity(entry.enableNonSecurity())
+                                .approveUntilDate(entry.approveUntilDate());
                 translateToResourceModelGlobalFilters(entry.patchFilterGroup()).ifPresent(ruleBuilder::patchFilterGroup);
                 resourceModelPatchRules.add(ruleBuilder.build());
             }

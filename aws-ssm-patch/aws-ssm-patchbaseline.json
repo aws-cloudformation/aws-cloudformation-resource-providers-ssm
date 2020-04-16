@@ -132,6 +132,11 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "ApproveUntilDate": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10
+                },
                 "EnableNonSecurity": {
                     "type": "boolean"
                 },

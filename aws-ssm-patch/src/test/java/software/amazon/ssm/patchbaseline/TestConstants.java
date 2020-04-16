@@ -38,6 +38,10 @@ public class TestConstants {
 
     public static final String SYSTEM_TAG_KEY = "aws:cloudformation:stack-name";
 
+    public static final String APPROVE_UNTIL_DATE = "2020-02-02";
+
+    public static final String UPDATED_APPROVE_UNTIL_DATE = "2020-02-05";
+
     public static final ArrayList<String> ACCEPTED_PATCHES = new ArrayList<String>() {{
         add("curl");
         add("apache");

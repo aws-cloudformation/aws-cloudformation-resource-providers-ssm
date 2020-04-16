@@ -27,6 +27,11 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * Only one of the approveAfterDays & approveUntilDate field in the PatchRule should be set,
+ * for testing purpose only, we set both of them not null
+ */
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestBase {
     @Mock
@@ -40,7 +45,7 @@ public class TestBase {
         List<software.amazon.ssm.patchbaseline.Tag> tags = tags(TAG_KEY, TAG_VALUE);
         List<software.amazon.ssm.patchbaseline.PatchSource> sources = sources();
         software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters = globalFilters();
-        software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
+        software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules(APPROVE_UNTIL_DATE);
 
         Map<String, String> desiredResourceTagsMap = new HashMap<>();
         desiredResourceTagsMap.put(TestConstants.CFN_KEY, TestConstants.CFN_VALUE);
@@ -65,7 +70,7 @@ public class TestBase {
         List<software.amazon.ssm.patchbaseline.Tag> tags = tags(TAG_KEY, TAG_VALUE);
         List<software.amazon.ssm.patchbaseline.PatchSource> sources = sources();
         software.amazon.ssm.patchbaseline.PatchFilterGroup globalFilters = globalFilters();
-        software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules();
+        software.amazon.ssm.patchbaseline.RuleGroup approvalRules = approvalRules(UPDATED_APPROVE_UNTIL_DATE);
 
         List<software.amazon.ssm.patchbaseline.Tag> updatedTags = tags(NEW_TAG_KEY, NEW_TAG_VALUE);
 
@@ -161,7 +166,7 @@ public class TestBase {
         return globalFilters;
     }
 
-    protected software.amazon.ssm.patchbaseline.RuleGroup approvalRules() {
+    protected software.amazon.ssm.patchbaseline.RuleGroup approvalRules(String approveUntilDate) {
         software.amazon.ssm.patchbaseline.PatchFilter pf1 = software.amazon.ssm.patchbaseline.PatchFilter.builder()
                 .key("PRODUCT")
                 .values(Collections.singletonList("Ubuntu16.04"))
@@ -172,6 +177,7 @@ public class TestBase {
         software.amazon.ssm.patchbaseline.Rule patchRule = software.amazon.ssm.patchbaseline.Rule.builder()
                 .patchFilterGroup(patchFilterGroup)
                 .approveAfterDays(10)
+                .approveUntilDate(approveUntilDate)
                 .complianceLevel(getComplianceString(TestConstants.ComplianceLevel.HIGH))
                 .enableNonSecurity(true)
                 .build();
@@ -225,6 +231,7 @@ public class TestBase {
         PatchRule patchRule = PatchRule.builder()
                 .patchFilterGroup(patchFilterGroup)
                 .approveAfterDays(10)
+                .approveUntilDate(APPROVE_UNTIL_DATE)
                 .complianceLevel(getComplianceString(ComplianceLevel.HIGH))
                 .enableNonSecurity(true)
                 .build();
