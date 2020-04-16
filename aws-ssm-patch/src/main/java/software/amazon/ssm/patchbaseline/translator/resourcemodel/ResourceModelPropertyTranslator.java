@@ -242,7 +242,4 @@ public class ResourceModelPropertyTranslator {
         }
         return resourceModelPatchRules;
     }
-
-
-
 }

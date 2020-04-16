@@ -87,7 +87,4 @@ public class ReadResourceModelTranslatorTest extends TestBase {
 
         assertThat(resultModel).isEqualTo(expectedModel);
     }
-
-
-
 }
