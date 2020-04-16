@@ -1,0 +1,10 @@
+[
+  {
+    "Key": "desiredTagKey1",
+    "Value": "desiredTagValue1"
+  },
+  {
+    "Key": "Environment",
+    "Value": "value"
+  }
+]
