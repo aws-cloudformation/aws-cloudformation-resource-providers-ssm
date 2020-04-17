@@ -2,7 +2,6 @@ package com.amazonaws.ssm.association.translator;
 
 import com.amazonaws.ssm.association.ResourceModel;
 import com.amazonaws.ssm.association.translator.property.InstanceAssociationOutputLocationTranslator;
-import com.amazonaws.ssm.association.translator.property.ParametersTranslator;
 import com.amazonaws.ssm.association.translator.property.TargetsListTranslator;
 import com.amazonaws.ssm.association.util.SimpleTypeValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,9 +29,8 @@ import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.LAS
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MAX_CONCURRENCY;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MAX_ERRORS;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_OUTPUT_LOCATION;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_PARAMETERS;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_TARGETS;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_PARAMETERS;
+import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.PARAMETERS;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SCHEDULE_EXPRESSION;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_OUTPUT_LOCATION;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_TARGETS;
@@ -47,8 +45,6 @@ class AssociationDescriptionTranslatorTest {
     private InstanceAssociationOutputLocationTranslator instanceAssociationOutputLocationTranslator;
     @Mock
     private TargetsListTranslator targetsListTranslator;
-    @Mock
-    private ParametersTranslator parametersTranslator;
 
     private AssociationDescriptionTranslator associationDescriptionTranslator;
 
@@ -60,8 +56,7 @@ class AssociationDescriptionTranslatorTest {
         associationDescriptionTranslator =
             new AssociationDescriptionTranslator(simpleTypeValidator,
                 instanceAssociationOutputLocationTranslator,
-                targetsListTranslator,
-                parametersTranslator);
+                targetsListTranslator);
     }
 
     @Test
@@ -70,8 +65,6 @@ class AssociationDescriptionTranslatorTest {
             .thenReturn(Optional.of(MODEL_OUTPUT_LOCATION));
         when(targetsListTranslator.serviceModelPropertyToResourceModel(SERVICE_TARGETS))
             .thenReturn(Optional.of(MODEL_TARGETS));
-        when(parametersTranslator.serviceModelPropertyToResourceModel(SERVICE_PARAMETERS))
-            .thenReturn(Optional.of(MODEL_PARAMETERS));
 
         final AssociationDescription associationDescription =
             AssociationDescription.builder()
@@ -79,7 +72,7 @@ class AssociationDescriptionTranslatorTest {
                 .name(DOCUMENT_NAME)
                 .documentVersion(DOCUMENT_VERSION)
                 .associationName(ASSOCIATION_NAME)
-                .parameters(SERVICE_PARAMETERS)
+                .parameters(PARAMETERS)
                 .targets(SERVICE_TARGETS)
                 .scheduleExpression(SCHEDULE_EXPRESSION)
                 .complianceSeverity(COMPLIANCE_SEVERITY)
@@ -104,7 +97,7 @@ class AssociationDescriptionTranslatorTest {
                 .associationName(ASSOCIATION_NAME)
                 .name(DOCUMENT_NAME)
                 .documentVersion(DOCUMENT_VERSION)
-                .parameters(MODEL_PARAMETERS)
+                .parameters(PARAMETERS)
                 .targets(MODEL_TARGETS)
                 .scheduleExpression(SCHEDULE_EXPRESSION)
                 .complianceSeverity(COMPLIANCE_SEVERITY)
@@ -123,8 +116,6 @@ class AssociationDescriptionTranslatorTest {
         when(instanceAssociationOutputLocationTranslator.serviceModelPropertyToResourceModel(null))
             .thenReturn(Optional.empty());
         when(targetsListTranslator.serviceModelPropertyToResourceModel(Collections.emptyList()))
-            .thenReturn(Optional.empty());
-        when(parametersTranslator.serviceModelPropertyToResourceModel(Collections.emptyMap()))
             .thenReturn(Optional.empty());
 
         final AssociationDescription associationDescription =
@@ -154,8 +145,6 @@ class AssociationDescriptionTranslatorTest {
         when(instanceAssociationOutputLocationTranslator.serviceModelPropertyToResourceModel(null))
             .thenReturn(Optional.empty());
         when(targetsListTranslator.serviceModelPropertyToResourceModel(Collections.emptyList()))
-            .thenReturn(Optional.empty());
-        when(parametersTranslator.serviceModelPropertyToResourceModel(Collections.emptyMap()))
             .thenReturn(Optional.empty());
 
         final AssociationDescription associationDescription =
