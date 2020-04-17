@@ -13,6 +13,8 @@ public class CallbackContext {
 
     private Boolean createDocumentStarted;
 
+    private Boolean eventStarted;
+
     private Integer stabilizationRetriesRemaining;
 
     @JsonIgnore

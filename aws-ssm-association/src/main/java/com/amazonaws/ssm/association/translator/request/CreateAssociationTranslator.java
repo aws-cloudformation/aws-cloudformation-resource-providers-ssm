@@ -2,6 +2,7 @@ package com.amazonaws.ssm.association.translator.request;
 
 import com.amazonaws.ssm.association.ResourceModel;
 import com.amazonaws.ssm.association.translator.property.InstanceAssociationOutputLocationTranslator;
+import com.amazonaws.ssm.association.translator.property.ParametersTranslator;
 import com.amazonaws.ssm.association.translator.property.TargetsListTranslator;
 import com.amazonaws.ssm.association.util.SimpleTypeValidator;
 import software.amazon.awssdk.services.ssm.model.CreateAssociationRequest;
@@ -14,6 +15,7 @@ public class CreateAssociationTranslator implements RequestTranslator<CreateAsso
     private final SimpleTypeValidator simpleTypeValidator;
     private final InstanceAssociationOutputLocationTranslator instanceAssociationOutputLocationTranslator;
     private final TargetsListTranslator targetsListTranslator;
+    private final ParametersTranslator parametersTranslator;
 
     /**
      * Constructor that initializes all required fields.
@@ -22,6 +24,7 @@ public class CreateAssociationTranslator implements RequestTranslator<CreateAsso
         this.simpleTypeValidator = new SimpleTypeValidator();
         this.instanceAssociationOutputLocationTranslator = new InstanceAssociationOutputLocationTranslator();
         this.targetsListTranslator = new TargetsListTranslator();
+        this.parametersTranslator = new ParametersTranslator();
     }
 
     /**
@@ -30,13 +33,16 @@ public class CreateAssociationTranslator implements RequestTranslator<CreateAsso
      * @param simpleTypeValidator Validator for simple data types.
      * @param instanceAssociationOutputLocationTranslator PropertyTranslator for InstanceAssociationOutputLocation property.
      * @param targetsListTranslator PropertyTranslator for Targets List property.
+     * @param parametersTranslator PropertyTranslator for Parameters property.
      */
-    public CreateAssociationTranslator(final SimpleTypeValidator simpleTypeValidator,
+    CreateAssociationTranslator(final SimpleTypeValidator simpleTypeValidator,
                                        final InstanceAssociationOutputLocationTranslator instanceAssociationOutputLocationTranslator,
-                                       final TargetsListTranslator targetsListTranslator) {
+                                       final TargetsListTranslator targetsListTranslator,
+                                       final ParametersTranslator parametersTranslator) {
         this.simpleTypeValidator = simpleTypeValidator;
         this.instanceAssociationOutputLocationTranslator = instanceAssociationOutputLocationTranslator;
         this.targetsListTranslator = targetsListTranslator;
+        this.parametersTranslator = parametersTranslator;
     }
 
     /**
@@ -60,7 +66,7 @@ public class CreateAssociationTranslator implements RequestTranslator<CreateAsso
         simpleTypeValidator.getValidatedString(model.getInstanceId())
             .ifPresent(createAssociationRequestBuilder::instanceId);
 
-        simpleTypeValidator.getValidatedMap(model.getParameters())
+        parametersTranslator.resourceModelPropertyToServiceModel(model.getParameters())
             .ifPresent(createAssociationRequestBuilder::parameters);
 
         simpleTypeValidator.getValidatedString(model.getScheduleExpression())

@@ -2,6 +2,7 @@ package com.amazonaws.ssm.association.translator;
 
 import com.amazonaws.ssm.association.ResourceModel;
 import com.amazonaws.ssm.association.translator.property.InstanceAssociationOutputLocationTranslator;
+import com.amazonaws.ssm.association.translator.property.ParametersTranslator;
 import com.amazonaws.ssm.association.translator.property.TargetsListTranslator;
 import com.amazonaws.ssm.association.util.SimpleTypeValidator;
 import software.amazon.awssdk.services.ssm.model.AssociationDescription;
@@ -14,6 +15,7 @@ public class AssociationDescriptionTranslator {
     private final SimpleTypeValidator simpleTypeValidator;
     private final InstanceAssociationOutputLocationTranslator instanceAssociationOutputLocationTranslator;
     private final TargetsListTranslator targetsListTranslator;
+    private final ParametersTranslator parametersTranslator;
 
     /**
      * Constructor that initializes all required fields.
@@ -22,6 +24,7 @@ public class AssociationDescriptionTranslator {
         this.simpleTypeValidator = new SimpleTypeValidator();
         this.instanceAssociationOutputLocationTranslator = new InstanceAssociationOutputLocationTranslator();
         this.targetsListTranslator = new TargetsListTranslator();
+        this.parametersTranslator = new ParametersTranslator();
     }
 
     /**
@@ -33,10 +36,12 @@ public class AssociationDescriptionTranslator {
      */
     public AssociationDescriptionTranslator(final SimpleTypeValidator simpleTypeValidator,
                                             final InstanceAssociationOutputLocationTranslator instanceAssociationOutputLocationTranslator,
-                                            final TargetsListTranslator targetsListTranslator) {
+                                            final TargetsListTranslator targetsListTranslator,
+                                            final ParametersTranslator parametersTranslator) {
         this.simpleTypeValidator = simpleTypeValidator;
         this.instanceAssociationOutputLocationTranslator = instanceAssociationOutputLocationTranslator;
         this.targetsListTranslator = targetsListTranslator;
+        this.parametersTranslator = parametersTranslator;
     }
 
     /**
@@ -62,7 +67,7 @@ public class AssociationDescriptionTranslator {
         simpleTypeValidator.getValidatedString(association.instanceId())
             .ifPresent(model::setInstanceId);
 
-        simpleTypeValidator.getValidatedMap(association.parameters())
+        parametersTranslator.serviceModelPropertyToResourceModel(association.parameters())
             .ifPresent(model::setParameters);
 
         simpleTypeValidator.getValidatedString(association.scheduleExpression())
