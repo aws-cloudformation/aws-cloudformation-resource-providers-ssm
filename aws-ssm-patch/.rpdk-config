@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::SSM::PatchBaseline",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.ssm.patchbaseline.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.ssm.patchbaseline.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "ssm",
+            "patchbaseline"
+        ]
+    }
+}
