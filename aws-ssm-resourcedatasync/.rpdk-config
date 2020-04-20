@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::SSM::ResourceDataSync",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.ssm.resourcedatasync.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.ssm.resourcedatasync.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "ssm",
+            "resourcedatasync"
+        ]
+    }
+}
