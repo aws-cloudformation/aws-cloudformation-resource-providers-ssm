@@ -1,77 +1,104 @@
 {
-    "typeName": "AWS::SSM::Parameter",
-    "description": "Resource Type definition for AWS::SSM::Parameter",
-    "additionalProperties": false,
-    "properties": {
-        "Id": {
-            "type": "string"
-        },
-        "Type": {
-            "type": "string"
-        },
-        "Value": {
-            "type": "string"
-        },
-        "Description": {
-            "type": "string"
-        },
-        "Policies": {
-            "type": "string"
-        },
-        "AllowedPattern": {
-            "type": "string"
-        },
-        "Tier": {
-            "type": "string"
-        },
-        "Tags": {
-            "type": "object"
-        },
-        "Name": {
-            "type": "string"
-        }
+  "typeName": "AWS::SSM::Parameter",
+  "description": "Resource Type definition for AWS::SSM::Parameter",
+  "additionalProperties": false,
+  "properties": {
+    "Type": {
+      "type": "string",
+      "description": "The type of the parameter.",
+      "enum": [
+        "String",
+        "StringList",
+        "SecureString"
+      ]
     },
-    "required": [
-        "Value",
-        "Type"
-    ],
-    "createOnlyProperties": [
-        "/properties/Name"
-    ],
-    "primaryIdentifier": [
-        "/properties/Id"
-    ],
-    "readOnlyProperties": [
-        "/properties/Id"
-    ],
-    "handlers": {
-        "create": {
-            "permissions": [
-                "ssm:PutParameter",
-                "ssm:GetParameters"
-            ]
-        },
-        "read": {
-            "permissions": [
-                "ssm:GetParameters"
-            ]
-        },
-        "update": {
-            "permissions": [
-                "ssm:PutParameter",
-                "ssm:AddTagsToResource",
-                "ssm:RemoveTagsFromResource"
-            ]
-        },
-        "delete": {
-            "permissions": [
-                "ssm:DeleteParameter"
-            ]
-        },
-        "list": {
-            "permissions": [
-                "ssm:DescribeParameters"
-            ]
-        }
+    "Value": {
+      "type": "string",
+      "description": "The value associated with the parameter.",
+      "minLength": 1,
+      "maxLength": 32768
+    },
+    "Description": {
+      "type": "string",
+      "description": "The information about the parameter.",
+      "minLength": 0,
+      "maxLength": 1024
+    },
+    "Policies": {
+      "type": "string",
+      "description": "The policies attached to the parameter."
+    },
+    "AllowedPattern": {
+      "type": "string",
+      "description": "The regular expression used to validate the parameter value.",
+      "minLength": 0,
+      "maxLength": 1024
+    },
+    "Tier": {
+      "type": "string",
+      "description": "The corresponding tier of the parameter.",
+      "enum": [
+        "Standard",
+        "Advanced",
+        "Intelligent-Tiering"
+      ]
+    },
+    "Tags": {
+      "type": "object",
+      "description": "A key-value pair to associate with a resource.",
+      "patternProperties": {
+        "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "Name": {
+      "type": "string",
+      "description": "The name of the parameter."
     }
+  },
+  "required": [
+    "Value",
+    "Type"
+  ],
+  "createOnlyProperties": [
+    "/properties/Name"
+  ],
+  "primaryIdentifier": [
+    "/properties/Name"
+  ],
+  "readOnlyProperties": [
+    "/properties/Name",
+    "/properties/Type",
+    "/properties/Value"
+  ],
+  "handlers": {
+    "create": {
+      "permissions": [
+        "ssm:PutParameter",
+        "ssm:GetParameters"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "ssm:GetParameters"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "ssm:PutParameter",
+        "ssm:AddTagsToResource",
+        "ssm:RemoveTagsFromResource"
+      ]
+    },
+    "delete": {
+      "permissions": [
+        "ssm:DeleteParameter"
+      ]
+    },
+    "list": {
+      "permissions": [
+        "ssm:DescribeParameters"
+      ]
+    }
+  }
 }
