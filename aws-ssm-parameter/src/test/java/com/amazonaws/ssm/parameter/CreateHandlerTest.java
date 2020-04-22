@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
@@ -68,6 +69,62 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
                 .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNotNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess_With_No_ParameterName_Defined_Exceeding_LogicalResourceId() {
+        RESOURCE_MODEL = ResourceModel.builder()
+                .description(DESCRIPTION)
+                .value(VALUE)
+                .type(TYPE)
+                .tags(TAG_SET)
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier(RandomStringUtils.random(600)).build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNotNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess_With_No_ParameterName_Defined_Not_Exceeding_LogicalResourceId() {
+        RESOURCE_MODEL = ResourceModel.builder()
+                .description(DESCRIPTION)
+                .value(VALUE)
+                .type(TYPE)
+                .tags(TAG_SET)
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
         assertThat(response).isNotNull();
