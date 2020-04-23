@@ -12,8 +12,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
-
 /**
  * Handles initial create requests for a given resource.
  */
@@ -81,7 +79,7 @@ public class InitialCreateHandler extends BaseHandler<CallbackContext> {
                     .associationDescription();
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
-                .translateFromServiceException(e, createAssociationRequest, Optional.empty());
+                .translateFromServiceException(e, createAssociationRequest, desiredModel);
 
             logger.log(cfnException.getCause().getMessage());
 

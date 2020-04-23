@@ -21,7 +21,6 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -157,7 +156,7 @@ class ReadHandlerTest {
             exceptionTranslator.translateFromServiceException(
                 serviceException,
                 expectedDescribeAssociationRequest,
-                Optional.of(expectedDescribeAssociationRequest.associationId())))
+                model))
             .thenReturn(new CfnServiceInternalErrorException("DescribeAssociation", serviceException));
 
         Assertions.assertThrows(CfnServiceInternalErrorException.class, () -> {
@@ -167,7 +166,7 @@ class ReadHandlerTest {
             .translateFromServiceException(
                 serviceException,
                 expectedDescribeAssociationRequest,
-                Optional.of(expectedDescribeAssociationRequest.associationId()));
+                model);
         verify(logger).log(anyString());
     }
 }

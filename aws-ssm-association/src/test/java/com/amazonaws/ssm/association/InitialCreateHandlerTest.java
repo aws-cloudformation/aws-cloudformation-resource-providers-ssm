@@ -21,7 +21,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -213,13 +212,13 @@ class InitialCreateHandlerTest {
                 ArgumentMatchers.<Function<CreateAssociationRequest, CreateAssociationResponse>>any()))
             .thenThrow(serviceException);
 
-        when(exceptionTranslator.translateFromServiceException(serviceException, createAssociationRequest, Optional.empty()))
+        when(exceptionTranslator.translateFromServiceException(serviceException, createAssociationRequest, model))
             .thenReturn(new CfnServiceInternalErrorException("CreateAssociation", serviceException));
 
         Assertions.assertThrows(CfnServiceInternalErrorException.class, () -> {
             handler.handleRequest(proxy, request, null, logger);
         });
         verify(exceptionTranslator)
-            .translateFromServiceException(serviceException, createAssociationRequest, Optional.empty());
+            .translateFromServiceException(serviceException, createAssociationRequest, model);
     }
 }

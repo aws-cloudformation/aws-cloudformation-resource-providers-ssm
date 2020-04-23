@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.association.util;
 
+import com.amazonaws.ssm.association.ResourceModel;
 import com.amazonaws.ssm.association.translator.ExceptionTranslator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,25 +28,28 @@ import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorExceptio
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 
-import java.util.Optional;
-
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.ASSOCIATION_ID;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.DOCUMENT_NAME;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.INSTANCE_ID;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class ExceptionTranslatorTest {
 
     private ExceptionTranslator exceptionTranslator;
+    private ResourceModel model;
+    private ResourceModel modelWithoutId;
 
     @BeforeEach
     void setUp() {
         exceptionTranslator = new ExceptionTranslator();
+        model = ResourceModel.builder().associationId(ASSOCIATION_ID).name(DOCUMENT_NAME).build();
+        modelWithoutId = ResourceModel.builder().name(DOCUMENT_NAME).instanceId(INSTANCE_ID).build();
     }
 
     @Test
-    void translateFromAssociationAlreadyExistsException() {
+    void translateFromAssociationAlreadyExistsExceptionWithoutAssociationId() {
         final AssociationAlreadyExistsException serviceException = AssociationAlreadyExistsException.builder().build();
         final CreateAssociationRequest request = CreateAssociationRequest.builder()
             .name(DOCUMENT_NAME)
@@ -53,28 +57,56 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.empty());
+                modelWithoutId);
 
         assertTrue(cfnException instanceof CfnAlreadyExistsException);
+        final String expectedMessage =
+            String.format("Resource of type 'AWS::SSM::Association' with identifier 'Name=%s,InstanceId=%s' already exists.",
+                modelWithoutId.getName(), modelWithoutId.getInstanceId());
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
-    void translateFromAssociationLimitExceededException() {
-        final AssociationLimitExceededException serviceException = AssociationLimitExceededException.builder().build();
+    void translateFromAssociationAlreadyExistsExceptionWithAssociationId() {
+        final AssociationAlreadyExistsException serviceException = AssociationAlreadyExistsException.builder().build();
         final CreateAssociationRequest request = CreateAssociationRequest.builder()
             .name(DOCUMENT_NAME)
             .build();
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.empty());
+                model);
+
+        assertTrue(cfnException instanceof CfnAlreadyExistsException);
+        final String expectedMessage =
+            String.format("Resource of type 'AWS::SSM::Association' with identifier '%s' already exists.", model.getAssociationId());
+        assertEquals(expectedMessage, cfnException.getMessage());
+    }
+
+    @Test
+    void translateFromAssociationLimitExceededException() {
+        final String serviceExceptionMessage = "Limit exceeded!";
+        final AssociationLimitExceededException serviceException =
+            AssociationLimitExceededException.builder().message(serviceExceptionMessage).build();
+        final CreateAssociationRequest request = CreateAssociationRequest.builder()
+            .name(DOCUMENT_NAME)
+            .build();
+        final Exception cfnException = exceptionTranslator
+            .translateFromServiceException(serviceException,
+                request,
+                model);
 
         assertTrue(cfnException instanceof CfnServiceLimitExceededException);
+        final String expectedMessage =
+            String.format("Limit exceeded for resource of type 'AWS::SSM::Association'. Reason: %s", serviceExceptionMessage);
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
     void translateFromAssociationVersionLimitExceededException() {
-        final AssociationVersionLimitExceededException serviceException = AssociationVersionLimitExceededException.builder().build();
+        final String serviceExceptionMessage = "Limit exceeded!";
+        final AssociationVersionLimitExceededException serviceException =
+            AssociationVersionLimitExceededException.builder().message(serviceExceptionMessage).build();
         final UpdateAssociationRequest request = UpdateAssociationRequest.builder()
             .associationId(ASSOCIATION_ID)
             .name(DOCUMENT_NAME)
@@ -82,9 +114,12 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnServiceLimitExceededException);
+        final String expectedMessage =
+            String.format("Limit exceeded for resource of type 'AWS::SSM::Association'. Reason: %s", serviceExceptionMessage);
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -96,9 +131,12 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnNotFoundException);
+        final String expectedMessage =
+            String.format("Resource of type 'AWS::SSM::Association' with identifier '%s' was not found.", model.getAssociationId());
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -111,9 +149,13 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.empty());
+                modelWithoutId);
 
         assertTrue(cfnException instanceof CfnNotFoundException);
+        final String expectedMessage =
+            String.format("Resource of type 'AWS::SSM::Association' with identifier 'Name=%s,InstanceId=%s' was not found.",
+                modelWithoutId.getName(), modelWithoutId.getInstanceId());
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -125,9 +167,11 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnServiceInternalErrorException);
+        final String expectedMessage = "Internal error reported from downstream service during operation 'DescribeAssociation'.";
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -140,9 +184,11 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
+        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -155,9 +201,11 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
+        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -170,9 +218,11 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
+        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -185,9 +235,11 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.empty());
+                model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
+        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -200,9 +252,11 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnThrottlingException);
+        final String expectedMessage = "Rate exceeded for operation 'UpdateAssociation'.";
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -215,8 +269,10 @@ class ExceptionTranslatorTest {
         final Exception cfnException = exceptionTranslator
             .translateFromServiceException(serviceException,
                 request,
-                Optional.of(ASSOCIATION_ID));
+                model);
 
         assertTrue(cfnException instanceof CfnGeneralServiceException);
+        final String expectedMessage = "Error occurred during operation 'UpdateAssociation'.";
+        assertEquals(expectedMessage, cfnException.getMessage());
     }
 }

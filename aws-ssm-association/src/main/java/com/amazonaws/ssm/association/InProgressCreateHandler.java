@@ -13,8 +13,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
-
 /**
  * Handles noninitial create requests for a given resource.
  */
@@ -79,7 +77,7 @@ public class InProgressCreateHandler extends BaseHandler<CallbackContext> {
 
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
-                .translateFromServiceException(e, describeAssociationRequest, Optional.of(associationId));
+                .translateFromServiceException(e, describeAssociationRequest, request.getDesiredResourceState());
 
             logger.log(cfnException.getCause().getMessage());
 

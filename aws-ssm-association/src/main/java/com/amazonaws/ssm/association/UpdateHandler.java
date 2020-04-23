@@ -16,8 +16,6 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
-
 /**
  * Handles update requests on a given resource.
  */
@@ -92,7 +90,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
-                .translateFromServiceException(e, updateAssociationRequest, Optional.of(associationId));
+                .translateFromServiceException(e, updateAssociationRequest, requestModel);
 
             logger.log(cfnException.getCause().getMessage());
 

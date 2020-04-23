@@ -15,8 +15,6 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
-
 /**
  * Handles read requests for a given resource.
  */
@@ -86,7 +84,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
-                .translateFromServiceException(e, describeAssociationRequest, Optional.of(associationId));
+                .translateFromServiceException(e, describeAssociationRequest, requestModel);
 
             logger.log(cfnException.getCause().getMessage());
 
