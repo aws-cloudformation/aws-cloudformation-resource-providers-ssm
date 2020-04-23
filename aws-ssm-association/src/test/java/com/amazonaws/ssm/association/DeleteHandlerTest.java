@@ -20,7 +20,6 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -213,13 +212,13 @@ class DeleteHandlerTest {
             exceptionTranslator.translateFromServiceException(
                 serviceException,
                 expectedDeleteAssociationRequest,
-                Optional.of(expectedDeleteAssociationRequest.associationId())))
+                model))
             .thenReturn(new CfnThrottlingException("DeleteAssociation", serviceException));
 
         Assertions.assertThrows(CfnThrottlingException.class, () -> {
             handler.handleRequest(proxy, request, null, logger);
         });
         verify(exceptionTranslator)
-            .translateFromServiceException(serviceException, expectedDeleteAssociationRequest, Optional.of(model.getAssociationId()));
+            .translateFromServiceException(serviceException, expectedDeleteAssociationRequest, model);
     }
 }

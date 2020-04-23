@@ -22,7 +22,6 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -193,7 +192,7 @@ class UpdateHandlerTest {
             exceptionTranslator.translateFromServiceException(
                 serviceException,
                 expectedUpdateAssociationRequest,
-                Optional.of(expectedUpdateAssociationRequest.associationId())))
+                desiredModel))
             .thenReturn(new CfnThrottlingException("UpdateAssociation", serviceException));
 
         Assertions.assertThrows(CfnThrottlingException.class, () -> {
@@ -203,6 +202,6 @@ class UpdateHandlerTest {
             .translateFromServiceException(
                 serviceException,
                 expectedUpdateAssociationRequest,
-                Optional.of(desiredModel.getAssociationId()));
+                desiredModel);
     }
 }
