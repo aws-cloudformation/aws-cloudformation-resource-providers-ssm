@@ -121,4 +121,3 @@ public class UpdateHandlerTest extends TestBase {
         });
     }
 }
-
