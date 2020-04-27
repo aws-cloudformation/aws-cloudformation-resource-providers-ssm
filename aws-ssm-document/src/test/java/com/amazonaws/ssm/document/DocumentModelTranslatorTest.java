@@ -169,15 +169,6 @@ public class DocumentModelTranslatorTest {
     }
 
     @Test
-    public void testGenerateCreateDocumentRequest_ContentJsonAndContentAsStringIsProvided_verifyResult() {
-        final ResourceModel resourceModel = createResourceModel();
-        resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
-
-        Assertions.assertThrows(InvalidDocumentContentException.class,
-                () -> unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_REQUEST_TOKEN));
-    }
-
-    @Test
     public void testGenerateCreateDocumentRequest_ContentJsonIsProvided_verifyResult() {
         final ResourceModel resourceModel = createResourceModel();
         resourceModel.setContentAsString(null);
@@ -262,15 +253,6 @@ public class DocumentModelTranslatorTest {
                 unitUnderTest.generateUpdateDocumentRequest(model);
 
         Assertions.assertEquals(expectedRequest, request);
-    }
-
-    @Test
-    public void testGenerateUpdateDocumentRequest_ContentJsonAndContentAsStringIsProvided_verifyResult() {
-        final ResourceModel resourceModel = createResourceModel();
-        resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
-
-        Assertions.assertThrows(InvalidDocumentContentException.class,
-                () -> unitUnderTest.generateUpdateDocumentRequest(resourceModel));
     }
 
     @Test

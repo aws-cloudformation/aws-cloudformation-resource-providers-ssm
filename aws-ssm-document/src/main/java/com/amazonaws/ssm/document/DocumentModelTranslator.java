@@ -137,10 +137,6 @@ class DocumentModelTranslator {
     }
 
     private String processDocumentContent(final Map<String, Object> jsonContent, final String contentAsString) {
-        if (jsonContent != null && contentAsString != null) {
-            throw new InvalidDocumentContentException("Only one of Content and ContentAsString attributes must be provided");
-        }
-
         try {
             return jsonContent != null ? OBJECT_MAPPER.writeValueAsString(jsonContent) : contentAsString;
         } catch (final JsonProcessingException e) {
