@@ -75,9 +75,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             progressEvent.setStatus(OperationStatus.SUCCESS);
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator.
-                translateFromServiceException(e,
-                    deleteAssociationRequest,
-                    Optional.ofNullable(deleteAssociationRequest.associationId()));
+                translateFromServiceException(e, deleteAssociationRequest, model);
 
             logger.log(cfnException.getCause().getMessage());
 

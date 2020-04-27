@@ -1,15 +1,20 @@
 package com.amazonaws.ssm.document;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.ssm.model.AttachmentsSource;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DeleteDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DocumentKeyValuesFilter;
 import software.amazon.awssdk.services.ssm.model.DocumentRequires;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.ListDocumentsRequest;
 import software.amazon.awssdk.services.ssm.model.Tag;
 
 import lombok.NonNull;
+import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
 import javax.annotation.Nullable;
@@ -25,6 +30,17 @@ class DocumentModelTranslator {
     private static final String EMPTY_STACK_NAME = "";
     private static final int DOCUMENT_NAME_MAX_LENGTH = 128;
     private static final String DOCUMENT_NAME_DELIMITER = "-";
+    private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
+
+    private static DocumentModelTranslator INSTANCE;
+
+    static DocumentModelTranslator getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new DocumentModelTranslator();
+        }
+
+        return INSTANCE;
+    }
 
     /**
      * Generate CreateDocumentRequest from the CreateResource request.
@@ -57,6 +73,34 @@ class DocumentModelTranslator {
         return GetDocumentRequest.builder()
                 .name(model.getName())
                 .documentVersion(model.getDocumentVersion())
+                .build();
+    }
+
+    UpdateDocumentRequest generateUpdateDocumentRequest(@NonNull final ResourceModel model) {
+        return UpdateDocumentRequest.builder()
+                .name(model.getName())
+                .content(model.getContent())
+                .versionName(model.getVersionName())
+                .documentVersion(LATEST_DOCUMENT_VERSION)
+                .documentFormat(model.getDocumentFormat())
+                .targetType(model.getTargetType())
+                .attachments(translateAttachments(model.getAttachments()))
+                .build();
+    }
+
+    DeleteDocumentRequest generateDeleteDocumentRequest(@NonNull final ResourceModel model) {
+        return DeleteDocumentRequest.builder()
+                .name(model.getName())
+                .force(true) // This is required for certain document types. If the user does not have permissions to use this flag, the call will fail.
+                .build();
+    }
+
+    ListDocumentsRequest generateListDocumentsRequest() {
+        List<DocumentKeyValuesFilter> keyValuesFilters =
+                ImmutableList.of(DocumentKeyValuesFilter.builder().key("owner").values("self").build());
+
+        return ListDocumentsRequest.builder()
+                .filters(keyValuesFilters)
                 .build();
     }
 

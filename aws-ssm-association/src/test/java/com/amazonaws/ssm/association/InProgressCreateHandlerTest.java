@@ -23,7 +23,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -349,7 +348,7 @@ class InProgressCreateHandlerTest {
             exceptionTranslator.translateFromServiceException(
                 serviceException,
                 describeAssociationRequest,
-                Optional.of(describeAssociationRequest.associationId())))
+                model))
             .thenReturn(new CfnServiceInternalErrorException("DescribeAssociation", serviceException));
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -366,6 +365,6 @@ class InProgressCreateHandlerTest {
             handler.handleRequest(proxy, request, callbackContext, logger);
         });
         verify(exceptionTranslator)
-            .translateFromServiceException(serviceException, describeAssociationRequest, Optional.of(model.getAssociationId()));
+            .translateFromServiceException(serviceException, describeAssociationRequest, model);
     }
 }

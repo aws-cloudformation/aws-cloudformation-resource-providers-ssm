@@ -23,6 +23,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "ec2:DescribeInstanceStatus"
+                - "iam:PassRole"
                 - "ssm:CreateAssociation"
                 - "ssm:DeleteAssociation"
                 - "ssm:DescribeAssociation"

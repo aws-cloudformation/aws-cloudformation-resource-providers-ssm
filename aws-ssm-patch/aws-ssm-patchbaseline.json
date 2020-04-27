@@ -1,0 +1,238 @@
+{
+    "typeName": "AWS::SSM::PatchBaseline",
+    "description": "Resource Type definition for AWS::SSM::PatchBaseline",
+    "additionalProperties": false,
+    "properties": {
+        "Id": {
+            "description": "The ID of the patch baseline.",
+            "type": "string"
+        },
+        "OperatingSystem": {
+            "description": "Defines the operating system the patch baseline applies to. The Default value is WINDOWS.",
+            "type": "string"
+        },
+        "Description": {
+            "description": "The description of the patch baseline.",
+            "type": "string"
+        },
+        "ApprovalRules": {
+            "$ref": "#/definitions/RuleGroup"
+        },
+        "Sources": {
+            "description": "Information about the patches to use to update the instances, including target operating systems and source repository. Applies to Linux instances only.",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "$ref": "#/definitions/PatchSource"
+            }
+        },
+        "Name": {
+            "description": "The name of the patch baseline.",
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
+        },
+        "RejectedPatches": {
+            "description": "A list of explicitly rejected patches for the baseline.",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "type": "string"
+            }
+        },
+        "ApprovedPatches": {
+            "description": "A list of explicitly approved patches for the baseline.",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "type": "string"
+            }
+        },
+        "RejectedPatchesAction": {
+            "description": "The action for Patch Manager to take on patches included in the RejectedPackages list.",
+            "type": "string"
+        },
+        "PatchGroups": {
+            "description": "PatchGroups is used to associate instances with a specific patch baseline",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "type": "string"
+            }
+        },
+        "ApprovedPatchesComplianceLevel": {
+            "description": "Defines the compliance level for approved patches. This means that if an approved patch is reported as missing, this is the severity of the compliance violation. The default value is UNSPECIFIED.",
+            "type": "string"
+        },
+        "ApprovedPatchesEnableNonSecurity": {
+            "description": "Indicates whether the list of approved patches includes non-security updates that should be applied to the instances. The default value is 'false'. Applies to Linux instances only.",
+            "type": "boolean"
+        },
+        "GlobalFilters": {
+            "description": "A set of global filters used to include patches in the baseline.",
+            "$ref": "#/definitions/PatchFilterGroup"
+        },
+        "Tags": {
+            "description": "Optional metadata that you assign to a resource. Tags enable you to categorize a resource in different ways.",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "$ref": "#/definitions/Tag"
+            }
+        }
+    },
+    "definitions": {
+        "PatchFilterGroup": {
+            "description": "The patch filter group that defines the criteria for the rule.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "PatchFilters": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "$ref": "#/definitions/PatchFilter"
+                    }
+                }
+            }
+        },
+        "PatchSource": {
+            "description": "Information about the patches to use to update the instances, including target operating systems and source repository. Applies to Linux instances only.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Products": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "Configuration": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                }
+            }
+        },
+        "Tag": {
+            "description": "Metadata that you assign to your AWS resources.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Key": {
+                    "type": "string"
+                },
+                "Value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "Value",
+                "Key"
+            ]
+        },
+        "RuleGroup": {
+            "description": "A set of rules defining the approval rules for a patch baseline.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "PatchRules": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "$ref": "#/definitions/Rule"
+                    }
+                }
+            }
+        },
+        "Rule": {
+            "description": "Defines an approval rule for a patch baseline.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ApproveUntilDate": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 10
+                },
+                "EnableNonSecurity": {
+                    "type": "boolean"
+                },
+                "PatchFilterGroup": {
+                    "$ref": "#/definitions/PatchFilterGroup"
+                },
+                "ApproveAfterDays": {
+                    "type": "integer"
+                },
+                "ComplianceLevel": {
+                    "type": "string"
+                }
+            }
+        },
+        "PatchFilter": {
+            "description": "Defines which patches should be included in a patch baseline.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Values": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "Key": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "required": [
+        "Name"
+    ],
+    "createOnlyProperties": [
+        "/properties/OperatingSystem"
+    ],
+    "primaryIdentifier": [
+        "/properties/Id"
+    ],
+    "readOnlyProperties": [
+        "/properties/Id"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "ssm:CreatePatchBaseline",
+                "ssm:RegisterPatchBaselineForPatchGroup",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeletePatchBaseline",
+                "ssm:GetPatchBaseline",
+                "ssm:DeregisterPatchBaselineForPatchGroup"
+            ]
+        },
+        "list": {
+            "permissions": []
+        },
+        "read": {
+            "permissions": [
+                "ssm:DescribePatchBaselines"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "ssm:UpdatePatchBaseline",
+                "ssm:DeregisterPatchBaselineForPatchGroup",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
+            ]
+        }
+    }
+}
