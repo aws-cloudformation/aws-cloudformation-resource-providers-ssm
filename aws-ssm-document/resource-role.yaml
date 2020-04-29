@@ -24,10 +24,13 @@ Resources:
               - Effect: Allow
                 Action:
                 - "s3:GetObject"
+                - "ssm:AddTagsToResource"
                 - "ssm:CreateDocument"
                 - "ssm:DeleteDocument"
                 - "ssm:GetDocument"
                 - "ssm:ListDocuments"
+                - "ssm:ListTagsForResource"
+                - "ssm:RemoveTagsFromResource"
                 - "ssm:UpdateDocument"
                 Resource: "*"
 Outputs:

@@ -1,10 +1,15 @@
 package com.amazonaws.ssm.document;
 
+import com.amazonaws.ssm.document.tags.TagUpdater;
 import com.google.common.collect.ImmutableMap;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.mockito.Mockito;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DocumentDescription;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
+import software.amazon.awssdk.services.ssm.model.DuplicateDocumentContentException;
+import software.amazon.awssdk.services.ssm.model.DuplicateDocumentVersionNameException;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
@@ -39,13 +44,11 @@ public class UpdateHandlerTest {
             "description", "Join instances to an AWS Directory Service domain."
     );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
+    private static final Map<String, String> SAMPLE_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey1", "tagValue1");
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final UpdateDocumentRequest SAMPLE_UPDATE_DOCUMENT_REQUEST = UpdateDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
             .content(SAMPLE_DOCUMENT_CONTENT_STRING)
-            .build();
-    private static final UpdateDocumentResponse SAMPLE_UPDATE_DOCUMENT_ACTIVE_RESPONSE = UpdateDocumentResponse.builder()
-            .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE).build())
             .build();
 
     private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder()
@@ -54,15 +57,14 @@ public class UpdateHandlerTest {
             .build();
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .systemTags(SAMPLE_SYSTEM_TAGS)
+            .desiredResourceTags(SAMPLE_DESIRED_RESOURCE_TAGS)
             .clientRequestToken(SAMPLE_REQUEST_TOKEN)
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
             .build();
-    private static final GetDocumentRequest SAMPLE_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
-            .name(SAMPLE_DOCUMENT_NAME)
-            .build();
+    private static final String UPDATING_MESSAGE = "Updating";
+
     private static final int CALLBACK_DELAY_SECONDS = 30;
     private static final int NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES = 20;
-    private static final String FAILED_MESSAGE = "failed";
 
     private static final ResourceStatus RESOURCE_MODEL_ACTIVE_STATE = ResourceStatus.ACTIVE;
     private static final ResourceStatus RESOURCE_MODEL_UPDATING_STATE = ResourceStatus.UPDATING;
@@ -86,6 +88,9 @@ public class UpdateHandlerTest {
     private DocumentExceptionTranslator exceptionTranslator;
 
     @Mock
+    private TagUpdater tagUpdater;
+
+    @Mock
     private SsmClient ssmClient;
 
     @Mock
@@ -98,7 +103,7 @@ public class UpdateHandlerTest {
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new UpdateHandler(documentModelTranslator, progressUpdater, exceptionTranslator, ssmClient);
+        unitUnderTest = new UpdateHandler(documentModelTranslator, progressUpdater, tagUpdater, exceptionTranslator, ssmClient);
     }
 
     @Test
@@ -128,6 +133,59 @@ public class UpdateHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
+    }
+
+    @Test
+    public void testHandleRequest_DocumentUpdateApiThrowsDuplicateDocumentContentException_VerifyResponse() {
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final CallbackContext expectedCallbackContext = CallbackContext.builder()
+            .eventStarted(true)
+            .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+            .resourceModel(expectedModel)
+            .status(OperationStatus.IN_PROGRESS)
+            .message(UPDATING_MESSAGE)
+            .callbackContext(expectedCallbackContext)
+            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+            .build();
+
+        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenThrow(DuplicateDocumentContentException.class);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+            = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
+
+        Assertions.assertEquals(expectedResponse, response);
+        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
+    }
+
+    @Test
+    public void testHandleRequest_DocumentUpdateApiThrowsDuplicateDocumentVersionNameException_VerifyResponse() {
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final CallbackContext expectedCallbackContext = CallbackContext.builder()
+            .eventStarted(true)
+            .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+            .resourceModel(expectedModel)
+            .status(OperationStatus.IN_PROGRESS)
+            .message(UPDATING_MESSAGE)
+            .callbackContext(expectedCallbackContext)
+            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+            .build();
+
+        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenThrow(DuplicateDocumentVersionNameException.class);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+            = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
+
+        Assertions.assertEquals(expectedResponse, response);
+        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
     }
 
     @Test

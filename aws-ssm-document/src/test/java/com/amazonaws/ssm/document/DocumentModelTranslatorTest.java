@@ -36,9 +36,15 @@ public class DocumentModelTranslatorTest {
             Tag.builder().key("tagKey1").value("tagValue1").build(),
             Tag.builder().key("tagKey2").value("tagValue2").build()
     );
+    private static final Map<String, String> SAMPLE_RESOURCE_REQUEST_TAGS = ImmutableMap.of(
+        "tagKey1", "tagValue1",
+        "tagKey2", "tagValue2",
+        "tagKey3", "tagValue3"
+    );
     private static final List<software.amazon.awssdk.services.ssm.model.Tag> SAMPLE_CREATE_REQUEST_TAGS = ImmutableList.of(
             software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey1").value("tagValue1").build(),
-            software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey2").value("tagValue2").build()
+            software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey2").value("tagValue2").build(),
+            software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey3").value("tagValue3").build()
     );
     private static final List<AttachmentsSource> SAMPLE_RESOURCE_MODEL_ATTACHMENTS = ImmutableList.of(
             AttachmentsSource.builder().name("name1").key("key1").values(ImmutableList.of("value11", "value12")).build(),
@@ -79,7 +85,7 @@ public class DocumentModelTranslatorTest {
                 .build();
 
         final CreateDocumentRequest request =
-                unitUnderTest.generateCreateDocumentRequest(model, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN);
+                unitUnderTest.generateCreateDocumentRequest(model, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
 
         Assertions.assertEquals(expectedRequest, request);
     }
@@ -102,7 +108,7 @@ public class DocumentModelTranslatorTest {
                 .build();
 
         final CreateDocumentRequest request =
-                unitUnderTest.generateCreateDocumentRequest(resourceModel, SAMPLE_SYSTEM_TAGS, SAMPLE_REQUEST_TOKEN);
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
 
         Assertions.assertTrue(request.name().startsWith("testStack-document"));
         Assertions.assertEquals(expectedRequest.versionName(), request.versionName());
@@ -121,19 +127,19 @@ public class DocumentModelTranslatorTest {
         resourceModel.setName(null);
 
         final CreateDocumentRequest expectedRequest = CreateDocumentRequest.builder()
-                .name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
-                .versionName(SAMPLE_VERSION_NAME)
-                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
-                .documentType(SAMPLE_DOCUMENT_TYPE)
-                .targetType(SAMPLE_TARGET_TYPE)
-                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
-                .tags(SAMPLE_CREATE_REQUEST_TAGS)
-                .requires(SAMPLE_CREATE_REQUEST_REQUIRES)
-                .build();
+            .name(SAMPLE_DOCUMENT_NAME)
+            .content(SAMPLE_DOCUMENT_CONTENT)
+            .versionName(SAMPLE_VERSION_NAME)
+            .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+            .documentType(SAMPLE_DOCUMENT_TYPE)
+            .targetType(SAMPLE_TARGET_TYPE)
+            .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+            .tags(SAMPLE_CREATE_REQUEST_TAGS)
+            .requires(SAMPLE_CREATE_REQUEST_REQUIRES)
+            .build();
 
         final CreateDocumentRequest request =
-                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_REQUEST_TOKEN);
+            unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
 
         Assertions.assertTrue(request.name().startsWith("document"));
         Assertions.assertEquals(expectedRequest.versionName(), request.versionName());
@@ -144,6 +150,27 @@ public class DocumentModelTranslatorTest {
         Assertions.assertEquals(expectedRequest.attachments(), request.attachments());
         Assertions.assertEquals(expectedRequest.tags(), request.tags());
         Assertions.assertEquals(expectedRequest.requires(), request.requires());
+    }
+
+    @Test
+    public void testGenerateCreateDocumentRequest_ResourceTagsIsNull_verifyResult() {
+        final ResourceModel resourceModel = createResourceModel();
+
+        final CreateDocumentRequest expectedRequest = CreateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                .documentType(SAMPLE_DOCUMENT_TYPE)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .requires(SAMPLE_CREATE_REQUEST_REQUIRES)
+                .build();
+
+        final CreateDocumentRequest request =
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, SAMPLE_SYSTEM_TAGS, null, SAMPLE_REQUEST_TOKEN);
+
+        Assertions.assertEquals(expectedRequest, request);
     }
 
     @Test
@@ -163,7 +190,7 @@ public class DocumentModelTranslatorTest {
                 .build();
 
         final CreateDocumentRequest request =
-                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_REQUEST_TOKEN);
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
 
         Assertions.assertEquals(expectedRequest, request);
     }
@@ -187,7 +214,7 @@ public class DocumentModelTranslatorTest {
                 .build();
 
         final CreateDocumentRequest request =
-                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_REQUEST_TOKEN);
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
 
         Assertions.assertEquals(expectedRequest, request);
     }
@@ -209,7 +236,7 @@ public class DocumentModelTranslatorTest {
                 .build();
 
         final CreateDocumentRequest request =
-                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_REQUEST_TOKEN);
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
 
         Assertions.assertEquals(expectedRequest, request);
     }

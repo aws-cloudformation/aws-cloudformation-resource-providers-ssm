@@ -1,9 +1,15 @@
 package com.amazonaws.ssm.document;
 
+import java.util.logging.LogManager;
+import com.amazonaws.ssm.document.tags.TagUpdater;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DuplicateDocumentContentException;
+import software.amazon.awssdk.services.ssm.model.DuplicateDocumentVersionNameException;
+import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
@@ -25,6 +31,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
      */
     private static final int CALLBACK_DELAY_SECONDS = 30;
 
+    private static final String UPDATING_MESSAGE = "Updating";
+
     private static final int NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES = 10 * 60 / CALLBACK_DELAY_SECONDS;
 
     private static final String OPERATION_NAME = "AWS::SSM::UpdateDocument";
@@ -36,6 +44,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
     private final StabilizationProgressRetriever stabilizationProgressRetriever;
 
     @NonNull
+    private final TagUpdater tagUpdater;
+
+    @NonNull
     private final DocumentExceptionTranslator exceptionTranslator;
 
     @NonNull
@@ -44,7 +55,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
     @VisibleForTesting
     UpdateHandler() {
         this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
-             DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient());
+            TagUpdater.getInstance(),
+            DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient());
     }
 
     @Override
@@ -69,19 +81,22 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         }
 
         try {
+            logger.log("update tags request for document name: " + model.getName());
+            tagUpdater.updateTags(model.getName(), request.getDesiredResourceTags(), ssmClient, proxy);
+
             logger.log("sending update request for document name: " + model.getName());
             final UpdateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(updateDocumentRequest, ssmClient::updateDocument);
-            context.setEventStarted(true);
-            context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES);
 
-            logger.log("update response: " + response);
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
-                    .status(OperationStatus.IN_PROGRESS)
-                    .message(response.documentDescription().statusInformation())
-                    .callbackContext(context)
-                    .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                    .build();
+            setInProgressContext(context);
+            logger.log("update InProgress response: " + response);
+
+            return getInProgressEvent(model, context, response.documentDescription().statusInformation());
+        } catch (final DuplicateDocumentContentException | DuplicateDocumentVersionNameException e) {
+            logger.log("no changes to document were made for update in cloudformation" +
+                " stack, sending for stabilization" + model.getName());
+            setInProgressContext(context);
+
+            return getInProgressEvent(model, context, UPDATING_MESSAGE);
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
@@ -108,6 +123,23 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .callbackContext(progressResponse.getCallbackContext())
                 .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
+    }
+
+    private ProgressEvent<ResourceModel, CallbackContext> getInProgressEvent(final ResourceModel model,
+                                                                             final CallbackContext context,
+                                                                             final String message) {
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            .resourceModel(model)
+            .status(OperationStatus.IN_PROGRESS)
+            .message(message)
+            .callbackContext(context)
+            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+            .build();
+    }
+
+    private void setInProgressContext(CallbackContext context) {
+        context.setEventStarted(true);
+        context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES);
     }
 
     private OperationStatus getOperationStatus(@NonNull final ResourceStatus status) {

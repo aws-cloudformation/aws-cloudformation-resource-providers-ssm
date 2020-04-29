@@ -51,6 +51,7 @@ class DocumentModelTranslator {
      */
     CreateDocumentRequest generateCreateDocumentRequest(@NonNull final ResourceModel model,
                                                         @Nullable final Map<String, String> systemTags,
+                                                        @Nullable final Map<String, String> resourceTags,
                                                         @NonNull final String requestToken) {
         final String documentName;
 
@@ -69,7 +70,7 @@ class DocumentModelTranslator {
                 .documentFormat(model.getDocumentFormat())
                 .documentType(model.getDocumentType())
                 .targetType(model.getTargetType())
-                .tags(translateTags(model.getTags()))
+                .tags(translateTags(resourceTags))
                 .attachments(translateAttachments(model.getAttachments()))
                 .requires(translateRequires(model.getRequires()))
                 .build();
@@ -144,12 +145,12 @@ class DocumentModelTranslator {
         }
     }
 
-    private List<Tag> translateTags(@Nullable final List<com.amazonaws.ssm.document.Tag> tags) {
-        if (CollectionUtils.isEmpty(tags)) {
+    private List<Tag> translateTags(@Nullable final Map<String, String> tags) {
+        if (tags == null) {
             return null;
         }
 
-        return tags.stream().map(
+        return tags.entrySet().stream().map(
                 tag -> Tag.builder()
                         .key(tag.getKey())
                         .value(tag.getValue())
