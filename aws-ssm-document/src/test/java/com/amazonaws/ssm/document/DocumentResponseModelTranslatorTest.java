@@ -22,8 +22,8 @@ public class DocumentResponseModelTranslatorTest {
             Tag.builder().key("tagKey2").value("tagValue2").build()
     );
     private static final List<AttachmentContent> SAMPLE_RESOURCE_MODEL_ATTACHMENTS = ImmutableList.of(
-            AttachmentContent.builder().name("name1").size(1d).hashType("hashType1").hash("hash1").url("url1").build(),
-            AttachmentContent.builder().name("name2").size(2d).hashType("hashType2").hash("hash2").url("url2").build()
+            AttachmentContent.builder().name("name1").size(1).hashType("hashType1").hash("hash1").url("url1").build(),
+            AttachmentContent.builder().name("name2").size(2).hashType("hashType2").hash("hash2").url("url2").build()
     );
     private static final List<software.amazon.awssdk.services.ssm.model.AttachmentContent> SAMPLE_GET_RESPONSE_ATTACHMENTS = ImmutableList.of(
             software.amazon.awssdk.services.ssm.model.AttachmentContent.builder()
@@ -182,7 +182,7 @@ public class DocumentResponseModelTranslatorTest {
     private ResourceModel createResourceModelWithAllAttributes() {
         return ResourceModel.builder()
                 .name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+                .contentAsString(SAMPLE_DOCUMENT_CONTENT)
                 .documentVersion(SAMPLE_DOCUMENT_VERSION)
                 .versionName(SAMPLE_VERSION_NAME)
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)

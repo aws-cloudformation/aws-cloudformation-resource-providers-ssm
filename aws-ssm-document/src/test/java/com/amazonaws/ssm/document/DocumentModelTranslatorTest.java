@@ -19,6 +19,12 @@ public class DocumentModelTranslatorTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_DOCUMENT_CONTENT = "sampleDocumentContent";
+    private static final Map<String, Object> SAMPLE_DOCUMENT_JSON_CONTENT = ImmutableMap.of(
+            "schemaVersion", "1.2",
+            "description", "Join instances to an AWS Directory Service domain."
+    );
+    private static final String SAMPLE_DOCUMENT_JSON_CONTENT_STRING = "{\"schemaVersion\":\"1.2\",\"description\":\"Join instances to an AWS Directory Service domain.\"}";
+
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final String SAMPLE_VERSION_NAME = "versionName";
@@ -163,6 +169,30 @@ public class DocumentModelTranslatorTest {
     }
 
     @Test
+    public void testGenerateCreateDocumentRequest_ContentJsonIsProvided_verifyResult() {
+        final ResourceModel resourceModel = createResourceModel();
+        resourceModel.setContentAsString(null);
+        resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
+
+        final CreateDocumentRequest expectedRequest = CreateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_JSON_CONTENT_STRING)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                .documentType(SAMPLE_DOCUMENT_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .tags(SAMPLE_CREATE_REQUEST_TAGS)
+                .requires(SAMPLE_CREATE_REQUEST_REQUIRES)
+                .build();
+
+        final CreateDocumentRequest request =
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, null, SAMPLE_REQUEST_TOKEN);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    @Test
     public void testGenerateCreateDocumentRequest_DocumentRequiresListIsNull_verifyResult() {
         final ResourceModel resourceModel = createResourceModel();
         resourceModel.setRequires(null);
@@ -225,6 +255,28 @@ public class DocumentModelTranslatorTest {
         Assertions.assertEquals(expectedRequest, request);
     }
 
+    @Test
+    public void testGenerateUpdateDocumentRequest_ContentJsonIsProvided_verifyResult() {
+        final ResourceModel resourceModel = createResourceModel();
+        resourceModel.setContentAsString(null);
+        resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
+
+        final UpdateDocumentRequest expectedRequest = UpdateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_JSON_CONTENT_STRING)
+                .documentVersion(LATEST_DOCUMENT_VERSION)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .build();
+
+        final UpdateDocumentRequest request =
+                unitUnderTest.generateUpdateDocumentRequest(resourceModel);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
     //DeleteDocumentRequest tests
     @Test
     public void testGenerateDeleteDocumentRequest_verifyResult() {
@@ -243,7 +295,7 @@ public class DocumentModelTranslatorTest {
     private ResourceModel createResourceModel() {
         return ResourceModel.builder()
                 .name(SAMPLE_DOCUMENT_NAME)
-                .content(SAMPLE_DOCUMENT_CONTENT)
+                .contentAsString(SAMPLE_DOCUMENT_CONTENT)
                 .versionName(SAMPLE_VERSION_NAME)
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)
                 .documentType(SAMPLE_DOCUMENT_TYPE)

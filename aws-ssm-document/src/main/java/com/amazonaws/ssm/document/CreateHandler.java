@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.SsmException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -62,12 +63,18 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             return updateProgress(model, context, ssmClient, proxy, logger);
         }
 
-        final CreateDocumentRequest createDocumentRequest =
-                documentModelTranslator.generateCreateDocumentRequest(model, request.getSystemTags(), request.getClientRequestToken());
+        final CreateDocumentRequest createDocumentRequest;
+        try {
+            createDocumentRequest =
+                    documentModelTranslator.generateCreateDocumentRequest(model, request.getSystemTags(), request.getClientRequestToken());
+        } catch (final InvalidDocumentContentException e) {
+            throw new CfnInvalidRequestException(e.getMessage(), e);
+        }
+
+        model.setName(createDocumentRequest.name());
 
         try {
             final CreateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(createDocumentRequest, ssmClient::createDocument);
-            model.setName(response.documentDescription().name());
             context.setCreateDocumentStarted(true);
             context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES);
 

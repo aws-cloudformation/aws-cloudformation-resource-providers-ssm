@@ -28,7 +28,7 @@ class DocumentResponseModelTranslator {
                 .documentFormat(response.documentFormatAsString())
                 .documentType(response.documentTypeAsString())
                 .documentVersion(response.documentVersion())
-                .content(response.content())
+                .contentAsString(response.content())
                 .requires(translateRequires(response))
                 .attachmentsContent(translateAttachments(response))
                 .build();
@@ -89,7 +89,7 @@ class DocumentResponseModelTranslator {
                         .name(attachmentContent.name())
                         .hash(attachmentContent.hash())
                         .hashType(attachmentContent.hashTypeAsString())
-                        .size(attachmentContent.size().doubleValue())
+                        .size(attachmentContent.size().intValue())
                         .url(attachmentContent.url())
                         .build())
                 .collect(Collectors.toList());
