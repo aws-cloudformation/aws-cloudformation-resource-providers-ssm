@@ -65,7 +65,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         final CreateDocumentRequest createDocumentRequest;
         try {
-            request.getDesiredResourceTags();
             createDocumentRequest =
                     documentModelTranslator.generateCreateDocumentRequest(model, request.getSystemTags(),
                         request.getDesiredResourceTags(), request.getClientRequestToken());
