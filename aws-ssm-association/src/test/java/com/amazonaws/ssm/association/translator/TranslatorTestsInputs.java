@@ -20,6 +20,7 @@ public class TranslatorTestsInputs {
     public static final String ASSOCIATION_VERSION = "3";
     public static final String DOCUMENT_VERSION = "2";
     public static final String SCHEDULE_EXPRESSION = "rate(30)";
+    public static final String SYNC_COMPLIANCE = "MANUAL";
     public static final String COMPLIANCE_SEVERITY = "CRITICAL";
     public static final String MAX_CONCURRENCY = "50%";
     public static final String MAX_ERRORS = "10%";

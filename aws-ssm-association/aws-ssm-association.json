@@ -181,6 +181,13 @@
                 "UNSPECIFIED"
             ]
         },
+        "SyncCompliance": {
+            "type": "string",
+            "enum": [
+                "AUTO",
+                "MANUAL"
+            ]
+        },
         "WaitForSuccessTimeoutSeconds": {
             "type": "integer",
             "minimum": 15,

@@ -84,6 +84,9 @@ public class CreateAssociationTranslator implements RequestTranslator<CreateAsso
         simpleTypeValidator.getValidatedString(model.getComplianceSeverity())
             .ifPresent(createAssociationRequestBuilder::complianceSeverity);
 
+        simpleTypeValidator.getValidatedString(model.getSyncCompliance())
+            .ifPresent(createAssociationRequestBuilder::syncCompliance);
+
         return createAssociationRequestBuilder.build();
     }
 }
