@@ -84,6 +84,9 @@ public class UpdateAssociationTranslator implements RequestTranslator<UpdateAsso
         simpleTypeValidator.getValidatedString(model.getComplianceSeverity())
             .ifPresent(updateAssociationRequestBuilder::complianceSeverity);
 
+        simpleTypeValidator.getValidatedString(model.getSyncCompliance())
+            .ifPresent(updateAssociationRequestBuilder::syncCompliance);
+            
         return updateAssociationRequestBuilder.build();
     }
 }

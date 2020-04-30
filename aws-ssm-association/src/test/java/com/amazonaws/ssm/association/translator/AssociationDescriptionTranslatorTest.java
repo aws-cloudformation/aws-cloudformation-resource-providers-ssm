@@ -34,6 +34,7 @@ import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.PAR
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SCHEDULE_EXPRESSION;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_OUTPUT_LOCATION;
 import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_TARGETS;
+import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SYNC_COMPLIANCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -86,6 +87,7 @@ class AssociationDescriptionTranslatorTest {
                 .lastUpdateAssociationDate(LAST_UPDATE_ASSOCIATION_DATE)
                 .lastExecutionDate(LAST_EXECUTION_DATE)
                 .lastSuccessfulExecutionDate(LAST_SUCCESSFUL_EXECUTION_DATE)
+                .syncCompliance(SYNC_COMPLIANCE)
                 .build();
 
         final ResourceModel resultModel =
@@ -106,6 +108,7 @@ class AssociationDescriptionTranslatorTest {
                 .outputLocation(MODEL_OUTPUT_LOCATION)
                 .automationTargetParameterName(AUTOMATION_TARGET_PARAMETER_NAME)
                 .instanceId(INSTANCE_ID)
+                .syncCompliance(SYNC_COMPLIANCE)
                 .build();
 
         assertThat(resultModel).isEqualTo(expectedModel);

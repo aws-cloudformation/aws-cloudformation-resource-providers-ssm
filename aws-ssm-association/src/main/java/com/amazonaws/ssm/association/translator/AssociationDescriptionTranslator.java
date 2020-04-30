@@ -86,6 +86,9 @@ public class AssociationDescriptionTranslator {
         simpleTypeValidator.getValidatedString(association.complianceSeverityAsString())
             .ifPresent(model::setComplianceSeverity);
 
+        simpleTypeValidator.getValidatedString(association.syncComplianceAsString())
+            .ifPresent(model::setSyncCompliance);
+                
         return model;
     }
 }
