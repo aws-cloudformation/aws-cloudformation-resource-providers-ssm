@@ -26,9 +26,9 @@ public class UpdateHandler extends BaseHandlerStd {
         final ResourceModel model = request.getDesiredResourceState();
 
         return proxy.initiate("ssm::update-parameter-group", proxyClient, model, callbackContext)
-                .request((resourceModel) -> Translator.updatePutParameterRequest(resourceModel))
+                .request(Translator::updatePutParameterRequest)
                 .call((updatePutParameterRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(updatePutParameterRequest, proxyInvocation.client()::putParameter))
-                .done((updatePutParameterRequest, updatePutParameterResponse, proxyInvocation, resourceModel, context) -> ProgressEvent.progress(model, callbackContext))
+                .progress()
                 .then(progress -> tagResources(proxy, proxyClient, progress, request.getDesiredResourceTags(), logger))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }

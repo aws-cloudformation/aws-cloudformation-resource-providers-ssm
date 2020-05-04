@@ -35,7 +35,7 @@ public class CreateHandler extends BaseHandlerStd {
         return proxy.initiate("ssm::create-parameter-group", proxyClient, model, callbackContext)
                 .request((resourceModel) -> Translator.createPutParameterRequest(resourceModel, consolidatedTagList))
                 .call((createPutParameterRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(createPutParameterRequest, proxyInvocation.client()::putParameter))
-                .success();
+                .done(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
     // We support this special use case of auto-generating names only for CloudFormation.

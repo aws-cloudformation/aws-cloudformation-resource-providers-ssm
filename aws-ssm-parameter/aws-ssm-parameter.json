@@ -55,7 +55,9 @@
         },
         "Name": {
             "type": "string",
-            "description": "The name of the parameter."
+            "description": "The name of the parameter.",
+            "minLength": 1,
+            "maxLength": 2048
         }
     },
     "required": [

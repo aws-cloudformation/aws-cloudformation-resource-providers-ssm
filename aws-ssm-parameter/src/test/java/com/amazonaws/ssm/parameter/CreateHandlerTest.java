@@ -3,6 +3,9 @@ package com.amazonaws.ssm.parameter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
+import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
+import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -23,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest extends AbstractTestBase {
@@ -54,6 +58,14 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .type(TYPE)
                 .tags(TAG_SET)
                 .build();
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE)
+                        .value(VALUE).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
     }
 
     @AfterEach

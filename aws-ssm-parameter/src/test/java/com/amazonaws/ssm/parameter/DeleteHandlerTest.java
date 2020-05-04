@@ -1,10 +1,10 @@
 package com.amazonaws.ssm.parameter;
 
-import org.junit.jupiter.api.AfterEach;
 import org.mockito.ArgumentMatchers;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterResponse;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -47,11 +47,11 @@ public class DeleteHandlerTest {
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
-            .build();
+                .desiredResourceState(model)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
+                = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -76,24 +76,19 @@ public class DeleteHandlerTest {
                         .build();
 
         when(proxy.injectCredentialsAndInvokeV2(
-                        eq(expectedDeleteParameterRequest),
-                        ArgumentMatchers.<Function<DeleteParameterRequest, DeleteParameterResponse>>any()))
+                eq(expectedDeleteParameterRequest),
+                ArgumentMatchers.<Function<DeleteParameterRequest, DeleteParameterResponse>>any()))
                 .thenThrow(ParameterNotFoundException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
-                handler.handleRequest(proxy, request, null, logger);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
+        try {
+            handler.handleRequest(proxy, request, null, logger);
+        } catch (CfnNotFoundException ex) {
+            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
+        }
 
         verify(proxy)
                 .injectCredentialsAndInvokeV2(
