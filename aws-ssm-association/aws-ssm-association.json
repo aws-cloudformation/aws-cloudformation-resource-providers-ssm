@@ -29,9 +29,7 @@
         "ParameterValues": {
             "type": "array",
             "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 65535
+                "type": "string"
             }
         },
         "S3Region": {
