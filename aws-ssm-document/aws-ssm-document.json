@@ -200,8 +200,7 @@
     "required": [],
     "createOnlyProperties": [
         "/properties/Name",
-        "/properties/DocumentType",
-        "/properties/Tags"
+        "/properties/DocumentType"
     ],
     "readOnlyProperties": [
         "/properties/DocumentVersion",
@@ -237,7 +236,10 @@
         "update": {
             "permissions": [
                 "ssm:UpdateDocument",
-                "s3:GetObject"
+                "s3:GetObject",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
             ]
         },
         "delete": {
