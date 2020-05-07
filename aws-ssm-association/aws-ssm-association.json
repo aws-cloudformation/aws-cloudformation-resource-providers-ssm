@@ -207,8 +207,7 @@
                 "ec2:DescribeInstanceStatus",
                 "iam:PassRole",
                 "ssm:CreateAssociation",
-                "ssm:DescribeAssociation",
-                "resource-groups:*"
+                "ssm:DescribeAssociation"
             ]
         },
         "delete": {
@@ -225,13 +224,18 @@
         "list": {
             "permissions": [
                 "ssm:ListAssociations",
-                "ssm:DescribeAssociation"
+                "ssm:DescribeAssociation",
+                "resource-groups:GetGroupQuery",
+                "resource-groups:ListGroups",
+                "resource-groups:ListGroupResources"
             ]
         },
         "read": {
             "permissions": [
                 "ssm:DescribeAssociation",
-                "resource-groups:*"
+                "resource-groups:GetGroupQuery",
+                "resource-groups:ListGroups",
+                "resource-groups:ListGroupResources"
             ]
         }
     },

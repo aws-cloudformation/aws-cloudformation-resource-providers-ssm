@@ -25,7 +25,9 @@ Resources:
                 Action:
                 - "ec2:DescribeInstanceStatus"
                 - "iam:PassRole"
-                - "resource-groups:*"
+                - "resource-groups:GetGroupQuery"
+                - "resource-groups:ListGroupResources"
+                - "resource-groups:ListGroups"
                 - "ssm:CreateAssociation"
                 - "ssm:DeleteAssociation"
                 - "ssm:DescribeAssociation"
