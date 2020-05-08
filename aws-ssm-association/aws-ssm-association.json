@@ -10,7 +10,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 128,
-                    "pattern": "^[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*$"
+                    "pattern": "^[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*$|resource-groups:Name"
                 },
                 "Values": {
                     "type": "array",
@@ -224,12 +224,18 @@
         "list": {
             "permissions": [
                 "ssm:ListAssociations",
-                "ssm:DescribeAssociation"
+                "ssm:DescribeAssociation",
+                "resource-groups:GetGroupQuery",
+                "resource-groups:ListGroups",
+                "resource-groups:ListGroupResources"
             ]
         },
         "read": {
             "permissions": [
-                "ssm:DescribeAssociation"
+                "ssm:DescribeAssociation",
+                "resource-groups:GetGroupQuery",
+                "resource-groups:ListGroups",
+                "resource-groups:ListGroupResources"
             ]
         }
     },
