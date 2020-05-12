@@ -1,12 +1,10 @@
 package com.amazonaws.ssm.parameter;
 
-import org.mockito.ArgumentMatchers;
+import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
-import software.amazon.awssdk.services.ssm.model.DeleteParameterResponse;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -17,82 +15,91 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.function.Function;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class DeleteHandlerTest {
+public class DeleteHandlerTest extends AbstractTestBase {
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
 
     @Mock
-    private Logger logger;
+    private ProxyClient<SsmClient> proxySsmClient;
+
+    @Mock
+    SsmClient ssmClient;
+
+    private DeleteHandler handler;
+
+    private ResourceModel RESOURCE_MODEL;
 
     @BeforeEach
     public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
+        handler = new DeleteHandler();
+        ssmClient = mock(SsmClient.class);
+        proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
+        proxySsmClient = MOCK_PROXY(proxy, ssmClient);
+
+        RESOURCE_MODEL = ResourceModel.builder()
+                .description(DESCRIPTION)
+                .name(NAME)
+                .value(VALUE)
+                .type(TYPE)
+                .tags(TAG_SET)
+                .build();
     }
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        final DeleteHandler handler = new DeleteHandler();
-
-        final ResourceModel model = ResourceModel.builder().build();
-
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(model)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, logger);
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
     }
 
     @Test
-    public void handleRequest_SimpleSuccess_ParameterNotFound() {
-        final DeleteHandler handler = new DeleteHandler();
-        final ResourceModel model = ResourceModel.builder()
-                .name("ParameterName")
-                .build();
-
-        final DeleteParameterRequest expectedDeleteParameterRequest =
-                DeleteParameterRequest.builder()
-                        .name(model.getName())
-                        .build();
-
-        when(proxy.injectCredentialsAndInvokeV2(
-                eq(expectedDeleteParameterRequest),
-                ArgumentMatchers.<Function<DeleteParameterRequest, DeleteParameterResponse>>any()))
+    public void handleRequest_Failure_ParameterNotFound() {
+        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
                 .thenThrow(ParameterNotFoundException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(model)
-                .build();
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logicalId").build();
 
-        try {
-            handler.handleRequest(proxy, request, null, logger);
-        } catch (CfnNotFoundException ex) {
-            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
-        }
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
-        verify(proxy)
-                .injectCredentialsAndInvokeV2(
-                        eq(expectedDeleteParameterRequest),
-                        ArgumentMatchers.<Function<DeleteParameterRequest, DeleteParameterResponse>>any());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNotNull();
+        assertThat(response.getMessage()).isEqualTo(String.format("Resource of type 'AWS::SSM::Parameter' with identifier '%s' was not found.", "ParameterName"));
+        assertThat(response.getErrorCode()).isNotNull();
+        assertThat(response.getErrorCode().name()).isEqualTo("NotFound");
+
+        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
     }
 }

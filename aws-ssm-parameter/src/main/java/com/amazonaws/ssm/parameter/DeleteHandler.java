@@ -1,36 +1,30 @@
 package com.amazonaws.ssm.parameter;
 
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public class DeleteHandler extends BaseHandler<CallbackContext> {
-    private static final SsmClient ssmClient = SSMClientBuilder.getClient();
+public class DeleteHandler extends BaseHandlerStd {
 
     @Override
-    public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
+    protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
+            final ProxyClient<SsmClient> proxyClient,
             final Logger logger) {
 
         final ResourceModel model = request.getDesiredResourceState();
 
-        try {
-            proxy.injectCredentialsAndInvokeV2(Translator.deleteParameterRequest(model), ssmClient::deleteParameter);
-
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
-                    .status(OperationStatus.SUCCESS)
-                    .build();
-        } catch (ParameterNotFoundException e) {
-            // Throw CfnNotFoundException as for Delete Handler this exception would be swallowed
-            throw new CfnNotFoundException(e);
-        }
+        return ProgressEvent.progress(model, callbackContext)
+                .then(progress ->
+                        proxy.initiate("aws-ssm-parameter::resource-delete", proxyClient, model, callbackContext)
+                                .translateToServiceRequest(Translator::deleteParameterRequest)
+                                .makeServiceCall((deleteParameterRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(deleteParameterRequest, proxyInvocation.client()::deleteParameter))
+                                .handleError((putParameterRequest, exception, _proxyClient, _model, _callbackContext) -> handleError("aws-ssm-parameter::resource-delete", exception, _model, _callbackContext, logger))
+                                .success());
     }
 }

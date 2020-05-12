@@ -13,14 +13,14 @@ public class ReadHandler extends BaseHandlerStd {
 
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-            AmazonWebServicesClientProxy proxy,
-            ResourceHandlerRequest<ResourceModel> request,
-            CallbackContext callbackContext,
-            ProxyClient<SsmClient> proxyClient,
-            Logger logger) {
-        return proxy.initiate("ssm::read-parameter-group", proxyClient, request.getDesiredResourceState(), callbackContext)
-                .request(Translator::getParametersRequest)
-                .call((getParametersRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(getParametersRequest, proxyInvocation.client()::getParameters))
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final ProxyClient<SsmClient> proxyClient,
+            final Logger logger) {
+        return proxy.initiate("aws-ssm-parameter::resource-read", proxyClient, request.getDesiredResourceState(), callbackContext)
+                .translateToServiceRequest(Translator::getParametersRequest)
+                .makeServiceCall((getParametersRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(getParametersRequest, proxyInvocation.client()::getParameters))
                 .done((getParametersRequest, getParametersResponse, proxyInvocation, resourceModel, context) -> {
                     if(getParametersResponse.parameters().size() == 0) {
                         throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getName());

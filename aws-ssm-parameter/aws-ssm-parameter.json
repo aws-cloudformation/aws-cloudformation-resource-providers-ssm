@@ -53,6 +53,14 @@
             },
             "additionalProperties": false
         },
+        "DataType": {
+            "type": "string",
+            "description": "The corresponding DataType of the parameter.",
+            "enum": [
+                "text",
+                "aws:ec2:image"
+            ]
+        },
         "Name": {
             "type": "string",
             "description": "The name of the parameter.",
@@ -80,7 +88,8 @@
             "permissions": [
                 "ssm:PutParameter",
                 "ssm:GetParameters"
-            ]
+            ],
+            "timeoutInMinutes": 5
         },
         "read": {
             "permissions": [
@@ -92,7 +101,8 @@
                 "ssm:PutParameter",
                 "ssm:AddTagsToResource",
                 "ssm:RemoveTagsFromResource"
-            ]
+            ],
+            "timeoutInMinutes": 5
         },
         "delete": {
             "permissions": [

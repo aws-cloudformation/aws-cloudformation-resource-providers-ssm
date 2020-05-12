@@ -1,12 +1,11 @@
 package com.amazonaws.ssm.parameter;
 
-import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -25,7 +24,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest extends AbstractTestBase {
@@ -47,11 +45,6 @@ public class ReadHandlerTest extends AbstractTestBase {
         ssm = mock(SsmClient.class);
         proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
         proxySsmClient = MOCK_PROXY(proxy, ssm);
-    }
-
-    @AfterEach
-    public void post_execute() {
-        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -91,16 +84,12 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .desiredResourceState(ResourceModel.builder().name("ParameterName")
                         .build())
                 .build();
-        final CallbackContext callbackContext = new CallbackContext();
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, callbackContext, proxySsmClient, logger);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isNotNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isEqualTo("Resource of type 'AWS::SSM::Parameter' with identifier 'ParameterName' was not found.");
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnNotFoundException ex) {
+            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
+        }
 
         verify(proxySsmClient.client()).getParameters(any(GetParametersRequest.class));
     }

@@ -30,6 +30,7 @@ public class Translator {
                 .policies(model.getPolicies())
                 .tier(model.getTier())
                 .tags(translateTagsToSdk(tags))
+                .dataType(model.getDataType())
                 .build();
     }
 
@@ -44,6 +45,7 @@ public class Translator {
                 .allowedPattern(model.getAllowedPattern())
                 .policies(model.getPolicies())
                 .tier(model.getTier())
+                .dataType(model.getDataType())
                 .build();
     }
 
@@ -57,6 +59,7 @@ public class Translator {
     static DescribeParametersRequest describeParametersRequest(final String nextToken) {
         return DescribeParametersRequest.builder()
                 .nextToken(nextToken)
+                .maxResults(Constants.MAX_RESULTS)
                 .build();
     }
 
