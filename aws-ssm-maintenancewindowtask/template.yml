@@ -20,4 +20,3 @@ Resources:
       Handler: software.amazon.ssm.maintenancewindowtask.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-ssm-maintenancewindowtask-handler-1.0-SNAPSHOT.jar
-
