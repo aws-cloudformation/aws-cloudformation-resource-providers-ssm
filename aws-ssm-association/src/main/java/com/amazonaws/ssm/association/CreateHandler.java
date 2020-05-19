@@ -1,5 +1,7 @@
 package com.amazonaws.ssm.association;
 
+import com.amazonaws.ssm.association.util.ResourceHandlerRequestToStringConverter;
+import com.amazonaws.ssm.association.util.ResourceModelToStringConverter;
 import com.amazonaws.ssm.association.util.SsmClientBuilder;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -17,6 +19,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
     private final BaseHandler<CallbackContext> initialCreateHandler;
     private final BaseHandler<CallbackContext> inProgressCreateHandler;
+    private final ResourceHandlerRequestToStringConverter requestToStringConverter;
 
     /**
      * Empty constructor used by wrapper classes.
@@ -24,6 +27,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
     CreateHandler() {
         initialCreateHandler = new InitialCreateHandler(CALLBACK_DELAY_SECONDS, SSM_CLIENT);
         inProgressCreateHandler = new InProgressCreateHandler(CALLBACK_DELAY_SECONDS, SSM_CLIENT);
+        requestToStringConverter = new ResourceHandlerRequestToStringConverter(new ResourceModelToStringConverter());
     }
 
     /**
@@ -31,12 +35,15 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      *
      * @param initialCreateHandler Concrete implementation of BaseCreateHandler used to handle first Create requests.
      * @param inProgressCreateHandler Concrete implementation of BaseCreateHandler used to handle noninitial Create requests.
+     * @param requestToStringConverter ResourceHandlerRequestToStringConverter used to convert requests to Strings.
      */
     CreateHandler(final BaseHandler<CallbackContext> initialCreateHandler,
-                  final BaseHandler<CallbackContext> inProgressCreateHandler) {
+                  final BaseHandler<CallbackContext> inProgressCreateHandler,
+                  final ResourceHandlerRequestToStringConverter requestToStringConverter) {
 
         this.initialCreateHandler = initialCreateHandler;
         this.inProgressCreateHandler = inProgressCreateHandler;
+        this.requestToStringConverter = requestToStringConverter;
     }
 
     @Override
@@ -46,7 +53,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        logger.log(String.format("Processing CreateHandler request %s", request));
+        logger.log(String.format("Processing CreateHandler request: %s", requestToStringConverter.convert(request)));
 
         if (callbackContext == null) {
             return initialCreateHandler.handleRequest(proxy, request, callbackContext, logger);

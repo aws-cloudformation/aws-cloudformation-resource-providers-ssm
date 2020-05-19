@@ -2,6 +2,8 @@ package com.amazonaws.ssm.association;
 
 import com.amazonaws.ssm.association.translator.AssociationDescriptionTranslator;
 import com.amazonaws.ssm.association.translator.ExceptionTranslator;
+import com.amazonaws.ssm.association.util.ResourceHandlerRequestToStringConverter;
+import com.amazonaws.ssm.association.util.ResourceModelToStringConverter;
 import com.amazonaws.ssm.association.util.SsmClientBuilder;
 import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -24,6 +26,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
     private final AssociationDescriptionTranslator associationDescriptionTranslator;
     private final ExceptionTranslator exceptionTranslator;
+    private final ResourceHandlerRequestToStringConverter requestToStringConverter;
 
     /**
      * Constructor to use by dependencies. Processes Read requests.
@@ -31,6 +34,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
     ReadHandler() {
         this.associationDescriptionTranslator = new AssociationDescriptionTranslator();
         this.exceptionTranslator = new ExceptionTranslator();
+        this.requestToStringConverter = new ResourceHandlerRequestToStringConverter(new ResourceModelToStringConverter());
     }
 
     /**
@@ -38,10 +42,14 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
      *
      * @param associationDescriptionTranslator Translates AssociationDescription into ResourceModel objects.
      * @param exceptionTranslator Translates service model exceptions.
+     * @param requestToStringConverter ResourceHandlerRequestToStringConverter used to convert requests to Strings.
      */
-    ReadHandler(final AssociationDescriptionTranslator associationDescriptionTranslator, final ExceptionTranslator exceptionTranslator) {
+    ReadHandler(final AssociationDescriptionTranslator associationDescriptionTranslator,
+                final ExceptionTranslator exceptionTranslator,
+                final ResourceHandlerRequestToStringConverter requestToStringConverter) {
         this.associationDescriptionTranslator = associationDescriptionTranslator;
         this.exceptionTranslator = exceptionTranslator;
+        this.requestToStringConverter = requestToStringConverter;
     }
 
     @Override
@@ -51,7 +59,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        logger.log(String.format("Processing ReadHandler request %s", request));
+        logger.log(String.format("Processing ReadHandler request: %s", requestToStringConverter.convert(request)));
 
         final ResourceModel requestModel = request.getDesiredResourceState();
 

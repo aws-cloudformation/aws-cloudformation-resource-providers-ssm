@@ -25,7 +25,6 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -55,13 +54,6 @@ class InitialCreateHandlerTest {
 
     @BeforeEach
     void setUp() {
-        ssmClient = mock(SsmClient.class);
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-        createAssociationTranslator = mock(CreateAssociationTranslator.class);
-        associationDescriptionTranslator = mock(AssociationDescriptionTranslator.class);
-        exceptionTranslator = mock(ExceptionTranslator.class);
-
         handler = new InitialCreateHandler(CALLBACK_DELAY_SECONDS,
             ssmClient,
             createAssociationTranslator,
