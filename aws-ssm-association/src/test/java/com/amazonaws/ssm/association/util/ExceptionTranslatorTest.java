@@ -187,7 +187,7 @@ class ExceptionTranslatorTest {
                 model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
-        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        final String expectedMessage = String.format("Invalid request provided: %s", serviceException.getMessage());
         assertEquals(expectedMessage, cfnException.getMessage());
     }
 
@@ -204,7 +204,7 @@ class ExceptionTranslatorTest {
                 model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
-        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        final String expectedMessage = String.format("Invalid request provided: %s", serviceException.getMessage());
         assertEquals(expectedMessage, cfnException.getMessage());
     }
 
@@ -221,7 +221,7 @@ class ExceptionTranslatorTest {
                 model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
-        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        final String expectedMessage = String.format("Invalid request provided: %s", serviceException.getMessage());
         assertEquals(expectedMessage, cfnException.getMessage());
     }
 
@@ -238,7 +238,7 @@ class ExceptionTranslatorTest {
                 model);
 
         assertTrue(cfnException instanceof CfnInvalidRequestException);
-        final String expectedMessage = String.format("Invalid request provided: %s", request.toString());
+        final String expectedMessage = String.format("Invalid request provided: %s", serviceException.getMessage());
         assertEquals(expectedMessage, cfnException.getMessage());
     }
 
