@@ -64,6 +64,8 @@ public class DocumentExceptionTranslatorTest {
 
     @Test
     public void testGetCfnException_400StatusCode_verifyExceptionsReturned() {
+        Mockito.when(ssmException.statusCode()).thenReturn(400);
+
         Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
     }
 }
