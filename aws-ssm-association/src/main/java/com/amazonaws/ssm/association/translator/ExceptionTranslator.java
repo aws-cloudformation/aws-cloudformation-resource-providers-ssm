@@ -74,7 +74,7 @@ public class ExceptionTranslator {
             || serviceException instanceof InvalidTargetException
             || serviceException instanceof UnsupportedPlatformTypeException) {
 
-            return new CfnInvalidRequestException(request.toString(), serviceException);
+            return new CfnInvalidRequestException(serviceException.getMessage(), serviceException);
         } else if (serviceException instanceof TooManyUpdatesException) {
 
             return new CfnThrottlingException(getClassNameWithoutRequestSuffix(request.getClass().getSimpleName()),
