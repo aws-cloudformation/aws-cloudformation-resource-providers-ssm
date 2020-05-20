@@ -28,6 +28,8 @@ import lombok.NonNull;
 
 class DocumentExceptionTranslator {
 
+    private static final int GENERIC_VALIDATION_STATUS_CODE = 400;
+
     private static DocumentExceptionTranslator INSTANCE;
 
     static DocumentExceptionTranslator getInstance() {
@@ -57,6 +59,8 @@ class DocumentExceptionTranslator {
 
             return new CfnNotFoundException(ResourceModel.TYPE_NAME, documentName);
 
+        } else if (e.statusCode() == GENERIC_VALIDATION_STATUS_CODE) {
+            return new CfnInvalidRequestException(e.getMessage(), e);
         }
 
         return new CfnGeneralServiceException(e);
