@@ -122,6 +122,39 @@ public class DocumentModelTranslatorTest {
     }
 
     @Test
+    public void testGenerateCreateDocumentRequest_DocumentNameIsNotProvided_StackNameStartsWithReservedPrefix_verifyResult() {
+        final Map<String, String> systemTags = ImmutableMap.of("aws:cloudformation:stack-name", "aws-test-stack");
+
+        final ResourceModel resourceModel = createResourceModel();
+        resourceModel.setName(null);
+
+        final CreateDocumentRequest expectedRequest = CreateDocumentRequest.builder()
+            .name(SAMPLE_DOCUMENT_NAME)
+            .content(SAMPLE_DOCUMENT_CONTENT)
+            .versionName(SAMPLE_VERSION_NAME)
+            .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+            .documentType(SAMPLE_DOCUMENT_TYPE)
+            .targetType(SAMPLE_TARGET_TYPE)
+            .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+            .tags(SAMPLE_CREATE_REQUEST_TAGS)
+            .requires(SAMPLE_CREATE_REQUEST_REQUIRES)
+            .build();
+
+        final CreateDocumentRequest request =
+            unitUnderTest.generateCreateDocumentRequest(resourceModel, systemTags, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
+
+        Assertions.assertTrue(request.name().startsWith("document"));
+        Assertions.assertEquals(expectedRequest.versionName(), request.versionName());
+        Assertions.assertEquals(expectedRequest.content(), request.content());
+        Assertions.assertEquals(expectedRequest.documentFormat(), request.documentFormat());
+        Assertions.assertEquals(expectedRequest.documentType(), request.documentType());
+        Assertions.assertEquals(expectedRequest.targetType(), request.targetType());
+        Assertions.assertEquals(expectedRequest.attachments(), request.attachments());
+        Assertions.assertEquals(expectedRequest.tags(), request.tags());
+        Assertions.assertEquals(expectedRequest.requires(), request.requires());
+    }
+
+    @Test
     public void testGenerateCreateDocumentRequest_DocumentNameIsNotProvided_SystemTagsIsNull_verifyResult() {
         final ResourceModel resourceModel = createResourceModel();
         resourceModel.setName(null);
