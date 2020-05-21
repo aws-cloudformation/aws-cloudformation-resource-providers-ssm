@@ -22,6 +22,7 @@ import software.amazon.cloudformation.resource.IdentifierUtils;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +34,6 @@ class DocumentModelTranslator {
         "aws", "amazon", "amzn"
     );
     private static final String DEFAULT_DOCUMENT_NAME_PREFIX = "document";
-    private static final String EMPTY_STACK_NAME = "";
     private static final int DOCUMENT_NAME_MAX_LENGTH = 128;
     private static final String DOCUMENT_NAME_DELIMITER = "-";
     private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
@@ -127,8 +127,8 @@ class DocumentModelTranslator {
     private String generateName(final Map<String, String> systemTags, final String requestToken) {
         final StringBuilder identifierPrefix = new StringBuilder();
 
-        final String stackName = getStackName(systemTags);
-        identifierPrefix.append(stackName);
+        final Optional<String> stackNameOptional = getStackName(systemTags);
+        stackNameOptional.ifPresent(stackName -> identifierPrefix.append(stackName).append(DOCUMENT_NAME_DELIMITER));
 
         identifierPrefix.append(DEFAULT_DOCUMENT_NAME_PREFIX);
 
@@ -139,9 +139,9 @@ class DocumentModelTranslator {
                 DOCUMENT_NAME_MAX_LENGTH);
     }
 
-    private String getStackName(final Map<String, String> systemTags) {
+    private Optional<String> getStackName(final Map<String, String> systemTags) {
         if (MapUtils.isEmpty(systemTags)) {
-            return EMPTY_STACK_NAME;
+            return Optional.empty();
         }
 
         final String stackName = systemTags.get("aws:cloudformation:stack-name");
@@ -149,10 +149,10 @@ class DocumentModelTranslator {
         final boolean stackNameMatchesReservedPrefix = AWS_SSM_DOCUMENT_RESERVED_PREFIXES.stream().anyMatch(stackName::startsWith);
 
         if (stackNameMatchesReservedPrefix) {
-            return EMPTY_STACK_NAME;
+            return Optional.empty();
         }
 
-        return stackName;
+        return Optional.of(stackName);
     }
 
     private String processDocumentContent(final Map<String, Object> jsonContent, final String contentAsString) {
