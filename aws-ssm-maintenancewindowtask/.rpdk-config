@@ -1,0 +1,16 @@
+{
+    "typeName": "AWS::SSM::MaintenanceWindowTask",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.ssm.maintenancewindowtask.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.ssm.maintenancewindowtask.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "ssm",
+            "maintenancewindowtask"
+        ],
+        "codegen_template_path": "default"
+    }
+}

@@ -1,0 +1,253 @@
+{
+    "typeName": "AWS::SSM::MaintenanceWindowTask",
+    "description": "Resource Type definition for AWS::SSM::MaintenanceWindowTask",
+    "additionalProperties": false,
+    "properties": {
+        "Id": {
+            "type": "string"
+        },
+        "MaxErrors": {
+            "type": "string"
+        },
+        "Description": {
+            "type": "string"
+        },
+        "ServiceRoleArn": {
+            "type": "string"
+        },
+        "Priority": {
+            "type": "integer"
+        },
+        "MaxConcurrency": {
+            "type": "string"
+        },
+        "Targets": {
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "$ref": "#/definitions/Target"
+            }
+        },
+        "Name": {
+            "type": "string"
+        },
+        "TaskArn": {
+            "type": "string"
+        },
+        "TaskInvocationParameters": {
+            "$ref": "#/definitions/TaskInvocationParameters"
+        },
+        "WindowId": {
+            "type": "string"
+        },
+        "TaskParameters": {
+            "type": "object"
+        },
+        "TaskType": {
+            "type": "string"
+        },
+        "LoggingInfo": {
+            "$ref": "#/definitions/LoggingInfo"
+        }
+    },
+    "definitions": {
+        "Target": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Values": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "Key": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "Key"
+            ]
+        },
+        "LoggingInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "S3Bucket": {
+                    "type": "string"
+                },
+                "Region": {
+                    "type": "string"
+                },
+                "S3Prefix": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "S3Bucket",
+                "Region"
+            ]
+        },
+        "TaskInvocationParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "MaintenanceWindowRunCommandParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowRunCommandParameters"
+                },
+                "MaintenanceWindowAutomationParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowAutomationParameters"
+                },
+                "MaintenanceWindowStepFunctionsParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowStepFunctionsParameters"
+                },
+                "MaintenanceWindowLambdaParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowLambdaParameters"
+                }
+            }
+        },
+        "MaintenanceWindowRunCommandParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "TimeoutSeconds": {
+                    "type": "integer"
+                },
+                "Comment": {
+                    "type": "string"
+                },
+                "OutputS3KeyPrefix": {
+                    "type": "string"
+                },
+                "Parameters": {
+                    "type": "object"
+                },
+                "DocumentHashType": {
+                    "type": "string"
+                },
+                "ServiceRoleArn": {
+                    "type": "string"
+                },
+                "NotificationConfig": {
+                    "$ref": "#/definitions/NotificationConfig"
+                },
+                "OutputS3BucketName": {
+                    "type": "string"
+                },
+                "DocumentHash": {
+                    "type": "string"
+                }
+            }
+        },
+        "MaintenanceWindowLambdaParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ClientContext": {
+                    "type": "string"
+                },
+                "Qualifier": {
+                    "type": "string"
+                },
+                "Payload": {
+                    "type": "string"
+                }
+            }
+        },
+        "MaintenanceWindowStepFunctionsParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Input": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                }
+            }
+        },
+        "MaintenanceWindowAutomationParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Parameters": {
+                    "type": "object"
+                },
+                "DocumentVersion": {
+                    "type": "string"
+                }
+            }
+        },
+        "NotificationConfig": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "NotificationArn": {
+                    "type": "string"
+                },
+                "NotificationType": {
+                    "type": "string"
+                },
+                "NotificationEvents": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "NotificationArn"
+            ]
+        }
+    },
+    "handlers": {
+        "create": {
+            "permissions": [
+                "ssm:RegisterTaskWithMaintenanceWindow",
+                "ssm:DescribeMaintenanceWindowTask"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeregisterTaskWithMaintenanceWindow"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "ssm:GetMaintenanceWindowTask",
+                "ssm:UpdateMaintenanceWindowTask"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "ssm:DescribeMaintenanceWindowTask",
+                "ssm:GetMaintenanceWindowTask"
+            ]
+        },
+        "read": {
+            "permissions": [
+                "ssm:DescribeMaintenanceWindowTask"
+            ]
+        }
+    },
+    "required": [
+        "MaxErrors",
+        "WindowId",
+        "Priority",
+        "TaskType",
+        "MaxConcurrency",
+        "Targets",
+        "TaskArn"
+    ],
+    "createOnlyProperties": [
+        "/properties/WindowId"
+    ],
+    "primaryIdentifier": [
+        "/properties/Id"
+    ],
+    "readOnlyProperties": [
+        "/properties/Id"
+    ]
+}
