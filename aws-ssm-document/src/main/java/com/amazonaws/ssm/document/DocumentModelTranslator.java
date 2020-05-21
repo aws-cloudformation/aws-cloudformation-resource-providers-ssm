@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 class DocumentModelTranslator {
 
     private static final List<String> AWS_SSM_DOCUMENT_RESERVED_PREFIXES = ImmutableList.of(
-        "aws", "amazon", "amzn"
+        "aws-", "amazon", "amzn"
     );
     private static final String DEFAULT_DOCUMENT_NAME_PREFIX = "document";
     private static final int DOCUMENT_NAME_MAX_LENGTH = 128;
