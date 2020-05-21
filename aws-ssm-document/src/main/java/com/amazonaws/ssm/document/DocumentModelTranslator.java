@@ -28,6 +28,10 @@ import java.util.stream.Collectors;
  * Translates CloudFormation's resource model to AWS resource model.
  */
 class DocumentModelTranslator {
+
+    private static final List<String> AWS_SSM_DOCUMENT_RESERVED_PREFIXES = ImmutableList.of(
+        "aws", "amazon", "amzn"
+    );
     private static final String DEFAULT_DOCUMENT_NAME_PREFIX = "document";
     private static final String EMPTY_STACK_NAME = "";
     private static final int DOCUMENT_NAME_MAX_LENGTH = 128;
@@ -123,9 +127,7 @@ class DocumentModelTranslator {
     private String generateName(final Map<String, String> systemTags, final String requestToken) {
         final StringBuilder identifierPrefix = new StringBuilder();
 
-        final String stackName = MapUtils.isNotEmpty(systemTags) ?
-                systemTags.get("aws:cloudformation:stack-name") + DOCUMENT_NAME_DELIMITER :
-                EMPTY_STACK_NAME;
+        final String stackName = getStackName(systemTags);
         identifierPrefix.append(stackName);
 
         identifierPrefix.append(DEFAULT_DOCUMENT_NAME_PREFIX);
@@ -135,6 +137,22 @@ class DocumentModelTranslator {
                 identifierPrefix.toString(),
                 requestToken,
                 DOCUMENT_NAME_MAX_LENGTH);
+    }
+
+    private String getStackName(final Map<String, String> systemTags) {
+        if (MapUtils.isEmpty(systemTags)) {
+            return EMPTY_STACK_NAME;
+        }
+
+        final String stackName = systemTags.get("aws:cloudformation:stack-name");
+
+        final boolean stackNameMatchesReservedPrefix = AWS_SSM_DOCUMENT_RESERVED_PREFIXES.stream().anyMatch(stackName::startsWith);
+
+        if (stackNameMatchesReservedPrefix) {
+            return EMPTY_STACK_NAME;
+        }
+
+        return stackName;
     }
 
     private String processDocumentContent(final Map<String, Object> jsonContent, final String contentAsString) {
