@@ -123,7 +123,7 @@ public class DocumentModelTranslatorTest {
 
     @Test
     public void testGenerateCreateDocumentRequest_DocumentNameIsNotProvided_StackNameStartsWithReservedPrefix_verifyResult() {
-        final Map<String, String> systemTags = ImmutableMap.of("aws:cloudformation:stack-name", "aws-test-stack");
+        final Map<String, String> systemTags = ImmutableMap.of("aws:cloudformation:stack-name", "AWS-test-stack");
 
         final ResourceModel resourceModel = createResourceModel();
         resourceModel.setName(null);
