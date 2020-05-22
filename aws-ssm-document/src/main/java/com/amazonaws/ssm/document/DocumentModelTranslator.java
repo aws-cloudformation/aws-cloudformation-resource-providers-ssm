@@ -146,7 +146,8 @@ class DocumentModelTranslator {
 
         final String stackName = systemTags.get("aws:cloudformation:stack-name");
 
-        final boolean stackNameMatchesReservedPrefix = AWS_SSM_DOCUMENT_RESERVED_PREFIXES.stream().anyMatch(stackName::startsWith);
+        final boolean stackNameMatchesReservedPrefix =
+            AWS_SSM_DOCUMENT_RESERVED_PREFIXES.stream().anyMatch(prefix -> stackName.toLowerCase().startsWith(prefix));
 
         if (stackNameMatchesReservedPrefix) {
             return Optional.empty();
