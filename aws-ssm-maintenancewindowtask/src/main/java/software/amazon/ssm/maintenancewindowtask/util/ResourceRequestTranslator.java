@@ -21,7 +21,7 @@ public class ResourceRequestTranslator {
     /**
      * Translate Resource Model Targets to Request Targets
      */
-    public  static Optional<List<Target>> translateToRequestTargets(final List<software.amazon.ssm.maintenancewindowtask.Target> resourceModelTargets) {
+    public static Optional<List<Target>> translateToRequestTargets(final List<software.amazon.ssm.maintenancewindowtask.Target> resourceModelTargets) {
 
         if (!CollectionUtils.isNullOrEmpty(resourceModelTargets)) {
             List<Target> requestTargets = resourceModelTargets.stream().map(entry ->
@@ -53,7 +53,7 @@ public class ResourceRequestTranslator {
      * Translate Resource Model NotificationConfig to Request NotificationConfig
      */
     public static Optional<NotificationConfig> translateToRequestNotificationConfig(final software.amazon.ssm.maintenancewindowtask.NotificationConfig resourceModelNotificationConfig) {
-        if(resourceModelNotificationConfig == null) {
+        if (resourceModelNotificationConfig == null) {
             return Optional.empty();
         } else {
             NotificationConfig requestNotificationConfig = NotificationConfig.builder()
@@ -69,7 +69,7 @@ public class ResourceRequestTranslator {
      * Translate Resource Model CloudWatchOutputConfig to Request CloudWatchOutputConfig
      */
     public static Optional<CloudWatchOutputConfig> translateToRequestCloudWatchOutputConfig(final software.amazon.ssm.maintenancewindowtask.CloudWatchOutputConfig resourceModelCloudWatchOutputConfig) {
-        if(resourceModelCloudWatchOutputConfig == null) {
+        if (resourceModelCloudWatchOutputConfig == null) {
             return Optional.empty();
         } else {
             CloudWatchOutputConfig requestCloudWatchOutputConfig = CloudWatchOutputConfig.builder()
@@ -172,12 +172,12 @@ public class ResourceRequestTranslator {
      * Translate Resource Model TaskParameters to Request TaskParameters
      */
     public static Optional<Map<String, MaintenanceWindowTaskParameterValueExpression>> translateToRequestTaskParameters(final Map<String, List<String>> resourceModelTaskParameters) {
-        if(resourceModelTaskParameters == null || resourceModelTaskParameters.isEmpty()){
+        if (resourceModelTaskParameters == null || resourceModelTaskParameters.isEmpty()) {
             return Optional.empty();
         } else {
-            Map<String, MaintenanceWindowTaskParameterValueExpression> requestTaskParams = new HashMap<String,MaintenanceWindowTaskParameterValueExpression>();
-            for (Map.Entry<String,List<String>> entry : resourceModelTaskParameters.entrySet())
-                requestTaskParams.put(entry.getKey(),MaintenanceWindowTaskParameterValueExpression.builder().values(entry.getValue()).build());
+            Map<String, MaintenanceWindowTaskParameterValueExpression> requestTaskParams = new HashMap<String, MaintenanceWindowTaskParameterValueExpression>();
+            for (Map.Entry<String, List<String>> entry : resourceModelTaskParameters.entrySet())
+                requestTaskParams.put(entry.getKey(), MaintenanceWindowTaskParameterValueExpression.builder().values(entry.getValue()).build());
             return Optional.of(requestTaskParams);
         }
     }
