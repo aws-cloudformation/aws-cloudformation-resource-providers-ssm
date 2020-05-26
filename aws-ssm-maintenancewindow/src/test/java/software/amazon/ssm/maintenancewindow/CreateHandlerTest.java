@@ -96,7 +96,6 @@ public class CreateHandlerTest {
                 .thenReturn(result);
 
         final ResourceModel expectedModel = request.getDesiredResourceState();
-        expectedModel.setWindowId(WINDOW_ID);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
@@ -124,7 +123,7 @@ public class CreateHandlerTest {
                 .thenThrow(serviceException);
 
         when(exceptionTranslator.translateFromServiceException(serviceException, createMaintenanceWindowRequest))
-                .thenReturn(new CfnServiceInternalErrorException("CreateMaintenanceWindowAssociation", serviceException));
+                .thenReturn(new CfnServiceInternalErrorException("CreateMaintenanceWindow", serviceException));
 
         Assertions.assertThrows(CfnServiceInternalErrorException.class, () -> {
             handler.handleRequest(proxy, request, null, logger);

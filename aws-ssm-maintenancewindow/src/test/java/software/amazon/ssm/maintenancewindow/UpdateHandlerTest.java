@@ -80,7 +80,7 @@ public class UpdateHandlerTest {
                 .previousResourceState(previousModel)
                 .build();
 
-        final UpdateMaintenanceWindowRequest expectedUpdateAssociationRequest =
+        final UpdateMaintenanceWindowRequest expectedUpdateMaintenanceWindowRequest =
                 UpdateMaintenanceWindowRequest.builder()
                         .windowId(desiredModel.getWindowId())
                         .name(desiredModel.getName())
@@ -93,14 +93,14 @@ public class UpdateHandlerTest {
                         .build();
 
         when(updateMaintenanceWindowTranslator.resourceModelToRequest(desiredModel))
-                .thenReturn(expectedUpdateAssociationRequest);
+                .thenReturn(expectedUpdateMaintenanceWindowRequest);
 
         when(updateMaintenanceWindowToResourceModelTranslator.updateMaintenanceWindowResponseToResourceModel(result))
                 .thenReturn(desiredModel);
 
         when(
                 proxy.injectCredentialsAndInvokeV2(
-                        eq(expectedUpdateAssociationRequest),
+                        eq(expectedUpdateMaintenanceWindowRequest),
                         ArgumentMatchers.<Function<UpdateMaintenanceWindowRequest, UpdateMaintenanceWindowResponse>>any()))
                 .thenReturn(result);
 
@@ -163,27 +163,27 @@ public class UpdateHandlerTest {
                 .previousResourceState(previousModel)
                 .build();
 
-        final UpdateMaintenanceWindowRequest expectedUpdateAssociationRequest =
+        final UpdateMaintenanceWindowRequest expectedUpdateMaintenanceWindowRequest =
                 UpdateMaintenanceWindowRequest.builder()
                         .windowId(desiredModel.getWindowId())
                         .name(desiredModel.getName())
                         .build();
 
         when(updateMaintenanceWindowTranslator.resourceModelToRequest(desiredModel))
-                .thenReturn(expectedUpdateAssociationRequest);
+                .thenReturn(expectedUpdateMaintenanceWindowRequest);
 
         final TooManyUpdatesException serviceException = TooManyUpdatesException.builder().build();
 
         when(
                 proxy.injectCredentialsAndInvokeV2(
-                        eq(expectedUpdateAssociationRequest),
+                        eq(expectedUpdateMaintenanceWindowRequest),
                         ArgumentMatchers.<Function<UpdateMaintenanceWindowRequest, UpdateMaintenanceWindowResponse>>any()))
                 .thenThrow(serviceException);
 
         when(
                 exceptionTranslator.translateFromServiceException(
                         serviceException,
-                        expectedUpdateAssociationRequest))
+                        expectedUpdateMaintenanceWindowRequest))
                 .thenReturn(new CfnThrottlingException("UpdateMaintenanceWindow", serviceException));
 
         Assertions.assertThrows(CfnThrottlingException.class, () -> {
@@ -193,6 +193,6 @@ public class UpdateHandlerTest {
         verify(exceptionTranslator)
                 .translateFromServiceException(
                         serviceException,
-                        expectedUpdateAssociationRequest);
+                        expectedUpdateMaintenanceWindowRequest);
     }
 }

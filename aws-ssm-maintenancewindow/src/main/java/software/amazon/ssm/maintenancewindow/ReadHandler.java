@@ -56,7 +56,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         if (StringUtils.isNullOrEmpty(windowId)) {
             progressEvent.setErrorCode(HandlerErrorCode.InvalidRequest);
-            progressEvent.setMessage("WindowId must be present to read the existing association.");
+            progressEvent.setMessage("WindowId must be present to read the existing maintenance window.");
             return progressEvent;
         }
 

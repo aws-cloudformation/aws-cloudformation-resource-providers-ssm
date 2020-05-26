@@ -118,7 +118,7 @@ public class ReadHandlerTest {
                 ProgressEvent.<ResourceModel, CallbackContext>builder()
                         .status(OperationStatus.FAILED)
                         .errorCode(HandlerErrorCode.InvalidRequest)
-                        .message("WindowId must be present to read the existing association.")
+                        .message("WindowId must be present to read the existing maintenance window.")
                         .build();
 
         assertThat(response).isEqualTo(expectedProgressEvent);
