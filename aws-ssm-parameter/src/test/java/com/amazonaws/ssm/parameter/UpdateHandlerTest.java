@@ -1,19 +1,23 @@
 package com.amazonaws.ssm.parameter;
 
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
-import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
-import software.amazon.awssdk.services.ssm.model.Parameter;
-import software.amazon.awssdk.services.ssm.model.ParameterTier;
-import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
-import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
-import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
+import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
+import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
+import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterTier;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceResponse;
+import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -77,6 +81,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
 
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
+
         final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
         when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
         final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
@@ -105,6 +115,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess_WithImageDataType() {
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
+
         RESOURCE_MODEL = ResourceModel.builder()
                 .description(DESCRIPTION)
                 .name(NAME)
@@ -113,12 +129,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .tags(TAG_SET)
                 .dataType("aws:ec2:image")
                 .build();
-
-        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
-                .version(VERSION)
-                .tier(ParameterTier.STANDARD)
-                .build();
-        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
@@ -151,6 +161,48 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_ThrottlingException() {
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(TooManyUpdatesException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnThrottlingException ex) {
+            assertThat(ex).isInstanceOf(CfnThrottlingException.class);
+        }
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_ParameterNotFoundException() {
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(ParameterNotFoundException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnNotFoundException ex) {
+            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
+        }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
     }

@@ -74,7 +74,7 @@ public class AbstractTestBase {
 
             @Override
             public <RequestT extends AwsRequest, ResponseT extends AwsResponse, IterableT extends SdkIterable<ResponseT>> IterableT injectCredentialsAndInvokeIterableV2(RequestT requestT, Function<RequestT, IterableT> function) {
-                throw new UnsupportedOperationException();
+                return proxy.injectCredentialsAndInvokeIterableV2(requestT, function);
             }
 
             @Override

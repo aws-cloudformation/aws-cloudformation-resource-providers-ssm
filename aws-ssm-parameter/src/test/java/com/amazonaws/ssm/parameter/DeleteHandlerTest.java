@@ -3,6 +3,9 @@ package com.amazonaws.ssm.parameter;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -88,17 +91,32 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .desiredResourceState(RESOURCE_MODEL)
                 .logicalResourceIdentifier("logicalId").build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnNotFoundException ex) {
+            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
+        }
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNotNull();
-        assertThat(response.getMessage()).isEqualTo(String.format("Resource of type 'AWS::SSM::Parameter' with identifier '%s' was not found.", "ParameterName"));
-        assertThat(response.getErrorCode()).isNotNull();
-        assertThat(response.getErrorCode().name()).isEqualTo("NotFound");
+        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_ThrottlingException() {
+        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
+                .thenThrow(TooManyUpdatesException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnThrottlingException ex) {
+            assertThat(ex).isInstanceOf(CfnThrottlingException.class);
+        }
 
         verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
     }

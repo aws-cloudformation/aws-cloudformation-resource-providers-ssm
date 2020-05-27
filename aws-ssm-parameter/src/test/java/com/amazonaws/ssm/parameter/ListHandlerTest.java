@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersResponse;
@@ -23,13 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ListHandlerTest extends AbstractTestBase {
-
-    private static final String PARAMETER_NAME = "parameterName";
-    private static final String NEXT_TOKEN = "4b90a7e4-b790-456b";
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -40,39 +39,33 @@ public class ListHandlerTest extends AbstractTestBase {
     @Mock
     SsmClient ssmClient;
 
-    private CreateHandler handler;
+    private ListHandler handler;
 
-    private ResourceModel RESOURCE_MODEL;
+    private static final String PARAMETER_NAME = "parameterName";
+    private static final String NEXT_TOKEN = "4b90a7e4-b790-456b";
 
     @BeforeEach
     public void setup() {
-        handler = new CreateHandler();
+        handler = new ListHandler();
         ssmClient = mock(SsmClient.class);
         proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
         proxySsmClient = MOCK_PROXY(proxy, ssmClient);
+    }
 
-        RESOURCE_MODEL = ResourceModel.builder()
-                .description(DESCRIPTION)
-                .name(NAME)
-                .value(VALUE)
-                .type(TYPE)
-                .tags(TAG_SET)
-                .build();
+    @AfterEach
+    public void post_execute() {
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        final ListHandler handler = new ListHandler();
-
         final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
                 .parameters(Collections.singletonList(ParameterMetadata.builder().name(PARAMETER_NAME).build()))
                 .nextToken(NEXT_TOKEN).build();
-
-
         when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
                 .thenReturn(describeParametersResponse);
 
-        final ResourceModel model = ResourceModel.builder().name(PARAMETER_NAME).build();
+        final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceModel expectedModel = ResourceModel.builder().name(PARAMETER_NAME).build();
 
@@ -80,7 +73,8 @@ public class ListHandlerTest extends AbstractTestBase {
                 .desiredResourceState(model)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -94,6 +88,5 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getNextToken()).isEqualTo(NEXT_TOKEN);
 
         verify(proxySsmClient.client()).describeParameters(any(DescribeParametersRequest.class));
-
     }
 }

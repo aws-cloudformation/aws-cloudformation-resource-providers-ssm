@@ -2,13 +2,15 @@ package com.amazonaws.ssm.parameter;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
+import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.Parameter;
-import software.amazon.awssdk.services.ssm.model.ParameterTier;
-import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
+import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterTier;
 import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -68,9 +70,16 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .parameters(Parameter.builder()
                         .name(NAME)
                         .type(TYPE)
-                        .value(VALUE).build())
+                        .value(VALUE)
+                        .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -97,9 +106,16 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .parameters(Parameter.builder()
                         .name(NAME)
                         .type(TYPE)
-                        .value(VALUE).build())
+                        .value(VALUE)
+                        .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
         RESOURCE_MODEL = ResourceModel.builder()
                 .description(DESCRIPTION)
@@ -133,9 +149,16 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .parameters(Parameter.builder()
                         .name(NAME)
                         .type(TYPE)
-                        .value(VALUE).build())
+                        .value(VALUE)
+                        .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
         RESOURCE_MODEL = ResourceModel.builder()
                 .description(DESCRIPTION)
@@ -174,12 +197,6 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .dataType("aws:ec2:image")
                 .build();
 
-        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
-                .version(VERSION)
-                .tier(ParameterTier.STANDARD)
-                .build();
-        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
-
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
                         .name(NAME)
@@ -188,6 +205,12 @@ public class CreateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -224,6 +247,27 @@ public class CreateHandlerTest extends AbstractTestBase {
             handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
         } catch (CfnThrottlingException ex) {
             assertThat(ex).isInstanceOf(CfnThrottlingException.class);
+        }
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_ParameterNotFoundException() {
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(ParameterNotFoundException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnNotFoundException ex) {
+            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));

@@ -2,7 +2,13 @@ package com.amazonaws.ssm.parameter;
 
 import com.google.common.collect.Sets;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
+import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -18,6 +24,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class UpdateHandler extends BaseHandlerStd {
+    private static final String OPERATION = "PutParameter";
+    private static final String RETRY_MESSAGE = "Detected retryable error, retrying. Exception message: %s";
+    private Logger logger;
+
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -25,35 +35,43 @@ public class UpdateHandler extends BaseHandlerStd {
             final CallbackContext callbackContext,
             final ProxyClient<SsmClient> proxyClient,
             final Logger logger) {
+        this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
 
+        Constant BACK_OFF_DELAY;
+
         if(model.getDataType() != null && model.getDataType() == Constants.AWS_EC2_IMAGE_DATATYPE) {
-            return ProgressEvent.progress(model, callbackContext)
-                    .then(progress ->
-                            proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
-                                    .translateToServiceRequest(Translator::updatePutParameterRequest)
-                                    .backoffDelay(
-                                            Constant.of()
-                                                    .timeout(Duration.ofMinutes(5))
-                                                    .delay(Duration.ofSeconds(30))
-                                                    .build())
-                                    .makeServiceCall((createPutParameterRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(createPutParameterRequest, proxyInvocation.client()::putParameter))
-                                    .stabilize(BaseHandlerStd::stabilize)
-                                    .handleError((putParameterRequest, exception, _proxyClient, _model, _callbackContext) -> handleError("aws-ssm-parameter::resource-update", exception, _model, _callbackContext, logger))
-                                    .progress())
-                    .then(progress -> tagResources(proxy, proxyClient, progress, request.getDesiredResourceTags(), callbackContext, logger))
-                    .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+            BACK_OFF_DELAY = Constant.of()
+                    .timeout(Duration.ofMinutes(5))
+                    .delay(Duration.ofSeconds(30))
+                    .build();
+        } else {
+            BACK_OFF_DELAY = Constant.of()
+                    .timeout(Duration.ofMinutes(5))
+                    .delay(Duration.ofSeconds(5))
+                    .build();
         }
 
-        return ProgressEvent.progress(model, callbackContext)
-                .then(progress ->
-                        proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
+        return proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
                                 .translateToServiceRequest(Translator::updatePutParameterRequest)
-                                .makeServiceCall((createPutParameterRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(createPutParameterRequest, proxyInvocation.client()::putParameter))
-                                .handleError((putParameterRequest, exception, _proxyClient, _model, _callbackContext) -> handleError("aws-ssm-parameter::resource-update", exception, _model, _callbackContext, logger))
-                                .progress())
+                                .backoffDelay(BACK_OFF_DELAY)
+                                .makeServiceCall(this::updateResource)
+                                .stabilize(BaseHandlerStd::stabilize)
+                                .progress()
                 .then(progress -> tagResources(proxy, proxyClient, progress, request.getDesiredResourceTags(), callbackContext, logger))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+    }
+
+    private PutParameterResponse updateResource(final PutParameterRequest putParameterRequest,
+                                                final ProxyClient<SsmClient> proxyClient) {
+        try {
+            return proxyClient.injectCredentialsAndInvokeV2(putParameterRequest, proxyClient.client()::putParameter);
+        } catch (final TooManyUpdatesException exception) {
+            logger.log(String.format(RETRY_MESSAGE, exception.getMessage()));
+            throw new CfnThrottlingException(OPERATION, exception);
+        } catch (final ParameterNotFoundException exception) {
+            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, putParameterRequest.name());
+        }
     }
 
     private ProgressEvent<ResourceModel,CallbackContext> tagResources(
