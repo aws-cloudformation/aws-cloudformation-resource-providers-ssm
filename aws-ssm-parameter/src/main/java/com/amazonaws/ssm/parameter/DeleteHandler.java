@@ -28,12 +28,10 @@ public class DeleteHandler extends BaseHandlerStd {
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
 
-        return ProgressEvent.progress(model, callbackContext)
-                .then(progress ->
-                        proxy.initiate("aws-ssm-parameter::resource-delete", proxyClient, model, callbackContext)
-                                .translateToServiceRequest(Translator::deleteParameterRequest)
-                                .makeServiceCall(this::deleteResource)
-                                .success());
+        return proxy.initiate("aws-ssm-parameter::resource-delete", proxyClient, model, callbackContext)
+                .translateToServiceRequest(Translator::deleteParameterRequest)
+                .makeServiceCall(this::deleteResource)
+                .success();
     }
 
     private DeleteParameterResponse deleteResource(final DeleteParameterRequest deleteParameterRequest,

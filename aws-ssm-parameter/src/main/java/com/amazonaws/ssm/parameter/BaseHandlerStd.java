@@ -9,6 +9,9 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.delay.Constant;
+
+import java.time.Duration;
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     @Override
@@ -30,6 +33,20 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             CallbackContext callbackContext,
             ProxyClient<SsmClient> client,
             Logger logger);
+
+    protected Constant getBackOffDelay(final ResourceModel model) {
+        if(model.getDataType() != null && model.getDataType() == Constants.AWS_EC2_IMAGE_DATATYPE) {
+            return Constant.of()
+                    .timeout(Duration.ofMinutes(5))
+                    .delay(Duration.ofSeconds(30))
+                    .build();
+        } else {
+            return Constant.of()
+                    .timeout(Duration.ofMinutes(5))
+                    .delay(Duration.ofSeconds(5))
+                    .build();
+        }
+    }
 
     /**
      * If your resource requires some form of stabilization (e.g. service does not provide strong

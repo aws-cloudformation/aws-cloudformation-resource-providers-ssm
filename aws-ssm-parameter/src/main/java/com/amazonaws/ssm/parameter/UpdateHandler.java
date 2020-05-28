@@ -38,26 +38,14 @@ public class UpdateHandler extends BaseHandlerStd {
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
 
-        Constant BACK_OFF_DELAY;
-
-        if(model.getDataType() != null && model.getDataType() == Constants.AWS_EC2_IMAGE_DATATYPE) {
-            BACK_OFF_DELAY = Constant.of()
-                    .timeout(Duration.ofMinutes(5))
-                    .delay(Duration.ofSeconds(30))
-                    .build();
-        } else {
-            BACK_OFF_DELAY = Constant.of()
-                    .timeout(Duration.ofMinutes(5))
-                    .delay(Duration.ofSeconds(5))
-                    .build();
-        }
-
-        return proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
+        return ProgressEvent.progress(model, callbackContext)
+                .then(progress ->
+                        proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
                                 .translateToServiceRequest(Translator::updatePutParameterRequest)
-                                .backoffDelay(BACK_OFF_DELAY)
+                                .backoffDelay(getBackOffDelay(model))
                                 .makeServiceCall(this::updateResource)
                                 .stabilize(BaseHandlerStd::stabilize)
-                                .progress()
+                                .progress())
                 .then(progress -> tagResources(proxy, proxyClient, progress, request.getDesiredResourceTags(), callbackContext, logger))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }

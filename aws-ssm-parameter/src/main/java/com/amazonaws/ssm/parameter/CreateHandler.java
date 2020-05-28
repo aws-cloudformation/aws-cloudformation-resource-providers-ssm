@@ -46,23 +46,9 @@ public class CreateHandler extends BaseHandlerStd {
             ));
         }
 
-        Constant BACK_OFF_DELAY;
-
-        if(model.getDataType() != null && model.getDataType() == Constants.AWS_EC2_IMAGE_DATATYPE) {
-            BACK_OFF_DELAY = Constant.of()
-                    .timeout(Duration.ofMinutes(5))
-                    .delay(Duration.ofSeconds(30))
-                    .build();
-        } else {
-            BACK_OFF_DELAY = Constant.of()
-                    .timeout(Duration.ofMinutes(5))
-                    .delay(Duration.ofSeconds(5))
-                    .build();
-        }
-
         return proxy.initiate("aws-ssm-parameter::resource-create", proxyClient, model, callbackContext)
                .translateToServiceRequest((resourceModel) -> Translator.createPutParameterRequest(resourceModel, consolidatedTagList))
-               .backoffDelay(BACK_OFF_DELAY)
+               .backoffDelay(getBackOffDelay(model))
                .makeServiceCall(this::createResource)
                .stabilize(BaseHandlerStd::stabilize)
                .progress()

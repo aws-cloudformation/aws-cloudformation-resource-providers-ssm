@@ -27,10 +27,10 @@ public class ReadHandler extends BaseHandlerStd {
                     }
                     final Parameter parameter = getParametersResponse.parameters().stream().findFirst().get();
 
-                    return ProgressEvent.success(ResourceModel.builder()
+                    return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
                             .name(parameter.name())
                             .type(parameter.typeAsString())
-                            .value(parameter.value()).build(), context);
+                            .value(parameter.value()).build());
                 });
     }
 }

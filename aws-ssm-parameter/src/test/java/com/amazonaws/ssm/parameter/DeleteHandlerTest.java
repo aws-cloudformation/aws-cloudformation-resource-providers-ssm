@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
@@ -22,9 +23,11 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
 public class DeleteHandlerTest extends AbstractTestBase {
@@ -56,6 +59,12 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .type(TYPE)
                 .tags(TAG_SET)
                 .build();
+    }
+
+    @AfterEach
+    public void post_execute() {
+        verify(ssmClient, atLeastOnce()).serviceName();
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
