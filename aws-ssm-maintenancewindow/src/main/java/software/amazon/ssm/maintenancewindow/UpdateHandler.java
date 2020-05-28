@@ -79,8 +79,10 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     updateMaintenanceWindowToResourceModelTranslator.updateMaintenanceWindowResponseToResourceModel(response);
 
             progressEvent.setResourceModel(updatedModel);
+
             progressEvent.setStatus(OperationStatus.SUCCESS);
 
+            return progressEvent;
         } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, updateMaintenanceWindowRequest);
@@ -89,7 +91,5 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
-
-        return progressEvent;
     }
 }

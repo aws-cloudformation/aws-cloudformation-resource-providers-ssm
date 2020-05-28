@@ -61,8 +61,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             model.setWindowId(response.windowId());
 
             progressEvent.setStatus(OperationStatus.SUCCESS);
+
             progressEvent.setResourceModel(model);
 
+            return progressEvent;
         } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, createMaintenanceWindowRequest);
@@ -71,7 +73,5 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
-
-        return progressEvent;
     }
 }

@@ -27,8 +27,8 @@
         "Cutoff": {
             "description": "The number of hours before the end of the maintenance window that Systems Manager stops scheduling new tasks for execution.",
             "type": "integer",
-            "minLength": 0,
-            "maxLength": 23
+            "minimum": 0,
+            "maximum": 23
         },
         "Schedule": {
             "description": "The schedule of the maintenance window in the form of a cron or rate expression.",
@@ -39,8 +39,8 @@
         "Duration": {
             "description": "The duration of the maintenance window in hours.",
             "type": "integer",
-            "minLength": 1,
-            "maxLength": 24
+            "minimum": 1,
+            "maximum": 24
         },
         "EndDate": {
             "description": "The date and time, in ISO-8601 Extended format, for when the maintenance window is scheduled to become inactive.",

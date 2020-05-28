@@ -51,19 +51,21 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
         progressEvent.setStatus(OperationStatus.FAILED);
 
-        final Optional<DeleteMaintenanceWindowRequest.Builder> optionalRequestBuilder = initializeRequestBuilder(model);
-
-        if (!optionalRequestBuilder.isPresent()) {
+        if (StringUtils.isNullOrEmpty(model.getWindowId())) {
             progressEvent.setErrorCode(HandlerErrorCode.InvalidRequest);
             progressEvent.setMessage("WindowId must be specified to delete a maintenance window.");
             return progressEvent;
         }
 
-        final DeleteMaintenanceWindowRequest deleteMaintenanceWindowRequest = optionalRequestBuilder.get().build();
+        final DeleteMaintenanceWindowRequest deleteMaintenanceWindowRequest = DeleteMaintenanceWindowRequest.builder()
+                .windowId(model.getWindowId()).build();
 
         try {
             proxy.injectCredentialsAndInvokeV2(deleteMaintenanceWindowRequest, SSM_CLIENT::deleteMaintenanceWindow);
+
             progressEvent.setStatus(OperationStatus.SUCCESS);
+
+            return ProgressEvent.defaultSuccessHandler(null);
         } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, deleteMaintenanceWindowRequest);
@@ -72,25 +74,5 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
-
-        if (progressEvent.isSuccess()) {
-            // nullify the model if delete succeeded
-            progressEvent.setResourceModel(null);
-        }
-
-
-        return progressEvent;
-    }
-
-    public Optional<DeleteMaintenanceWindowRequest.Builder> initializeRequestBuilder(final ResourceModel model) {
-        if (!StringUtils.isNullOrEmpty(model.getWindowId())) {
-
-            return Optional.of(
-                    DeleteMaintenanceWindowRequest.builder()
-                            .windowId(model.getWindowId()));
-
-        }
-
-        return Optional.empty();
     }
 }

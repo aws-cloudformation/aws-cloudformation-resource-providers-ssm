@@ -53,10 +53,6 @@ public class ExceptionTranslator {
                 || serviceException instanceof IdempotentParameterMismatchException){
 
             return new CfnInvalidRequestException(request.toString(), serviceException);
-        }else if (serviceException instanceof TooManyUpdatesException) {
-
-            return new CfnThrottlingException(getClassNameWithoutRequestSuffix(request.getClass().getSimpleName()),
-                    serviceException);
         } else {
             // in case of unknown/unexpected service exceptions, use a generic exception with the name of the failed operation
             return new CfnGeneralServiceException(getClassNameWithoutRequestSuffix(request.getClass().getSimpleName()),
