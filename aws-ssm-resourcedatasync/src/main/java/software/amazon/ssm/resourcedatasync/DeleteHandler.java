@@ -27,7 +27,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
      */
     private static final int CALLBACK_DELAY_SECONDS = 30;
 
-    private static final int INITIAL_CALLBACK_DELAY_SECONDS = 5;
+    private static final int INITIAL_CALLBACK_DELAY_SECONDS = 2;
 
     private static final int NUMBER_OF_RESOURCE_DATA_SYNC_DELETE_POLL_RETRIES = 2 * 60 / CALLBACK_DELAY_SECONDS;
 

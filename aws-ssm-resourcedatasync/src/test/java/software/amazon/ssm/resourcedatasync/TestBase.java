@@ -7,11 +7,11 @@ public class TestBase {
 
     static final int CREATE_CALLBACK_DELAY_SECONDS = 10;
 
-    static final int INITIAL_CREATE_CALLBACK_DELAY_SECONDS = 5;
+    static final int INITIAL_CREATE_CALLBACK_DELAY_SECONDS = 2;
 
     static final int DELETE_CALLBACK_DELAY_SECONDS = 30;
 
-    static final int INITIAL_DELETE_CALLBACK_DELAY_SECONDS = 5;
+    static final int INITIAL_DELETE_CALLBACK_DELAY_SECONDS = 2;
 
     static final int NUMBER_OF_RESOURCE_DATA_SYNC_CREATE_POLL_RETRIES = 60 / CREATE_CALLBACK_DELAY_SECONDS;
 
