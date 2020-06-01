@@ -42,8 +42,8 @@ public class TagUpdater {
         final List<Tag> tagsToAdd = getTagsToAdd(requestedTags, existingTags);
         final List<Tag> tagsToRemove = getTagsToRemove(requestedTags, existingTags);
 
-        tagClient.addTags(tagsToAdd, documentName, ssmClient, proxy);
         tagClient.removeTags(tagsToRemove, documentName, ssmClient, proxy);
+        tagClient.addTags(tagsToAdd, documentName, ssmClient, proxy);
     }
 
     private List<Tag> getTagsToAdd(List<Tag> requestedTags, List<Tag> existingTags) {
