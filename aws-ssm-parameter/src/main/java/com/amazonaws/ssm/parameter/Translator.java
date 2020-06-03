@@ -20,7 +20,6 @@ public class Translator {
     static PutParameterRequest createPutParameterRequest(final ResourceModel model,
                                                          final Map<String, String> tags) {
         return PutParameterRequest.builder()
-                .allowedPattern(model.getAllowedPattern())
                 .description(model.getDescription())
                 .name(model.getName())
                 .value(model.getValue())
@@ -36,7 +35,6 @@ public class Translator {
 
     static PutParameterRequest updatePutParameterRequest(final ResourceModel model) {
         return PutParameterRequest.builder()
-                .allowedPattern(model.getAllowedPattern())
                 .description(model.getDescription())
                 .name(model.getName())
                 .value(model.getValue())

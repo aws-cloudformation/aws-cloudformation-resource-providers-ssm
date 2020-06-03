@@ -1,11 +1,14 @@
 package com.amazonaws.ssm.parameter;
 
+import com.amazonaws.AmazonServiceException;
 import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
-import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -111,8 +114,12 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_ThrottlingException() {
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        amazonServiceException.setStatusCode(429);
+        amazonServiceException.setErrorCode("ThrottlingException");
+
         when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
-                .thenThrow(TooManyUpdatesException.builder().build());
+                .thenThrow(amazonServiceException);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -125,6 +132,76 @@ public class DeleteHandlerTest extends AbstractTestBase {
             handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
         } catch (CfnThrottlingException ex) {
             assertThat(ex).isInstanceOf(CfnThrottlingException.class);
+        }
+
+        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_NonThrottlingAmazonServiceException() {
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        amazonServiceException.setStatusCode(500);
+
+        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
+                .thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+        }
+
+        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AmazonServiceExceptionInternalServerError() {
+        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
+                .thenThrow(InternalServerErrorException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnServiceInternalErrorException ex) {
+            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
+        }
+
+        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AmazonServiceException400NonThrottlingException() {
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        amazonServiceException.setStatusCode(400);
+        amazonServiceException.setErrorCode("Invalid Input");
+
+        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
+                .thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
         }
 
         verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));

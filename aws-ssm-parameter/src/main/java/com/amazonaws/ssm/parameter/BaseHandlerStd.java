@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import com.google.common.collect.ImmutableSet;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
@@ -12,8 +13,13 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.delay.Constant;
 
 import java.time.Duration;
+import java.util.Set;
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+    protected static final Set<String> THROTTLING_ERROR_CODES = ImmutableSet.of(
+            "ThrottlingException",
+            "TooManyUpdates");
+
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(final AmazonWebServicesClientProxy proxy,
                                                                        final ResourceHandlerRequest<ResourceModel> request,
@@ -72,11 +78,10 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final GetParametersResponse response =  proxyClient.injectCredentialsAndInvokeV2(Translator.getParametersRequest(resourceModel), proxyClient.client()::getParameters);
         // if invalid parameters list is not empty return false as the validation for
         // DataType has not been completed and the parameter has not been created yet.
-        if(response.invalidParameters().size() != 0) {
+        if(response == null || response.invalidParameters().size() != 0) {
             return false;
         }
-        return (response != null &&
-                response.parameters() != null &&
+        return (response.parameters() != null &&
                 response.parameters().get(0).version() == putParameterResponse.version());
     }
 }

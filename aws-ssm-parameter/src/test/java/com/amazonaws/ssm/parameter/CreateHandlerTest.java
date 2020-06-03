@@ -1,18 +1,21 @@
 package com.amazonaws.ssm.parameter;
 
+import com.amazonaws.AmazonServiceException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.Parameter;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.ParameterTier;
-import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -241,9 +244,13 @@ public class CreateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_ThrottlingException() {
+    public void handleRequest_AmazonServiceException400ThrottlingException() {
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        amazonServiceException.setStatusCode(429);
+        amazonServiceException.setErrorCode("ThrottlingException");
+
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
-                .thenThrow(TooManyUpdatesException.builder().build());
+                .thenThrow(amazonServiceException);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -262,9 +269,9 @@ public class CreateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_ParameterNotFoundException() {
+    public void handleRequest_ParameterAlreadyExistsException() {
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
-                .thenThrow(ParameterNotFoundException.builder().build());
+                .thenThrow(ParameterAlreadyExistsException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -275,8 +282,78 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         try {
             handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
-        } catch (CfnNotFoundException ex) {
-            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
+        } catch (CfnAlreadyExistsException ex) {
+            assertThat(ex).isInstanceOf(CfnAlreadyExistsException.class);
+        }
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AmazonServiceException500Exception() {
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        amazonServiceException.setStatusCode(500);
+
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+        }
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AmazonServiceException400NonThrottlingException() {
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        amazonServiceException.setStatusCode(400);
+        amazonServiceException.setErrorCode("Invalid Input");
+
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+        }
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AmazonServiceExceptionInternalServerError() {
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(InternalServerErrorException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnServiceInternalErrorException ex) {
+            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
