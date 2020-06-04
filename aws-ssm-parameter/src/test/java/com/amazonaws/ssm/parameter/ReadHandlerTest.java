@@ -4,8 +4,10 @@ import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -98,6 +100,25 @@ public class ReadHandlerTest extends AbstractTestBase {
             handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
         } catch (CfnNotFoundException ex) {
             assertThat(ex).isInstanceOf(CfnNotFoundException.class);
+        }
+
+        verify(proxySsmClient.client()).getParameters(any(GetParametersRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AmazonServiceExceptionInternalServerError() {
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class)))
+                .thenThrow(InternalServerErrorException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(ResourceModel.builder()
+                        .build())
+                .build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnServiceInternalErrorException ex) {
+            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
         }
 
         verify(proxySsmClient.client()).getParameters(any(GetParametersRequest.class));

@@ -8,8 +8,7 @@
             "description": "The type of the parameter.",
             "enum": [
                 "String",
-                "StringList",
-                "SecureString"
+                "StringList"
             ]
         },
         "Value": {
