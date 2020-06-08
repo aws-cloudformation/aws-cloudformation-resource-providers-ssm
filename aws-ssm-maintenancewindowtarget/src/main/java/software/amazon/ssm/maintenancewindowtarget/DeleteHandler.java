@@ -91,5 +91,3 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         return Optional.empty();
     }
 }
-
-

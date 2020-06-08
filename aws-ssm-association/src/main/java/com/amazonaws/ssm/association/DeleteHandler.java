@@ -1,6 +1,8 @@
 package com.amazonaws.ssm.association;
 
 import com.amazonaws.ssm.association.translator.ExceptionTranslator;
+import com.amazonaws.ssm.association.util.ResourceHandlerRequestToStringConverter;
+import com.amazonaws.ssm.association.util.ResourceModelToStringConverter;
 import com.amazonaws.ssm.association.util.SsmClientBuilder;
 import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -23,21 +25,26 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient SSM_CLIENT = SsmClientBuilder.getClient();
     private final ExceptionTranslator exceptionTranslator;
+    private final ResourceHandlerRequestToStringConverter requestToStringConverter;
 
     /**
      * Constructor to use by dependencies. Processes Delete requests.
      */
     DeleteHandler() {
         this.exceptionTranslator = new ExceptionTranslator();
+        this.requestToStringConverter = new ResourceHandlerRequestToStringConverter(new ResourceModelToStringConverter());
     }
 
     /**
      * Used for unit tests.
      *
      * @param exceptionTranslator Used for translating service model exceptions.
+     * @param requestToStringConverter ResourceHandlerRequestToStringConverter used to convert requests to Strings.
      */
-    DeleteHandler(final ExceptionTranslator exceptionTranslator) {
+    DeleteHandler(final ExceptionTranslator exceptionTranslator,
+                  final ResourceHandlerRequestToStringConverter requestToStringConverter) {
         this.exceptionTranslator = exceptionTranslator;
+        this.requestToStringConverter = requestToStringConverter;
     }
 
     @Override
@@ -47,7 +54,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        logger.log(String.format("Processing DeleteHandler request %s", request));
+        logger.log(String.format("Processing DeleteHandler request: %s", requestToStringConverter.convert(request)));
 
         final ResourceModel model = request.getDesiredResourceState();
         final ProgressEvent<ResourceModel, CallbackContext> progressEvent =

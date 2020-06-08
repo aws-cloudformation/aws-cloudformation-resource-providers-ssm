@@ -3,6 +3,8 @@ package com.amazonaws.ssm.association;
 import com.amazonaws.ssm.association.translator.AssociationDescriptionTranslator;
 import com.amazonaws.ssm.association.translator.ExceptionTranslator;
 import com.amazonaws.ssm.association.translator.request.UpdateAssociationTranslator;
+import com.amazonaws.ssm.association.util.ResourceHandlerRequestToStringConverter;
+import com.amazonaws.ssm.association.util.ResourceModelToStringConverter;
 import com.amazonaws.ssm.association.util.SsmClientBuilder;
 import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -26,6 +28,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
     private final UpdateAssociationTranslator updateAssociationTranslator;
     private final AssociationDescriptionTranslator associationDescriptionTranslator;
     private final ExceptionTranslator exceptionTranslator;
+    private final ResourceHandlerRequestToStringConverter requestToStringConverter;
 
     /**
      * Constructor to use by dependencies. Processes Update requests.
@@ -34,6 +37,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         this.updateAssociationTranslator = new UpdateAssociationTranslator();
         this.associationDescriptionTranslator = new AssociationDescriptionTranslator();
         this.exceptionTranslator = new ExceptionTranslator();
+        this.requestToStringConverter = new ResourceHandlerRequestToStringConverter(new ResourceModelToStringConverter());
     }
 
     /**
@@ -42,13 +46,16 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
      * @param updateAssociationTranslator Translates ResourceModel objects into UpdateAssociation requests.
      * @param associationDescriptionTranslator Translates AssociationDescription into ResourceModel objects.
      * @param exceptionTranslator Translates service model exceptions.
+     * @param requestToStringConverter ResourceHandlerRequestToStringConverter used to convert requests to Strings.
      */
     UpdateHandler(final UpdateAssociationTranslator updateAssociationTranslator,
                   final AssociationDescriptionTranslator associationDescriptionTranslator,
-                  final ExceptionTranslator exceptionTranslator) {
+                  final ExceptionTranslator exceptionTranslator,
+                  final ResourceHandlerRequestToStringConverter requestToStringConverter) {
         this.updateAssociationTranslator = updateAssociationTranslator;
         this.associationDescriptionTranslator = associationDescriptionTranslator;
         this.exceptionTranslator = exceptionTranslator;
+        this.requestToStringConverter = requestToStringConverter;
     }
 
     @Override
@@ -58,7 +65,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        logger.log(String.format("Processing UpdateHandler request %s", request));
+        logger.log(String.format("Processing UpdateHandler request: %s", requestToStringConverter.convert(request)));
 
         final ResourceModel requestModel = request.getDesiredResourceState();
 

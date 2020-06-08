@@ -143,5 +143,4 @@ public class DeleteHandlerTest {
         verify(exceptionTranslator)
             .translateFromServiceException(serviceException, expectedDeregisterTargetFromMaintenanceWindowRequest);
     }
-
 }

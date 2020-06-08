@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_OUTPUT_LOCATION;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_OUTPUT_LOCATION;
+import static com.amazonaws.ssm.association.TestsInputs.MODEL_OUTPUT_LOCATION;
+import static com.amazonaws.ssm.association.TestsInputs.SERVICE_OUTPUT_LOCATION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class InstanceAssociationOutputLocationTranslatorTest {

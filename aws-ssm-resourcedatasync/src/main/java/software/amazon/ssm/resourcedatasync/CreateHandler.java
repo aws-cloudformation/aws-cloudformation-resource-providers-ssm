@@ -31,7 +31,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      */
     private static final int CALLBACK_DELAY_SECONDS = 10;
 
-    private static final int INITIAL_CALLBACK_DELAY_SECONDS = 5;
+    private static final int INITIAL_CALLBACK_DELAY_SECONDS = 2;
 
     private static final int NUMBER_OF_RESOURCE_DATA_SYNC_CREATE_POLL_RETRIES = 60 / CALLBACK_DELAY_SECONDS;
 

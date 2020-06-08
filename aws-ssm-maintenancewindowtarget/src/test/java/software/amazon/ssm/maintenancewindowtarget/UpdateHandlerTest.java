@@ -33,7 +33,6 @@ import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.NAME;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_ID;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_TARGET_ID;
 
-
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest extends AbstractTestBase {
 
