@@ -1,6 +1,6 @@
 # AWS::SSM::MaintenanceWindowTarget
 
-An example resource schema demonstrating some basic constructs and validation rules.
+Resource Type definition for AWS::SSM::MaintenanceWindowTarget
 
 ## Syntax
 
@@ -12,14 +12,15 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 {
     "Type" : "AWS::SSM::MaintenanceWindowTarget",
     "Properties" : {
-        "<a href="#title" title="Title">Title</a>" : <i>String</i>,
-        "<a href="#coversheetincluded" title="CoverSheetIncluded">CoverSheetIncluded</a>" : <i>Boolean</i>,
-        "<a href="#duedate" title="DueDate">DueDate</a>" : <i>String</i>,
-        "<a href="#approvaldate" title="ApprovalDate">ApprovalDate</a>" : <i>String</i>,
-        "<a href="#memo" title="Memo">Memo</a>" : <i><a href="secondcopyofmemo.md">SecondCopyOfMemo</a></i>,
-        "<a href="#secondcopyofmemo" title="SecondCopyOfMemo">SecondCopyOfMemo</a>" : <i><a href="secondcopyofmemo.md">SecondCopyOfMemo</a></i>,
-        "<a href="#testcode" title="TestCode">TestCode</a>" : <i>String</i>,
-        "<a href="#authors" title="Authors">Authors</a>" : <i>[ String, ... ]</i>
+        "<a href="#clienttoken" title="ClientToken">ClientToken</a>" : <i>String</i>,
+        "<a href="#description" title="Description">Description</a>" : <i>String</i>,
+        "<a href="#name" title="Name">Name</a>" : <i>String</i>,
+        "<a href="#ownerinformation" title="OwnerInformation">OwnerInformation</a>" : <i>String</i>,
+        "<a href="#replace" title="Replace">Replace</a>" : <i>Boolean</i>,
+        "<a href="#resourcetype" title="ResourceType">ResourceType</a>" : <i>String</i>,
+        "<a href="#safe" title="Safe">Safe</a>" : <i>Boolean</i>,
+        "<a href="#targets" title="Targets">Targets</a>" : <i>[ <a href="targets.md">Targets</a>, ... ]</i>,
+        "<a href="#windowtargetid" title="WindowTargetId">WindowTargetId</a>" : <i>String</i>
     }
 }
 </pre>
@@ -29,36 +30,81 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <pre>
 Type: AWS::SSM::MaintenanceWindowTarget
 Properties:
-    <a href="#title" title="Title">Title</a>: <i>String</i>
-    <a href="#coversheetincluded" title="CoverSheetIncluded">CoverSheetIncluded</a>: <i>Boolean</i>
-    <a href="#duedate" title="DueDate">DueDate</a>: <i>String</i>
-    <a href="#approvaldate" title="ApprovalDate">ApprovalDate</a>: <i>String</i>
-    <a href="#memo" title="Memo">Memo</a>: <i><a href="secondcopyofmemo.md">SecondCopyOfMemo</a></i>
-    <a href="#secondcopyofmemo" title="SecondCopyOfMemo">SecondCopyOfMemo</a>: <i><a href="secondcopyofmemo.md">SecondCopyOfMemo</a></i>
-    <a href="#testcode" title="TestCode">TestCode</a>: <i>String</i>
-    <a href="#authors" title="Authors">Authors</a>: <i>
-      - String</i>
+    <a href="#clienttoken" title="ClientToken">ClientToken</a>: <i>String</i>
+    <a href="#description" title="Description">Description</a>: <i>String</i>
+    <a href="#name" title="Name">Name</a>: <i>String</i>
+    <a href="#ownerinformation" title="OwnerInformation">OwnerInformation</a>: <i>String</i>
+    <a href="#replace" title="Replace">Replace</a>: <i>Boolean</i>
+    <a href="#resourcetype" title="ResourceType">ResourceType</a>: <i>String</i>
+    <a href="#safe" title="Safe">Safe</a>: <i>Boolean</i>
+    <a href="#targets" title="Targets">Targets</a>: <i>
+      - <a href="targets.md">Targets</a></i>
+    <a href="#windowtargetid" title="WindowTargetId">WindowTargetId</a>: <i>String</i>
 </pre>
 
 ## Properties
 
-#### Title
+#### ClientToken
 
-The title of the TPS report is a mandatory element.
+User-provided idempotency token.
 
-_Required_: Yes
+_Required_: No
 
 _Type_: String
 
-_Minimum_: <code>20</code>
+_Minimum_: <code>1</code>
 
-_Maximum_: <code>250</code>
+_Maximum_: <code>64</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
-#### CoverSheetIncluded
+#### Description
 
-Required for all TPS Reports submitted after 2/19/1999
+A description for the target.
+
+_Required_: No
+
+_Type_: String
+
+_Minimum_: <code>1</code>
+
+_Maximum_: <code>128</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### Name
+
+The name for the maintenance window target.
+
+_Required_: No
+
+_Type_: String
+
+_Minimum_: <code>3</code>
+
+_Maximum_: <code>128</code>
+
+_Pattern_: <code>^[a-zA-Z0-9_\-.]{3,128}$</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### OwnerInformation
+
+A user-provided value that will be included in any CloudWatch events that are raised while running tasks for these targets in this maintenance window.
+
+_Required_: No
+
+_Type_: String
+
+_Minimum_: <code>1</code>
+
+_Maximum_: <code>128</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### Replace
+
+If True, then all fields that are required by the RegisterTargetWithMaintenanceWindow action are also required for this API request. Optional fields that are not specified are set to null.
 
 _Required_: No
 
@@ -66,53 +112,51 @@ _Type_: Boolean
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
-#### DueDate
+#### ResourceType
 
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### ApprovalDate
-
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### Memo
-
-_Required_: No
-
-_Type_: <a href="secondcopyofmemo.md">SecondCopyOfMemo</a>
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### SecondCopyOfMemo
-
-_Required_: No
-
-_Type_: <a href="secondcopyofmemo.md">SecondCopyOfMemo</a>
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### TestCode
+The type of target that is being registered with the maintenance window.
 
 _Required_: Yes
 
 _Type_: String
 
-_Allowed Values_: <code>NOT_STARTED</code> | <code>CANCELLED</code>
+_Allowed Values_: <code>INSTANCE</code> | <code>RESOURCE_GROUP</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
-#### Authors
+#### Safe
+
+The system checks if the target is being referenced by a task. If the target is being referenced, the system returns an error and does not deregister the target from the maintenance window.
 
 _Required_: No
 
-_Type_: List of String
+_Type_: Boolean
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### Targets
+
+The targets to register with the maintenance window. In other words, the instances to run commands on when the maintenance window runs.
+
+_Required_: Yes
+
+_Type_: List of <a href="targets.md">Targets</a>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### WindowTargetId
+
+The ID of the target.
+
+_Required_: No
+
+_Type_: String
+
+_Minimum_: <code>36</code>
+
+_Maximum_: <code>36</code>
+
+_Pattern_: <code>^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -120,7 +164,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 ### Ref
 
-When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the TPSCode.
+When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the WindowId.
 
 ### Fn::GetAtt
 
@@ -128,7 +172,7 @@ The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of
 
 For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::GetAtt](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html).
 
-#### TPSCode
+#### WindowId
 
-A TPS Code is automatically generated on creation and assigned as the unique identifier.
+The ID of the maintenance window to register the target with.
 
