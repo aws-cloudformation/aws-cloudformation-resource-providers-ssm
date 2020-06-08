@@ -1,105 +1,137 @@
 {
-    "typeName": "AWS::SSM::MaintenanceWindowTarget",
-    "description": "An example resource schema demonstrating some basic constructs and validation rules.",
-    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
-    "definitions": {
-        "InitechDateFormat": {
-            "$comment": "Use the `definitions` block to provide shared resource property schemas",
-            "type": "string",
-            "format": "date-time"
+  "typeName": "AWS::SSM::MaintenanceWindowTarget",
+  "description": "Resource Type definition for AWS::SSM::MaintenanceWindowTarget",
+  "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-ssm.git",
+  "definitions": {
+    "Target": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*$|resource-groups:Name"
         },
-        "Memo": {
-            "type": "object",
-            "properties": {
-                "Heading": {
-                    "type": "string"
-                },
-                "Body": {
-                    "type": "string"
-                }
-            },
-            "additionalProperties": false
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "maxItems": 50
         }
-    },
-    "properties": {
-        "TPSCode": {
-            "description": "A TPS Code is automatically generated on creation and assigned as the unique identifier.",
-            "type": "string",
-            "pattern": "^[A-Z]{3,5}[0-9]{8}-[0-9]{4}$"
-        },
-        "Title": {
-            "description": "The title of the TPS report is a mandatory element.",
-            "type": "string",
-            "minLength": 20,
-            "maxLength": 250
-        },
-        "CoverSheetIncluded": {
-            "description": "Required for all TPS Reports submitted after 2/19/1999",
-            "type": "boolean"
-        },
-        "DueDate": {
-            "$ref": "#/definitions/InitechDateFormat"
-        },
-        "ApprovalDate": {
-            "$ref": "#/definitions/InitechDateFormat"
-        },
-        "Memo": {
-            "$ref": "#/definitions/Memo"
-        },
-        "SecondCopyOfMemo": {
-            "description": "In case you didn't get the first one.",
-            "$ref": "#/definitions/Memo"
-        },
-        "TestCode": {
-            "type": "string",
-            "enum": [
-                "NOT_STARTED",
-                "CANCELLED"
-            ]
-        },
-        "Authors": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        }
-    },
-    "additionalProperties": false,
-    "required": [
-        "TestCode",
-        "Title"
-    ],
-    "readOnlyProperties": [
-        "/properties/TPSCode"
-    ],
-    "primaryIdentifier": [
-        "/properties/TPSCode"
-    ],
-    "handlers": {
-        "create": {
-            "permissions": [
-                "initech:CreateReport"
-            ]
-        },
-        "read": {
-            "permissions": [
-                "initech:DescribeReport"
-            ]
-        },
-        "update": {
-            "permissions": [
-                "initech:UpdateReport"
-            ]
-        },
-        "delete": {
-            "permissions": [
-                "initech:DeleteReport"
-            ]
-        },
-        "list": {
-            "permissions": [
-                "initech:ListReports"
-            ]
-        }
+      },
+      "required": [
+        "Key",
+        "Values"
+      ]
     }
+  },
+  "properties": {
+    "ClientToken": {
+      "description": "User-provided idempotency token.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "Description": {
+      "description": "A description for the target.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "Name": {
+      "description": "The name for the maintenance window target.",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
+    },
+    "OwnerInformation": {
+      "description": "A user-provided value that will be included in any CloudWatch events that are raised while running tasks for these targets in this maintenance window.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "Replace": {
+      "description": "If True, then all fields that are required by the RegisterTargetWithMaintenanceWindow action are also required for this API request. Optional fields that are not specified are set to null.",
+      "type": "boolean"
+    },
+    "ResourceType": {
+      "description": "The type of target that is being registered with the maintenance window.",
+      "type": "string",
+      "enum": [
+        "INSTANCE",
+        "RESOURCE_GROUP"
+      ]
+    },
+    "Safe": {
+      "description": "The system checks if the target is being referenced by a task. If the target is being referenced, the system returns an error and does not deregister the target from the maintenance window.",
+      "type": "boolean"
+    },
+    "Targets": {
+      "description": "The targets to register with the maintenance window. In other words, the instances to run commands on when the maintenance window runs.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Target"
+      },
+      "minItems": 0,
+      "maxItems": 5
+    },
+    "WindowId": {
+      "description": "The ID of the maintenance window to register the target with.",
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 20,
+      "pattern": "^mw-[0-9a-f]{17}$"
+    },
+    "WindowTargetId": {
+      "description": "The ID of the target.",
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "ResourceType",
+    "Targets",
+    "WindowId"
+  ],
+  "readOnlyProperties": [
+    "/properties/WindowId"
+  ],
+  "primaryIdentifier": [
+    "/properties/WindowId"
+  ],
+  "handlers": {
+    "create": {
+      "permissions": [
+        "ssm:RegisterTargetWithMaintenanceWindow",
+        "ssm:DescribeMaintenanceWindowTargets"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "ssm:DescribeMaintenanceWindowTargets"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "ssm:UpdateMaintenanceWindowTarget"
+      ]
+    },
+    "delete": {
+      "permissions": [
+        "ssm:DeregisterTargetFromMaintenanceWindow"
+      ]
+    },
+    "list": {
+      "permissions": [
+        "ssm:DescribeMaintenanceWindowTargets"
+      ]
+    }
+  }
 }
+
