@@ -1,5 +1,6 @@
 package software.amazon.ssm.maintenancewindowtarget;
 
+import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -14,6 +15,8 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        return new ProgressEvent<>();
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            .status(OperationStatus.SUCCESS)
+            .build();
     }
 }

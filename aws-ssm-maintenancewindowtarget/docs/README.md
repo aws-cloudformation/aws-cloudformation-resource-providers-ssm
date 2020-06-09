@@ -14,7 +14,10 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "Properties" : {
         "<a href="#clienttoken" title="ClientToken">ClientToken</a>" : <i>String</i>,
         "<a href="#description" title="Description">Description</a>" : <i>String</i>,
+        "<a href="#filters" title="Filters">Filters</a>" : <i>[ <a href="filters.md">Filters</a>, ... ]</i>,
+        "<a href="#maxresults" title="MaxResults">MaxResults</a>" : <i>Double</i>,
         "<a href="#name" title="Name">Name</a>" : <i>String</i>,
+        "<a href="#nexttoken" title="NextToken">NextToken</a>" : <i>String</i>,
         "<a href="#ownerinformation" title="OwnerInformation">OwnerInformation</a>" : <i>String</i>,
         "<a href="#replace" title="Replace">Replace</a>" : <i>Boolean</i>,
         "<a href="#resourcetype" title="ResourceType">ResourceType</a>" : <i>String</i>,
@@ -32,7 +35,11 @@ Type: AWS::SSM::MaintenanceWindowTarget
 Properties:
     <a href="#clienttoken" title="ClientToken">ClientToken</a>: <i>String</i>
     <a href="#description" title="Description">Description</a>: <i>String</i>
+    <a href="#filters" title="Filters">Filters</a>: <i>
+      - <a href="filters.md">Filters</a></i>
+    <a href="#maxresults" title="MaxResults">MaxResults</a>: <i>Double</i>
     <a href="#name" title="Name">Name</a>: <i>String</i>
+    <a href="#nexttoken" title="NextToken">NextToken</a>: <i>String</i>
     <a href="#ownerinformation" title="OwnerInformation">OwnerInformation</a>: <i>String</i>
     <a href="#replace" title="Replace">Replace</a>: <i>Boolean</i>
     <a href="#resourcetype" title="ResourceType">ResourceType</a>: <i>String</i>
@@ -72,6 +79,30 @@ _Maximum_: <code>128</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
+#### Filters
+
+Optional filters that can be used to narrow down the scope of the returned window targets. The supported filter keys are Type, WindowTargetId and OwnerInformation.
+
+_Required_: No
+
+_Type_: List of <a href="filters.md">Filters</a>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### MaxResults
+
+"The maximum number of items to return for this call. The call also returns a token that you can specify in a subsequent call to get the next set of results.
+
+_Required_: No
+
+_Type_: Double
+
+_Minimum_: <code>10</code>
+
+_Maximum_: <code>100</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
 #### Name
 
 The name for the maintenance window target.
@@ -85,6 +116,16 @@ _Minimum_: <code>3</code>
 _Maximum_: <code>128</code>
 
 _Pattern_: <code>^[a-zA-Z0-9_\-.]{3,128}$</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### NextToken
+
+The token for the next set of items to return. (You received this token from a previous call.
+
+_Required_: No
+
+_Type_: String
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -175,4 +216,3 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 #### WindowId
 
 The ID of the maintenance window to register the target with.
-
