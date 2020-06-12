@@ -52,6 +52,7 @@ public class AssociationDescriptionTranslator {
 
         model.setAssociationId(association.associationId());
         model.setName(association.name());
+        model.setApplyOnlyAtCronInterval(association.applyOnlyAtCronInterval());
 
         simpleTypeValidator.getValidatedString(association.associationName())
             .ifPresent(model::setAssociationName);
