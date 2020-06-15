@@ -34,7 +34,7 @@ class CreateHandlerTest {
     @Mock
     private BaseHandler<CallbackContext> initialCreateHandler;
     @Mock
-    private BaseHandler<CallbackContext> inProgressCreateHandler;
+    private BaseHandler<CallbackContext> inProgressHandler;
     @Mock
     private ResourceHandlerRequestToStringConverter requestToStringConverter;
 
@@ -42,7 +42,7 @@ class CreateHandlerTest {
     void setUp() {
         when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
 
-        handler = new CreateHandler(initialCreateHandler, inProgressCreateHandler, requestToStringConverter);
+        handler = new CreateHandler(initialCreateHandler, inProgressHandler, requestToStringConverter);
     }
 
     @Test
@@ -68,7 +68,7 @@ class CreateHandlerTest {
 
         assertThat(response).isEqualTo(expectedProgressEvent);
         verify(initialCreateHandler).handleRequest(proxy, request, callbackContext, logger);
-        verifyZeroInteractions(inProgressCreateHandler);
+        verifyZeroInteractions(inProgressHandler);
     }
 
     @Test
@@ -87,13 +87,13 @@ class CreateHandlerTest {
         final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
             ProgressEvent.progress(model, callbackContext);
 
-        when(inProgressCreateHandler.handleRequest(proxy, request, callbackContext, logger)).thenReturn(expectedProgressEvent);
+        when(inProgressHandler.handleRequest(proxy, request, callbackContext, logger)).thenReturn(expectedProgressEvent);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, callbackContext, logger);
 
         assertThat(response).isEqualTo(expectedProgressEvent);
-        verify(inProgressCreateHandler).handleRequest(proxy, request, callbackContext, logger);
+        verify(inProgressHandler).handleRequest(proxy, request, callbackContext, logger);
         verifyZeroInteractions(initialCreateHandler);
     }
 

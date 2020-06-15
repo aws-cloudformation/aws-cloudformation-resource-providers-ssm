@@ -16,43 +16,42 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 /**
  * Handles noninitial create requests for a given resource.
  */
-public class InProgressCreateHandler extends BaseHandler<CallbackContext> {
+public class InProgressHandler extends BaseHandler<CallbackContext> {
 
-    private final int callbackDelaySeconds;
     private final SsmClient ssmClient;
     private final AssociationDescriptionTranslator associationDescriptionTranslator;
     private final ExceptionTranslator exceptionTranslator;
+    private final InProgressEventCreator inProgressEventCreator;
 
     /**
      * Constructor to use by dependencies. Processes noninitial CreateHandler requests.
      *
-     * @param callbackDelaySeconds Callback delay period.
      * @param ssmClient SsmClient implementation to use for API calls.
      */
-    InProgressCreateHandler(final int callbackDelaySeconds, final SsmClient ssmClient) {
-        this.callbackDelaySeconds = callbackDelaySeconds;
+    InProgressHandler(final SsmClient ssmClient) {
         this.ssmClient = ssmClient;
         this.associationDescriptionTranslator = new AssociationDescriptionTranslator();
         this.exceptionTranslator = new ExceptionTranslator();
+        this.inProgressEventCreator = new InProgressEventCreator();
     }
 
     /**
      * Used for unit tests.
      *
-     * @param callbackDelaySeconds Callback delay period.
      * @param ssmClient SsmClient implementation to use for API calls.
      * @param associationDescriptionTranslator Translates AssociationDescription into ResourceModel objects.
      * @param exceptionTranslator Translates service model exceptions.
+     * @param inProgressEventCreator Creates InProgress ProgressEvent objects for progress chaining.
      */
-    InProgressCreateHandler(final int callbackDelaySeconds,
-                            final SsmClient ssmClient,
-                            final AssociationDescriptionTranslator associationDescriptionTranslator,
-                            final ExceptionTranslator exceptionTranslator) {
+    InProgressHandler(final SsmClient ssmClient,
+                      final AssociationDescriptionTranslator associationDescriptionTranslator,
+                      final ExceptionTranslator exceptionTranslator,
+                      final InProgressEventCreator inProgressEventCreator) {
 
-        this.callbackDelaySeconds = callbackDelaySeconds;
         this.ssmClient = ssmClient;
         this.associationDescriptionTranslator = associationDescriptionTranslator;
         this.exceptionTranslator = exceptionTranslator;
+        this.inProgressEventCreator = inProgressEventCreator;
     }
 
     @Override
@@ -95,30 +94,13 @@ public class InProgressCreateHandler extends BaseHandler<CallbackContext> {
         } else if (AssociationStatusName.PENDING.name()
             .equalsIgnoreCase(requestAssociation.overview().status())) {
 
-            final Integer remainingTimeoutSeconds = callbackContext.getRemainingTimeoutSeconds();
+            final int remainingTimeoutSeconds = callbackContext.getRemainingTimeoutSeconds();
 
             if (remainingTimeoutSeconds <= 0) {
                 throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, associationId);
             }
 
-            if (remainingTimeoutSeconds < callbackDelaySeconds) {
-
-                return ProgressEvent.defaultInProgressHandler(
-                    CallbackContext.builder()
-                        .remainingTimeoutSeconds(0)
-                        .associationId(associationId)
-                        .build(),
-                    remainingTimeoutSeconds,
-                    existingModel);
-            } else {
-                return ProgressEvent.defaultInProgressHandler(
-                    CallbackContext.builder()
-                        .remainingTimeoutSeconds(remainingTimeoutSeconds - callbackDelaySeconds)
-                        .associationId(associationId)
-                        .build(),
-                    callbackDelaySeconds,
-                    existingModel);
-            }
+            return inProgressEventCreator.nextInProgressEvent(remainingTimeoutSeconds, existingModel);
         } else {
             throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, associationId);
         }
