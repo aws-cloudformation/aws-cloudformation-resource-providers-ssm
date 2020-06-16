@@ -76,6 +76,7 @@ class CreateAssociationTranslatorTest {
                 .automationTargetParameterName(AUTOMATION_TARGET_PARAMETER_NAME)
                 .instanceId(INSTANCE_ID)
                 .syncCompliance(SYNC_COMPLIANCE)
+                .applyOnlyAtCronInterval(true)
                 .build();
 
         final CreateAssociationRequest createAssociationRequest =
@@ -96,6 +97,7 @@ class CreateAssociationTranslatorTest {
                 .automationTargetParameterName(AUTOMATION_TARGET_PARAMETER_NAME)
                 .instanceId(INSTANCE_ID)
                 .syncCompliance(SYNC_COMPLIANCE)
+                .applyOnlyAtCronInterval(true)
                 .build();
 
         assertThat(createAssociationRequest).isEqualTo(expectedRequest);

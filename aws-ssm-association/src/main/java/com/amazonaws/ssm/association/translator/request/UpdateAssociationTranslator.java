@@ -49,7 +49,8 @@ public class UpdateAssociationTranslator implements RequestTranslator<UpdateAsso
     public UpdateAssociationRequest resourceModelToRequest(final ResourceModel model) {
         final UpdateAssociationRequest.Builder updateAssociationRequestBuilder =
             UpdateAssociationRequest.builder()
-                .associationId(model.getAssociationId());
+                .associationId(model.getAssociationId())
+                .applyOnlyAtCronInterval(model.getApplyOnlyAtCronInterval());
 
         simpleTypeValidator.getValidatedString(model.getName())
             .ifPresent(updateAssociationRequestBuilder::name);
