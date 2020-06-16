@@ -223,7 +223,7 @@ class UpdateHandlerTest {
     @Test
     void handleRequestLogsWithRequestConverter() {
         when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
-        
+
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
