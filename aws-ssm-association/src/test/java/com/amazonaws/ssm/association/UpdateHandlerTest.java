@@ -68,6 +68,11 @@ class UpdateHandlerTest {
     }
 
     @Test
+    void defaultConstructorWorks() {
+        new UpdateHandler();
+    }
+
+    @Test
     void handleRequestWithAssociationIdPresent() {
         final ResourceModel.ResourceModelBuilder resourceModelBuilder =
             ResourceModel.builder()

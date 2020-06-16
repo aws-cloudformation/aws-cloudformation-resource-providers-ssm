@@ -70,6 +70,11 @@ class InProgressHandlerTest {
     }
 
     @Test
+    void defaultConstructorWorks() {
+        new InProgressHandler(ssmClient);
+    }
+
+    @Test
     public void handleInProgressRequestWithTimeoutRemainingAndAssociationSuccessStatus() {
         final DescribeAssociationRequest describeAssociationRequest =
             DescribeAssociationRequest.builder()

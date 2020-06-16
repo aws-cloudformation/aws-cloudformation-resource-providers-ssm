@@ -40,13 +40,18 @@ class CreateHandlerTest {
 
     @BeforeEach
     void setUp() {
-        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
-
         handler = new CreateHandler(initialCreateHandler, inProgressHandler, requestToStringConverter);
     }
 
     @Test
+    void defaultConstructorWorks() {
+        new CreateHandler();
+    }
+
+    @Test
     void handleRequestWithNoCallbackContextInvokesInitialHandler() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder()
             .name(DOCUMENT_NAME)
             .scheduleExpression(SCHEDULE_EXPRESSION)
@@ -73,6 +78,8 @@ class CreateHandlerTest {
 
     @Test
     void handleRequestWithCallbackContextInvokesInProgressHandler() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder()
             .name(DOCUMENT_NAME)
             .scheduleExpression(SCHEDULE_EXPRESSION)
@@ -99,6 +106,8 @@ class CreateHandlerTest {
 
     @Test
     void handleRequestLogsWithRequestConverter() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()

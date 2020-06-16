@@ -62,6 +62,11 @@ class InitialCreateHandlerTest {
     }
 
     @Test
+    void defaultConstructorWorks() {
+        new InitialCreateHandler(ssmClient);
+    }
+
+    @Test
     void handleInitialCreateRequestWithNoWaitForSuccess() {
         final ResourceModel model = ResourceModel.builder()
             .name(DOCUMENT_NAME)
