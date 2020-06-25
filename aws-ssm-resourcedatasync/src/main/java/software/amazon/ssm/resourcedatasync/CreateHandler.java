@@ -143,13 +143,16 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             logger.log(String.format("%s [%s] is in %s stage", TYPE_NAME, resourceDataSyncName, currentStatus));
 
-            if (currentStatus == null && resourceDataSyncItems.get(0).syncType().equals(SYNC_TYPE_SYNC_FROM_SOURCE)) {
+            if (currentStatus == null &&
+                    resourceDataSyncItems.get(0).syncType() != null &&
+                    resourceDataSyncItems.get(0).syncType().equals(SYNC_TYPE_SYNC_FROM_SOURCE)) {
+                // syncFromSource operation does not have currentStatus attribute
                 return true;
             }
-            if (currentStatus.equals(LastResourceDataSyncStatus.SUCCESSFUL)) {
+            if (currentStatus != null && currentStatus.equals(LastResourceDataSyncStatus.SUCCESSFUL)) {
                 return true;
             }
-            if (currentStatus.equals(LastResourceDataSyncStatus.FAILED)) {
+            if (currentStatus != null && currentStatus.equals(LastResourceDataSyncStatus.FAILED)) {
                 throw new CfnNotStabilizedException(TYPE_NAME, resourceDataSyncName);
             }
         }
