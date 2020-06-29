@@ -23,7 +23,8 @@ public class AbstractTestBase {
 
     protected static final String DESCRIPTION;
     protected static final String NAME;
-    protected static final String TYPE;
+    protected static final String TYPE_STRING;
+    protected static final String TYPE_SECURE_STRING;
     protected static final String VALUE;
     protected static final Long VERSION;
     protected static final Map<String, String> TAG_SET;
@@ -39,7 +40,8 @@ public class AbstractTestBase {
 
         DESCRIPTION = "sample description";
         NAME = "ParameterName";
-        TYPE = "String";
+        TYPE_STRING = "String";
+        TYPE_SECURE_STRING = "SecureString";
         VALUE = "dummy value";
         VERSION = 1L;
         TAG_SET = new HashMap<String, String>() {

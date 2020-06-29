@@ -6,17 +6,20 @@ import org.apache.commons.lang3.RandomStringUtils;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
-import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterType;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
+import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.exceptions.TerminalException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ProxyClient;
-import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.ProxyClient;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.ProgressEvent;
 
 import java.util.Map;
 import java.util.Random;
@@ -36,9 +39,6 @@ public class CreateHandler extends BaseHandlerStd {
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
 
-        Map<String, String> consolidatedTagList = request.getDesiredResourceTags();
-        consolidatedTagList.putAll(request.getSystemTags());
-
         // Set model primary ID if absent
         if(model.getName() == null) {
             model.setName(generateParameterName(
@@ -46,6 +46,16 @@ public class CreateHandler extends BaseHandlerStd {
                     request.getClientRequestToken()
             ));
         }
+
+        if(model.getType().equalsIgnoreCase(ParameterType.SECURE_STRING.toString())) {
+            logger.log("Cannot create secure string parameters through CFN");
+            String message = String.format("SSM Parameters of type %s cannot be created using CloudFormation", ParameterType.SECURE_STRING);
+            return ProgressEvent.defaultFailureHandler(new TerminalException(message),
+                    HandlerErrorCode.InvalidRequest);
+        }
+
+        Map<String, String> consolidatedTagList = request.getDesiredResourceTags();
+        consolidatedTagList.putAll(request.getSystemTags());
 
         return proxy.initiate("aws-ssm-parameter::resource-create", proxyClient, model, callbackContext)
                .translateToServiceRequest((resourceModel) -> Translator.createPutParameterRequest(resourceModel, consolidatedTagList))
