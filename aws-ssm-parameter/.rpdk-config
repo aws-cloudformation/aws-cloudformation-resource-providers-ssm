@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::SSM::Parameter",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.ssm.parameter.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.ssm.parameter.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "ssm",
+            "parameter"
+        ]
+    }
+}

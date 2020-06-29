@@ -190,6 +190,9 @@
             "type": "integer",
             "minimum": 15,
             "maximum": 172800
+        },
+        "ApplyOnlyAtCronInterval": {
+            "type": "boolean"
         }
     },
     "required": [
