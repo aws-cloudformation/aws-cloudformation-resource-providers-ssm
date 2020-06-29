@@ -10,6 +10,7 @@
             "amazonaws",
             "ssm",
             "parameter"
-        ]
+        ],
+        "protocolVersion": "2.0.0"
     }
 }

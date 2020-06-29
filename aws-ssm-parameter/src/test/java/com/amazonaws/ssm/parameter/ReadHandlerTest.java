@@ -63,7 +63,7 @@ public class ReadHandlerTest extends AbstractTestBase {
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
                         .name(NAME)
-                        .type(TYPE)
+                        .type(TYPE_STRING)
                         .value(VALUE).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
