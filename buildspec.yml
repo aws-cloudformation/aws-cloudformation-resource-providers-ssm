@@ -21,4 +21,5 @@ phases:
       - cd aws-ssm-parameter
       - mvn clean verify --no-transfer-progress
     finally:
+      # - cat "$CODEBUILD_SRC_DIR/aws-ssm-association/rpdk.log"
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-association/rpdk.log"
