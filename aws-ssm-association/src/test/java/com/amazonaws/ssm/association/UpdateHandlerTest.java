@@ -59,8 +59,6 @@ class UpdateHandlerTest {
 
     @BeforeEach
     void setup() {
-        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
-
         handler = new UpdateHandler(updateAssociationTranslator,
             associationDescriptionTranslator,
             exceptionTranslator,
@@ -68,7 +66,14 @@ class UpdateHandlerTest {
     }
 
     @Test
+    void defaultConstructorWorks() {
+        new UpdateHandler();
+    }
+
+    @Test
     void handleRequestWithAssociationIdPresent() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel.ResourceModelBuilder resourceModelBuilder =
             ResourceModel.builder()
                 .associationId(ASSOCIATION_ID)
@@ -128,6 +133,8 @@ class UpdateHandlerTest {
 
     @Test
     void handleRequestWithNoAssociationId() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel desiredModel = ResourceModel.builder()
             .associationName(NEW_ASSOCIATION_NAME)
             .build();
@@ -160,6 +167,8 @@ class UpdateHandlerTest {
 
     @Test
     void handleRequestThrowsTranslatedServiceException() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel.ResourceModelBuilder resourceModelBuilder =
             ResourceModel.builder()
                 .associationId(ASSOCIATION_ID)
@@ -213,6 +222,8 @@ class UpdateHandlerTest {
 
     @Test
     void handleRequestLogsWithRequestConverter() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
