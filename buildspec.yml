@@ -13,9 +13,9 @@ phases:
       # install aws-cloudformation-rpdk
       - pip install cloudformation-cli cloudformation-cli-java-plugin
       # end-to-end test child repo for aws-ssm-association(s)
-      - cd "$CODEBUILD_SRC_DIR"
-      - cd aws-ssm-association
-      - mvn clean verify --no-transfer-progress
+      # - cd "$CODEBUILD_SRC_DIR"
+      # - cd aws-ssm-association
+      # - mvn clean verify --no-transfer-progress
       # end-to-end test child repo for aws-ssm-parameter(s)
       - cd "$CODEBUILD_SRC_DIR"
       - cd aws-ssm-parameter
