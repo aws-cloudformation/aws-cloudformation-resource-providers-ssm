@@ -17,8 +17,28 @@ phases:
       - cd aws-ssm-association
       - mvn clean verify --no-transfer-progress
       # end-to-end test child repo for aws-ssm-parameter(s)
-      # - cd "$CODEBUILD_SRC_DIR"
-      # - cd aws-ssm-parameter
-      # - mvn clean verify --no-transfer-progress
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-parameter
+      - mvn clean verify --no-transfer-progress
+      # end-to-end test child repo for aws-ssm-document(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-document
+      - mvn clean verify --no-transfer-progress
+      # end-to-end test child repo for aws-ssm-maintenancewindow(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-maintenancewindow
+      - mvn clean verify --no-transfer-progress
+      # end-to-end test child repo for aws-ssm-maintenancewindowtask(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-maintenancewindowtask
+      - mvn clean verify --no-transfer-progress
+      # end-to-end test child repo for aws-ssm-patchbaseline(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-patchbaseline
+      - mvn clean verify --no-transfer-progress
+      # end-to-end test child repo for aws-ssm-resourcedatasync(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-resourcedatasync
+      - mvn clean verify --no-transfer-progress
     finally:
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-association/rpdk.log"
