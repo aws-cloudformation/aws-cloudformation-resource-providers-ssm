@@ -10,6 +10,7 @@
             "amazonaws",
             "ssm",
             "document"
-        ]
+        ],
+        "protocolVersion": "2.0.0"
     }
 }
