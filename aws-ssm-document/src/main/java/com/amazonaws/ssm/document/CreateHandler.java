@@ -59,7 +59,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
 
-        logger.log(context.toString());
         if (context.getCreateDocumentStarted() != null) {
             return updateProgress(model, context, ssmClient, proxy, logger);
         }
