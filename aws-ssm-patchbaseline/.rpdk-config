@@ -10,6 +10,7 @@
             "amazon",
             "ssm",
             "patchbaseline"
-        ]
+        ],
+        "protocolVersion": "2.0.0"
     }
 }
