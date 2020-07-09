@@ -52,13 +52,17 @@ class DeleteHandlerTest {
 
     @BeforeEach
     void setup() {
-        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
-
         handler = new DeleteHandler(exceptionTranslator, requestToStringConverter);
     }
 
     @Test
+    void defaultConstructorWorks() {
+        new DeleteHandler();
+    }
+
+    @Test
     void handleRequestWithAssociationId() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
         final ResourceModel model = ResourceModel.builder()
             .associationId(ASSOCIATION_ID)
             .build();
@@ -92,6 +96,7 @@ class DeleteHandlerTest {
 
     @Test
     void handleRequestWithInstanceIdAndDocumentName() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
         final ResourceModel model = ResourceModel.builder()
             .instanceId(INSTANCE_ID)
             .name(DOCUMENT_NAME)
@@ -127,6 +132,7 @@ class DeleteHandlerTest {
 
     @Test
     void handleRequestWithNoRequiredParametersPresent() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
         final ResourceModel model = ResourceModel.builder()
             .build();
 
@@ -152,6 +158,7 @@ class DeleteHandlerTest {
 
     @Test
     void handleRequestWhenAssociationDoesNotExist() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
         final ResourceModel model = ResourceModel.builder()
             .associationId(ASSOCIATION_ID)
             .build();
@@ -192,6 +199,7 @@ class DeleteHandlerTest {
 
     @Test
     void handleRequestThrowsTranslatedServiceException() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
         final ResourceModel model = ResourceModel.builder()
             .associationId(ASSOCIATION_ID)
             .build();
@@ -229,6 +237,7 @@ class DeleteHandlerTest {
 
     @Test
     void handleRequestLogsWithRequestConverter() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()

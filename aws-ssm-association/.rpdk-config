@@ -10,6 +10,7 @@
             "amazonaws",
             "ssm",
             "association"
-        ]
+        ],
+        "protocolVersion": "2.0.0"
     }
 }

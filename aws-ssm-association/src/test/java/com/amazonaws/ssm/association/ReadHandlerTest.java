@@ -55,13 +55,18 @@ class ReadHandlerTest {
 
     @BeforeEach
     void setup() {
-        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
-
         handler = new ReadHandler(associationDescriptionTranslator, exceptionTranslator, requestToStringConverter);
     }
 
     @Test
+    void defaultConstructorWorks() {
+        new ReadHandler();
+    }
+
+    @Test
     void handleRequestWithAssociationId() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder()
             .associationId(ASSOCIATION_ID)
             .build();
@@ -110,6 +115,8 @@ class ReadHandlerTest {
 
     @Test
     void handleRequestWithNoAssociationId() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder()
             .build();
 
@@ -135,6 +142,8 @@ class ReadHandlerTest {
 
     @Test
     void handleRequestThrowsTranslatedServiceException() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder()
             .associationId(ASSOCIATION_ID)
             .build();
@@ -176,6 +185,8 @@ class ReadHandlerTest {
 
     @Test
     void handleRequestLogsWithRequestConverter() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()

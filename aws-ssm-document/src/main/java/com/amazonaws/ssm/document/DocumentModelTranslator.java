@@ -65,7 +65,7 @@ class DocumentModelTranslator {
             documentName = model.getName();
         }
 
-        final String documentContent = processDocumentContent(model.getContent(), model.getContentAsString());
+        final String documentContent = processDocumentContent(model.getContent());
 
         return CreateDocumentRequest.builder()
                 .name(documentName)
@@ -90,7 +90,7 @@ class DocumentModelTranslator {
     }
 
     UpdateDocumentRequest generateUpdateDocumentRequest(@NonNull final ResourceModel model) {
-        final String documentContent = processDocumentContent(model.getContent(), model.getContentAsString());
+        final String documentContent = processDocumentContent(model.getContent());
 
         return UpdateDocumentRequest.builder()
                 .name(model.getName())
@@ -156,12 +156,16 @@ class DocumentModelTranslator {
         return Optional.of(stackName);
     }
 
-    private String processDocumentContent(final Map<String, Object> jsonContent, final String contentAsString) {
-        try {
-            return jsonContent != null ? OBJECT_MAPPER.writeValueAsString(jsonContent) : contentAsString;
-        } catch (final JsonProcessingException e) {
-            throw new InvalidDocumentContentException("Document Content is not valid", e);
+    private String processDocumentContent(final Object content) {
+        if (content instanceof Map) {
+            try {
+                return OBJECT_MAPPER.writeValueAsString(content);
+            } catch (final JsonProcessingException e) {
+                throw new InvalidDocumentContentException("Document Content is not valid", e);
+            }
         }
+
+        return (String)content;
     }
 
     private List<Tag> translateTags(@Nullable final Map<String, String> tags) {

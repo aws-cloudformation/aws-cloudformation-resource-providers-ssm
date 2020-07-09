@@ -108,13 +108,11 @@
     },
     "properties": {
         "Content": {
-            "description": "The content for the Systems Manager document in JSON or YAML format. Use ContentAsString property if you wish to provide the content as String. Only one of Content or ContentAsString property has to be used but not both.",
-            "type": "object",
-            "minLength": 1
-        },
-        "ContentAsString": {
-            "description": "The content in the Systems Manager document as String. This could be an escaped JSON or just plain text depending on the type of Document. Only one of Content or ContentAsString property has to be used but not both.",
-            "type": "string",
+            "description": "The content for the Systems Manager document in JSON, YAML or String format.",
+            "type": [
+                "object",
+                "string"
+            ],
             "minLength": 1
         },
         "Attachments": {
