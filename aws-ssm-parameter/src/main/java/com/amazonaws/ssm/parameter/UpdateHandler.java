@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
+import software.amazon.awssdk.services.ssm.model.ParameterType;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.Tag;
@@ -12,7 +13,9 @@ import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.exceptions.TerminalException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.Logger;
@@ -38,6 +41,12 @@ public class UpdateHandler extends BaseHandlerStd {
             final Logger logger) {
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
+
+        if(model.getType().equalsIgnoreCase(ParameterType.SECURE_STRING.toString())) {
+            String message = String.format("SSM Parameters of type %s cannot be updated using CloudFormation", ParameterType.SECURE_STRING);
+            return ProgressEvent.defaultFailureHandler(new TerminalException(message),
+                    HandlerErrorCode.InvalidRequest);
+        }
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress ->
