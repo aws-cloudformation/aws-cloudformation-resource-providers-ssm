@@ -24,7 +24,7 @@ Resources:
               - Effect: Allow
                 Action:
                 - "iam:PassRole"
-                - "ssm:DeregisterTaskWithMaintenanceWindow"
+                - "ssm:DeregisterTaskFromMaintenanceWindow"
                 - "ssm:DescribeMaintenanceWindowTask"
                 - "ssm:DescribeMaintenanceWindowTasks"
                 - "ssm:GetMaintenanceWindow"

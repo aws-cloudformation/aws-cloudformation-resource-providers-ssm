@@ -8,7 +8,6 @@ import software.amazon.ssm.maintenancewindowtask.util.SimpleTypeValidator;
 
 public class RegisterTaskWithMaintenanceWindowTranslator {
 
-    private final ResourceRequestTranslator resourceRequestTranslator;
     private final SimpleTypeValidator simpleTypeValidator;
 
     /**
@@ -16,18 +15,15 @@ public class RegisterTaskWithMaintenanceWindowTranslator {
      */
     public RegisterTaskWithMaintenanceWindowTranslator() {
         this.simpleTypeValidator = new SimpleTypeValidator();
-        this.resourceRequestTranslator = new ResourceRequestTranslator();
     }
 
     /**
      * Used for unit tests.
      *
      * @param simpleTypeValidator       Validator for simple data types.
-     * @param resourceRequestTranslator Translator from resource model to request.
      */
-    public RegisterTaskWithMaintenanceWindowTranslator(final SimpleTypeValidator simpleTypeValidator, final ResourceRequestTranslator resourceRequestTranslator) {
+    public RegisterTaskWithMaintenanceWindowTranslator(final SimpleTypeValidator simpleTypeValidator) {
         this.simpleTypeValidator = simpleTypeValidator;
-        this.resourceRequestTranslator = resourceRequestTranslator;
     }
 
     /**
@@ -40,8 +36,10 @@ public class RegisterTaskWithMaintenanceWindowTranslator {
                         .windowId(model.getWindowId())
                         .taskArn(model.getTaskArn())
                         .serviceRoleArn(model.getServiceRoleArn())
-                        .taskType(model.getTaskType())
-                        .targets(ResourceRequestTranslator.translateToRequestTargets(model.getTargets()).get());
+                        .taskType(model.getTaskType());
+
+        ResourceRequestTranslator.translateToRequestTargets(model.getTargets())
+                .ifPresent(registerTaskWithMaintenanceWindowRequestRequestBuilder::targets);
 
         simpleTypeValidator.getValidatedString(model.getDescription())
                 .ifPresent(registerTaskWithMaintenanceWindowRequestRequestBuilder::description);

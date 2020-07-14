@@ -1,29 +1,51 @@
 package software.amazon.ssm.maintenancewindowtask;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
-import software.amazon.awssdk.services.ssm.model.*;
-import software.amazon.cloudformation.exceptions.*;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.ssm.model.RegisterTaskWithMaintenanceWindowRequest;
+import software.amazon.awssdk.services.ssm.model.RegisterTaskWithMaintenanceWindowResponse;
+import software.amazon.awssdk.services.ssm.model.DoesNotExistException;
+import software.amazon.awssdk.services.ssm.model.FeatureNotAvailableException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.awssdk.services.ssm.model.ResourceLimitExceededException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.ssm.maintenancewindowtask.translator.ExceptionTranslator;
 import software.amazon.ssm.maintenancewindowtask.translator.request.RegisterTaskWithMaintenanceWindowTranslator;
+import software.amazon.ssm.maintenancewindowtask.util.ResourceHandlerRequestToStringConverter;
 
 import java.util.function.Function;
 
+import static junit.framework.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
-import static software.amazon.ssm.maintenancewindowtask.TestConstants.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.LAMBDA_TASK_ARN;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.LAMBDA_TASK_TYPE;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.REQUEST_TASK_TARGETS;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.RESOURCE_TASK_TASK_PARAMETERS;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.TASK_MAX_CONCURRENCY;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.TASK_MAX_ERRORS;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.TASK_PRIORITY;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.TASK_SERVICE_ROLE_ARN;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.TASK_TARGETS;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.TASK_TASK_PARAMETERS;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.WINDOW_ID;
+import static software.amazon.ssm.maintenancewindowtask.TestConstants.WINDOW_TASK_ID;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -31,7 +53,7 @@ public class CreateHandlerTest {
 
     private static final ResourceModel model = ResourceModel.builder()
             .windowId(WINDOW_ID)
-            .taskArn(TASK_TASK_ARN)
+            .taskArn(LAMBDA_TASK_ARN)
             .serviceRoleArn(TASK_SERVICE_ROLE_ARN)
             .taskType(LAMBDA_TASK_TYPE)
             .targets(TASK_TARGETS)
@@ -48,7 +70,7 @@ public class CreateHandlerTest {
     private static final RegisterTaskWithMaintenanceWindowRequest registerTaskWithMaintenanceWindowRequest =
             RegisterTaskWithMaintenanceWindowRequest.builder()
                     .windowId(WINDOW_ID)
-                    .taskArn(TASK_TASK_ARN)
+                    .taskArn(LAMBDA_TASK_ARN)
                     .serviceRoleArn(TASK_SERVICE_ROLE_ARN)
                     .taskType(LAMBDA_TASK_TYPE)
                     .targets(REQUEST_TASK_TARGETS)
@@ -72,13 +94,16 @@ public class CreateHandlerTest {
     @Mock
     private RegisterTaskWithMaintenanceWindowTranslator registerTaskWithMaintenanceWindowTranslator;
 
+    @Mock
+    private ResourceHandlerRequestToStringConverter requestToStringConverter;
+
     @BeforeEach
     public void setup() {
         proxy = mock(AmazonWebServicesClientProxy.class);
         logger = mock(Logger.class);
         exceptionTranslator = mock(ExceptionTranslator.class);
         registerTaskWithMaintenanceWindowTranslator = mock(RegisterTaskWithMaintenanceWindowTranslator.class);
-        handler = new CreateHandler(registerTaskWithMaintenanceWindowTranslator, exceptionTranslator);
+        handler = new CreateHandler(registerTaskWithMaintenanceWindowTranslator, exceptionTranslator, requestToStringConverter);
     }
 
     @Test
@@ -204,6 +229,5 @@ public class CreateHandlerTest {
         });
         verify(exceptionTranslator)
                 .translateFromServiceException(resourceLimitExceededException, registerTaskWithMaintenanceWindowRequest, request.getDesiredResourceState());
-
     }
 }

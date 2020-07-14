@@ -4,9 +4,6 @@ import com.amazonaws.util.StringUtils;
 
 import java.util.Optional;
 
-/**
- * Validates data types that are not defined in Resource or Service models.
- */
 public class SimpleTypeValidator {
 
     /**

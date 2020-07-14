@@ -1,8 +1,18 @@
 package software.amazon.ssm.maintenancewindowtask.util;
 
 import com.amazonaws.util.CollectionUtils;
+import com.amazonaws.util.Base64;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.ssm.model.*;
+import software.amazon.awssdk.services.ssm.model.CloudWatchOutputConfig;
+import software.amazon.awssdk.services.ssm.model.LoggingInfo;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowAutomationParameters;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowLambdaParameters;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowRunCommandParameters;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowStepFunctionsParameters;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowTaskInvocationParameters;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowTaskParameterValueExpression;
+import software.amazon.awssdk.services.ssm.model.NotificationConfig;
+import software.amazon.awssdk.services.ssm.model.Target;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,9 +21,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 
-
 /**
- * Translates Resource Model to Request
+ * Translates ResourceModel properties to Service Model Properties
  */
 public class ResourceRequestTranslator {
 
@@ -34,6 +43,7 @@ public class ResourceRequestTranslator {
         return Optional.empty();
     }
 
+
     /**
      * Translate Resource Model LoggingInfo to Request LoggingInfo
      */
@@ -52,7 +62,7 @@ public class ResourceRequestTranslator {
     /**
      * Translate Resource Model NotificationConfig to Request NotificationConfig
      */
-    public static Optional<NotificationConfig> translateToRequestNotificationConfig(final software.amazon.ssm.maintenancewindowtask.NotificationConfig resourceModelNotificationConfig) {
+    private static Optional<NotificationConfig> translateToRequestNotificationConfig(final software.amazon.ssm.maintenancewindowtask.NotificationConfig resourceModelNotificationConfig) {
         if (resourceModelNotificationConfig == null) {
             return Optional.empty();
         } else {
@@ -68,7 +78,7 @@ public class ResourceRequestTranslator {
     /**
      * Translate Resource Model CloudWatchOutputConfig to Request CloudWatchOutputConfig
      */
-    public static Optional<CloudWatchOutputConfig> translateToRequestCloudWatchOutputConfig(final software.amazon.ssm.maintenancewindowtask.CloudWatchOutputConfig resourceModelCloudWatchOutputConfig) {
+    private static Optional<CloudWatchOutputConfig> translateToRequestCloudWatchOutputConfig(final software.amazon.ssm.maintenancewindowtask.CloudWatchOutputConfig resourceModelCloudWatchOutputConfig) {
         if (resourceModelCloudWatchOutputConfig == null) {
             return Optional.empty();
         } else {
@@ -83,11 +93,10 @@ public class ResourceRequestTranslator {
     /**
      * Translate Resource Model MaintenanceWindowAutomationParameters to Request MaintenanceWindowAutomationParameters
      */
-    public static Optional<MaintenanceWindowAutomationParameters> translateToRequestAutomationParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowAutomationParameters resourceModelAutomation) {
+    private static Optional<MaintenanceWindowAutomationParameters> translateToRequestAutomationParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowAutomationParameters resourceModelAutomation) {
         if (resourceModelAutomation == null) {
             return Optional.empty();
         } else {
-            //OBJECT_MAPPER.addMixIn(MaintenanceWindowAutomationParameters.class, FixMaintenanceWindowAutomationParameters.class);
             MaintenanceWindowAutomationParameters requestAutomationParameters = MaintenanceWindowAutomationParameters.builder()
                     .documentVersion(resourceModelAutomation.getDocumentVersion())
                     .parameters(resourceModelAutomation.getParameters())
@@ -99,14 +108,14 @@ public class ResourceRequestTranslator {
     /**
      * Translate Resource Model MaintenanceWindowLambdaParameters to Request MaintenanceWindowLambdaParameters
      */
-    public static Optional<MaintenanceWindowLambdaParameters> translateToRequestLambdaParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowLambdaParameters resourceModelLambda) {
+    private static Optional<MaintenanceWindowLambdaParameters> translateToRequestLambdaParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowLambdaParameters resourceModelLambda) {
         if (resourceModelLambda == null) {
             return Optional.empty();
         } else {
 
             MaintenanceWindowLambdaParameters requestLambdaParameters = MaintenanceWindowLambdaParameters.builder()
                     .clientContext(resourceModelLambda.getClientContext())
-                    .payload(SdkBytes.fromUtf8String(resourceModelLambda.getPayload()))
+                    .payload(SdkBytes.fromByteArray(Base64.decode(resourceModelLambda.getPayload())))
                     .qualifier(resourceModelLambda.getQualifier())
                     .build();
             return Optional.of(requestLambdaParameters);
@@ -116,30 +125,31 @@ public class ResourceRequestTranslator {
     /**
      * Translate Resource Model MaintenanceWindowRunCommandParameters to Request MaintenanceWindowRunCommandParameters
      */
-    public static Optional<MaintenanceWindowRunCommandParameters> translateToRequestRunCommandParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowRunCommandParameters resourceModelRunCommand) {
+    private static Optional<MaintenanceWindowRunCommandParameters> translateToRequestRunCommandParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowRunCommandParameters resourceModelRunCommand) {
         if (resourceModelRunCommand == null) {
             return Optional.empty();
         } else {
-            MaintenanceWindowRunCommandParameters requestRunCommandParameters = MaintenanceWindowRunCommandParameters.builder()
+            MaintenanceWindowRunCommandParameters.Builder requestRunCommandParametersBuilder = MaintenanceWindowRunCommandParameters.builder()
                     .comment(resourceModelRunCommand.getComment())
                     .documentHash(resourceModelRunCommand.getDocumentHash())
                     .documentHashType(resourceModelRunCommand.getDocumentHashType())
-                    .notificationConfig(translateToRequestNotificationConfig(resourceModelRunCommand.getNotificationConfig()).get())
                     .outputS3BucketName(resourceModelRunCommand.getOutputS3BucketName())
                     .outputS3KeyPrefix(resourceModelRunCommand.getOutputS3KeyPrefix())
                     .serviceRoleArn(resourceModelRunCommand.getServiceRoleArn())
                     .timeoutSeconds(resourceModelRunCommand.getTimeoutSeconds())
-                    .parameters(resourceModelRunCommand.getParameters())
-                    .cloudWatchOutputConfig(translateToRequestCloudWatchOutputConfig(resourceModelRunCommand.getCloudWatchOutputConfig()).get())
-                    .build();
-            return Optional.of(requestRunCommandParameters);
+                    .parameters(resourceModelRunCommand.getParameters());
+            translateToRequestNotificationConfig(resourceModelRunCommand.getNotificationConfig())
+                    .ifPresent(requestRunCommandParametersBuilder::notificationConfig);
+            translateToRequestCloudWatchOutputConfig(resourceModelRunCommand.getCloudWatchOutputConfig())
+                    .ifPresent(requestRunCommandParametersBuilder::cloudWatchOutputConfig);
+            return Optional.of(requestRunCommandParametersBuilder.build());
         }
     }
 
     /**
      * Translate Resource Model MaintenanceWindowStepFunctionsParameters to Request MaintenanceWindowStepFunctionsParameters
      */
-    public static Optional<MaintenanceWindowStepFunctionsParameters> translateToRequestStepFunctionsParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowStepFunctionsParameters resourceModelStepFunctions) {
+    private static Optional<MaintenanceWindowStepFunctionsParameters> translateToRequestStepFunctionsParameters(final software.amazon.ssm.maintenancewindowtask.MaintenanceWindowStepFunctionsParameters resourceModelStepFunctions) {
         if (resourceModelStepFunctions == null) {
             return Optional.empty();
         } else {
@@ -158,13 +168,16 @@ public class ResourceRequestTranslator {
         if (resourceModelTaskInvocationParameters == null) {
             return Optional.empty();
         } else {
-            MaintenanceWindowTaskInvocationParameters requestTaskInvocationParameters = MaintenanceWindowTaskInvocationParameters.builder()
-                    .automation(translateToRequestAutomationParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowAutomationParameters()).get())
-                    .lambda(translateToRequestLambdaParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowLambdaParameters()).get())
-                    .runCommand(translateToRequestRunCommandParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowRunCommandParameters()).get())
-                    .stepFunctions(translateToRequestStepFunctionsParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowStepFunctionsParameters()).get())
-                    .build();
-            return Optional.of(requestTaskInvocationParameters);
+            MaintenanceWindowTaskInvocationParameters.Builder requestTaskInvocationParametersBuilder = MaintenanceWindowTaskInvocationParameters.builder();
+            translateToRequestAutomationParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowAutomationParameters())
+                    .ifPresent(requestTaskInvocationParametersBuilder::automation);
+            translateToRequestLambdaParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowLambdaParameters())
+                    .ifPresent(requestTaskInvocationParametersBuilder::lambda);
+            translateToRequestRunCommandParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowRunCommandParameters())
+                    .ifPresent(requestTaskInvocationParametersBuilder::runCommand);
+            translateToRequestStepFunctionsParameters(resourceModelTaskInvocationParameters.getMaintenanceWindowStepFunctionsParameters())
+                    .ifPresent(requestTaskInvocationParametersBuilder::stepFunctions);
+            return Optional.of(requestTaskInvocationParametersBuilder.build());
         }
     }
 

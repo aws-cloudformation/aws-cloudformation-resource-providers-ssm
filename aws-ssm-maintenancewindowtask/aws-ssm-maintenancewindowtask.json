@@ -332,7 +332,7 @@
         },
         "delete": {
             "permissions": [
-                "ssm:DeregisterTaskWithMaintenanceWindow"
+                "ssm:DeregisterTaskFromMaintenanceWindow"
             ]
         },
         "update": {
@@ -349,7 +349,8 @@
         },
         "read": {
             "permissions": [
-                "ssm:DescribeMaintenanceWindowTask"
+                "ssm:DescribeMaintenanceWindowTask",
+                "ssm:GetMaintenanceWindowTask"
             ]
         }
     },
@@ -363,7 +364,8 @@
         "TaskArn"
     ],
     "createOnlyProperties": [
-        "/properties/WindowId"
+        "/properties/WindowId",
+        "/properties/TaskType"
     ],
     "primaryIdentifier": [
         "/properties/WindowTaskId"

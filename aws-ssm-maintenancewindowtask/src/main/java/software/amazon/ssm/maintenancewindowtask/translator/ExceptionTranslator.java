@@ -1,6 +1,5 @@
 package software.amazon.ssm.maintenancewindowtask.translator;
 
-
 import software.amazon.awssdk.services.ssm.model.AlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.DoesNotExistException;
 import software.amazon.awssdk.services.ssm.model.FeatureNotAvailableException;
@@ -11,11 +10,11 @@ import software.amazon.awssdk.services.ssm.model.SsmRequest;
 import software.amazon.awssdk.services.ssm.model.TargetInUseException;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.ssm.maintenancewindowtask.ResourceModel;
 
 
@@ -29,7 +28,7 @@ public class ExceptionTranslator {
      *
      * @param serviceException     Service model exception to translate.
      * @param request              Type of SsmRequest where the service exception came from.
-    * @param desiredResourceModel Desired resource model from the request being handled.
+     * @param desiredResourceModel Desired resource model from the request being handled.
      * @return CloudFormation-type exception converted from a service model exception.
      */
     public BaseHandlerException translateFromServiceException(final Exception serviceException,

@@ -17,46 +17,45 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
  */
 public class InitialCreateHandler extends BaseHandler<CallbackContext> {
 
-    private final int callbackDelaySeconds;
     private final SsmClient ssmClient;
     private final CreateAssociationTranslator createAssociationTranslator;
     private final AssociationDescriptionTranslator associationDescriptionTranslator;
     private final ExceptionTranslator exceptionTranslator;
+    private final InProgressEventCreator inProgressEventCreator;
 
     /**
      * Constructor to use by dependencies. Processes initial CreateHandler requests.
      *
-     * @param callbackDelaySeconds Callback delay period.
      * @param ssmClient SsmClient implementation to use for API calls.
      */
-    InitialCreateHandler(final int callbackDelaySeconds, final SsmClient ssmClient) {
-        this.callbackDelaySeconds = callbackDelaySeconds;
+    InitialCreateHandler(final SsmClient ssmClient) {
         this.ssmClient = ssmClient;
         this.createAssociationTranslator = new CreateAssociationTranslator();
         this.associationDescriptionTranslator = new AssociationDescriptionTranslator();
         this.exceptionTranslator = new ExceptionTranslator();
+        this.inProgressEventCreator = new InProgressEventCreator();
     }
 
     /**
      * Used for unit tests.
      *
-     * @param callbackDelaySeconds Callback delay period.
      * @param ssmClient SsmClient implementation to use for API calls.
      * @param createAssociationTranslator Translates ResourceModel objects into CreateAssociation requests.
      * @param associationDescriptionTranslator Translates AssociationDescription into ResourceModel objects.
      * @param exceptionTranslator Translates service model exceptions.
+     * @param inProgressEventCreator Creates InProgress ProgressEvent objects for progress chaining.
      */
-    InitialCreateHandler(final int callbackDelaySeconds,
-                         final SsmClient ssmClient,
+    InitialCreateHandler(final SsmClient ssmClient,
                          final CreateAssociationTranslator createAssociationTranslator,
                          final AssociationDescriptionTranslator associationDescriptionTranslator,
-                         final ExceptionTranslator exceptionTranslator) {
+                         final ExceptionTranslator exceptionTranslator,
+                         final InProgressEventCreator inProgressEventCreator) {
 
-        this.callbackDelaySeconds = callbackDelaySeconds;
         this.ssmClient = ssmClient;
         this.createAssociationTranslator = createAssociationTranslator;
         this.associationDescriptionTranslator = associationDescriptionTranslator;
         this.exceptionTranslator = exceptionTranslator;
+        this.inProgressEventCreator = inProgressEventCreator;
     }
 
     @Override
@@ -89,21 +88,14 @@ public class InitialCreateHandler extends BaseHandler<CallbackContext> {
         final ResourceModel resultModel =
             associationDescriptionTranslator.associationDescriptionToResourceModel(resultAssociationDescription);
 
-        if (desiredModel.getWaitForSuccessTimeoutSeconds() == null) {
+        final Integer waitForSuccessTimeoutSeconds = desiredModel.getWaitForSuccessTimeoutSeconds();
+
+        if (waitForSuccessTimeoutSeconds == null) {
             // return success without waiting for association to complete
             return ProgressEvent.defaultSuccessHandler(resultModel);
         } else {
             // indicates a Create request that needs to wait for association to complete
-            final int remainingTimeoutSeconds =
-                desiredModel.getWaitForSuccessTimeoutSeconds() - callbackDelaySeconds;
-
-            return ProgressEvent.defaultInProgressHandler(
-                CallbackContext.builder()
-                    .remainingTimeoutSeconds(remainingTimeoutSeconds)
-                    .associationId(resultAssociationDescription.associationId())
-                    .build(),
-                callbackDelaySeconds,
-                resultModel);
+            return inProgressEventCreator.nextInProgressEvent(waitForSuccessTimeoutSeconds, resultModel);
         }
     }
 }

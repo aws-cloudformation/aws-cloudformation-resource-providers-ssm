@@ -34,19 +34,24 @@ class CreateHandlerTest {
     @Mock
     private BaseHandler<CallbackContext> initialCreateHandler;
     @Mock
-    private BaseHandler<CallbackContext> inProgressCreateHandler;
+    private BaseHandler<CallbackContext> inProgressHandler;
     @Mock
     private ResourceHandlerRequestToStringConverter requestToStringConverter;
 
     @BeforeEach
     void setUp() {
-        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+        handler = new CreateHandler(initialCreateHandler, inProgressHandler, requestToStringConverter);
+    }
 
-        handler = new CreateHandler(initialCreateHandler, inProgressCreateHandler, requestToStringConverter);
+    @Test
+    void defaultConstructorWorks() {
+        new CreateHandler();
     }
 
     @Test
     void handleRequestWithNoCallbackContextInvokesInitialHandler() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder()
             .name(DOCUMENT_NAME)
             .scheduleExpression(SCHEDULE_EXPRESSION)
@@ -68,11 +73,13 @@ class CreateHandlerTest {
 
         assertThat(response).isEqualTo(expectedProgressEvent);
         verify(initialCreateHandler).handleRequest(proxy, request, callbackContext, logger);
-        verifyZeroInteractions(inProgressCreateHandler);
+        verifyZeroInteractions(inProgressHandler);
     }
 
     @Test
     void handleRequestWithCallbackContextInvokesInProgressHandler() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder()
             .name(DOCUMENT_NAME)
             .scheduleExpression(SCHEDULE_EXPRESSION)
@@ -87,18 +94,20 @@ class CreateHandlerTest {
         final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
             ProgressEvent.progress(model, callbackContext);
 
-        when(inProgressCreateHandler.handleRequest(proxy, request, callbackContext, logger)).thenReturn(expectedProgressEvent);
+        when(inProgressHandler.handleRequest(proxy, request, callbackContext, logger)).thenReturn(expectedProgressEvent);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, callbackContext, logger);
 
         assertThat(response).isEqualTo(expectedProgressEvent);
-        verify(inProgressCreateHandler).handleRequest(proxy, request, callbackContext, logger);
+        verify(inProgressHandler).handleRequest(proxy, request, callbackContext, logger);
         verifyZeroInteractions(initialCreateHandler);
     }
 
     @Test
     void handleRequestLogsWithRequestConverter() {
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
