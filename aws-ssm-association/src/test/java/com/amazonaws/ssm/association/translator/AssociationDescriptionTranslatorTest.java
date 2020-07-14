@@ -88,6 +88,7 @@ class AssociationDescriptionTranslatorTest {
                 .lastExecutionDate(LAST_EXECUTION_DATE)
                 .lastSuccessfulExecutionDate(LAST_SUCCESSFUL_EXECUTION_DATE)
                 .syncCompliance(SYNC_COMPLIANCE)
+                .applyOnlyAtCronInterval(true)
                 .build();
 
         final ResourceModel resultModel =
@@ -109,6 +110,7 @@ class AssociationDescriptionTranslatorTest {
                 .automationTargetParameterName(AUTOMATION_TARGET_PARAMETER_NAME)
                 .instanceId(INSTANCE_ID)
                 .syncCompliance(SYNC_COMPLIANCE)
+                .applyOnlyAtCronInterval(true)
                 .build();
 
         assertThat(resultModel).isEqualTo(expectedModel);
