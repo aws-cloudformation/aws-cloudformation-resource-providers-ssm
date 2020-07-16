@@ -11,6 +11,7 @@
             "ssm",
             "maintenancewindowtask"
         ],
-        "codegen_template_path": "default"
+        "codegen_template_path": "default",
+        "protocolVersion": "2.0.0"
     }
 }
