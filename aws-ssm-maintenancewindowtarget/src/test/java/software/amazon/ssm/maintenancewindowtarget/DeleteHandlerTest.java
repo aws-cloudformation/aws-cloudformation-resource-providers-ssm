@@ -8,7 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.DeregisterTargetFromMaintenanceWindowRequest;
 import software.amazon.awssdk.services.ssm.model.DeregisterTargetFromMaintenanceWindowResponse;
-import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.awssdk.services.ssm.model.DoesNotExistException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.ssm.maintenancewindowtarget.translator.ExceptionTranslator;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -17,17 +19,19 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.ssm.maintenancewindowtarget.util.ResourceHandlerRequestToStringConverter;
 
 import java.util.function.Function;
 
 import org.mockito.ArgumentMatchers;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.LOGGED_RESOURCE_HANDLER_REQUEST;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_ID;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_TARGET_ID;
 
@@ -35,6 +39,7 @@ import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_TAR
 public class DeleteHandlerTest {
 
     private DeleteHandler handler;
+
     @Mock
     private AmazonWebServicesClientProxy proxy;
 
@@ -44,20 +49,23 @@ public class DeleteHandlerTest {
     @Mock
     private ExceptionTranslator exceptionTranslator;
 
+    @Mock
+    private ResourceHandlerRequestToStringConverter requestToStringConverter;
+
     @BeforeEach
     public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-        exceptionTranslator = mock(ExceptionTranslator.class);
-        handler = new DeleteHandler(exceptionTranslator);
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
+        handler = new DeleteHandler(exceptionTranslator, requestToStringConverter);
     }
 
     @Test
-    public void handleRequestWithWindowTargetId() {
+    public void handleDeleteRequestWithWindowTargetId() {
         final ResourceModel model = ResourceModel.builder()
             .windowId(WINDOW_ID)
             .windowTargetId(WINDOW_TARGET_ID)
             .build();
+
         final DeregisterTargetFromMaintenanceWindowRequest expectedDeregisterTargetFromMaintenanceWindowRequest =
             DeregisterTargetFromMaintenanceWindowRequest.builder()
                 .windowId(model.getWindowId())
@@ -82,7 +90,7 @@ public class DeleteHandlerTest {
     }
 
     @Test
-    void handleRequestWithNoRequiredParametersPresent() {
+    void handleDeleteRequestWithNoRequiredParametersPresent() {
         final ResourceModel model = ResourceModel.builder()
             .build();
 
@@ -107,7 +115,7 @@ public class DeleteHandlerTest {
     }
 
     @Test
-    void handleRequestThrowsTranslatedServiceException() {
+    void handleDeleteRequestThrowsTranslatedServiceException() {
         final ResourceModel model = ResourceModel.builder()
             .windowId(WINDOW_ID)
             .windowTargetId(WINDOW_TARGET_ID)
@@ -119,11 +127,11 @@ public class DeleteHandlerTest {
                 .windowTargetId(model.getWindowTargetId())
                 .build();
 
+        final InternalServerErrorException serviceException = InternalServerErrorException.builder().build();
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
             .build();
-
-        final TooManyUpdatesException serviceException = TooManyUpdatesException.builder().build();
 
         when(
             proxy.injectCredentialsAndInvokeV2(
@@ -133,15 +141,50 @@ public class DeleteHandlerTest {
         when(
             exceptionTranslator.translateFromServiceException(
                 serviceException,
-                expectedDeregisterTargetFromMaintenanceWindowRequest))
-            .thenReturn(new CfnThrottlingException("DeregisterTargetFromMaintenanceWindow", serviceException));
+                expectedDeregisterTargetFromMaintenanceWindowRequest,
+                request.getDesiredResourceState()))
+            .thenReturn(new CfnThrottlingException(expectedDeregisterTargetFromMaintenanceWindowRequest.toString(), serviceException));
 
         Assertions.assertThrows(CfnThrottlingException.class, () -> {
             handler.handleRequest(proxy, request, null, logger);
         });
 
         verify(exceptionTranslator)
-            .translateFromServiceException(serviceException, expectedDeregisterTargetFromMaintenanceWindowRequest);
+            .translateFromServiceException(serviceException, expectedDeregisterTargetFromMaintenanceWindowRequest, request.getDesiredResourceState());
     }
 
+    @Test
+    public void handleDeleteRequestThrowsDoesNotExistsException() {
+        final ResourceModel model = ResourceModel.builder()
+                .windowId(WINDOW_ID)
+                .windowTargetId(WINDOW_TARGET_ID)
+                .build();
+
+        final DeregisterTargetFromMaintenanceWindowRequest expectedDeregisterTargetFromMaintenanceWindowRequest =
+                DeregisterTargetFromMaintenanceWindowRequest.builder()
+                        .windowId(model.getWindowId())
+                        .windowTargetId(model.getWindowTargetId())
+                        .build();
+
+        final DoesNotExistException doesNotExistsException = DoesNotExistException.builder().build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+
+        when(
+                proxy.injectCredentialsAndInvokeV2(
+                        eq(expectedDeregisterTargetFromMaintenanceWindowRequest),
+                        ArgumentMatchers.<Function<DeregisterTargetFromMaintenanceWindowRequest, DeregisterTargetFromMaintenanceWindowResponse>>any()))
+                .thenThrow(doesNotExistsException);
+
+        when(exceptionTranslator.translateFromServiceException(doesNotExistsException, expectedDeregisterTargetFromMaintenanceWindowRequest, request.getDesiredResourceState()))
+                .thenReturn(new CfnNotFoundException(doesNotExistsException));
+
+        Assertions.assertThrows(CfnNotFoundException.class, () -> {
+            handler.handleRequest(proxy, request, null, logger);
+        });
+        verify(exceptionTranslator)
+                .translateFromServiceException(doesNotExistsException, expectedDeregisterTargetFromMaintenanceWindowRequest,request.getDesiredResourceState());
+    }
 }
