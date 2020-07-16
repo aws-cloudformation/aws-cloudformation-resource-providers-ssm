@@ -10,6 +10,17 @@ import java.util.Optional;
  */
 public class SimpleTypeValidator {
     /**
+     * Validates an input Integer
+     */
+    public Optional<Integer> getValidatedInteger(final Integer parameter) {
+        if (parameter == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(parameter);
+        }
+    }
+
+    /**
      * Validates an input String.
      */
     public Optional<String> getValidatedString(final String parameter) {
@@ -24,7 +35,7 @@ public class SimpleTypeValidator {
      * Validates an input Boolean.
      */
     public Optional<Boolean> getValidatedBoolean(final Boolean parameter) {
-        if (parameter.booleanValue() != true && parameter.booleanValue() != false) {
+        if (parameter == null) {
             return Optional.empty();
         } else {
             return Optional.of(parameter);

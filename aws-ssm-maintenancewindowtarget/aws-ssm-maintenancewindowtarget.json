@@ -47,6 +47,61 @@
                 "Key",
                 "Values"
             ]
+        },
+        "MaintenanceWindowTarget": {
+            "type": "object",
+            "properties": {
+                "Description": {
+                    "description": "A description for the target.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "Name": {
+                    "description": "The name for the maintenance window target.",
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 128,
+                    "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
+                },
+                "OwnerInformation": {
+                    "description": "A user-provided value that will be included in any CloudWatch events that are raised while running tasks for these targets in this maintenance window.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "ResourceType": {
+                    "description": "The type of target that is being registered with the maintenance window.",
+                    "type": "string",
+                    "enum": [
+                        "INSTANCE",
+                        "RESOURCE_GROUP"
+                    ]
+                },
+                "Targets": {
+                    "description": "The targets, either instances or tags.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Target"
+                    },
+                    "minItems": 0,
+                    "maxItems": 5
+                },
+                "WindowId": {
+                    "description": "The ID of the maintenance window to register the target with.",
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 20,
+                    "pattern": "^mw-[0-9a-f]{17}$"
+                },
+                "WindowTargetId": {
+                    "description": "The ID of the target.",
+                    "type": "string",
+                    "minLength": 36,
+                    "maxLength": 36,
+                    "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+                }
+            }
         }
     },
     "properties": {

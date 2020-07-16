@@ -4,9 +4,11 @@ import java.util.function.Function;
 
 import org.junit.jupiter.api.Assertions;
 import org.mockito.ArgumentMatchers;
-import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.awssdk.services.ssm.model.DoesNotExistException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.UpdateMaintenanceWindowTargetRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateMaintenanceWindowTargetResponse;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
@@ -21,18 +23,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.ssm.maintenancewindowtarget.translator.ExceptionTranslator;
 import software.amazon.ssm.maintenancewindowtarget.translator.request.UpdateMaintenanceWindowTargetTranslator;
+import software.amazon.ssm.maintenancewindowtarget.util.ResourceHandlerRequestToStringConverter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.NEW_NAME;
+import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.UPDATED_NAME;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.NAME;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_ID;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_TARGET_ID;
-
+import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.LOGGED_RESOURCE_HANDLER_REQUEST;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest extends AbstractTestBase {
@@ -51,25 +54,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Mock
     private ExceptionTranslator exceptionTranslator;
 
+    @Mock
+    private ResourceHandlerRequestToStringConverter requestToStringConverter;
+
     @BeforeEach
     public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-        updateMaintenanceWindowTargetTranslator = mock(UpdateMaintenanceWindowTargetTranslator.class);
-        exceptionTranslator = mock(ExceptionTranslator.class);
-        handler = new UpdateHandler(updateMaintenanceWindowTargetTranslator, exceptionTranslator);
+        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
+
+        handler = new UpdateHandler(updateMaintenanceWindowTargetTranslator,
+                exceptionTranslator,
+                requestToStringConverter);
     }
 
     @Test
-    public void handleRequestWithWindowIdPresent(){
+    public void handleUpdateRequestWithWindowIdPresent(){
         final ResourceModel.ResourceModelBuilder resourceModelBuilder =
             ResourceModel.builder()
                 .name(NAME)
                 .windowId(WINDOW_ID)
                 .windowTargetId(WINDOW_TARGET_ID);
+
         final ResourceModel previousModel = resourceModelBuilder.build();
+
         final ResourceModel desiredModel = resourceModelBuilder
-            .name(NEW_NAME)
+            .name(UPDATED_NAME)
             .windowId(WINDOW_ID)
             .windowTargetId(WINDOW_TARGET_ID)
             .build();
@@ -81,14 +89,16 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final UpdateMaintenanceWindowTargetRequest expectedUpdateMaintenanceWindowTargetRequest =
             UpdateMaintenanceWindowTargetRequest.builder()
-                .windowId(desiredModel.getWindowId())
                 .name(desiredModel.getName())
+                .windowId(desiredModel.getWindowId())
+                .windowTargetId(desiredModel.getWindowTargetId())
                 .build();
 
         final UpdateMaintenanceWindowTargetResponse result =
             UpdateMaintenanceWindowTargetResponse.builder()
                 .name(desiredModel.getName())
                 .windowId(desiredModel.getWindowId())
+                .windowTargetId(desiredModel.getWindowTargetId())
                 .build();
 
         when(updateMaintenanceWindowTargetTranslator.resourceModelToRequest(desiredModel))
@@ -114,9 +124,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    void handleRequestWithNoWindowId() {
+    void handleUpdateRequestWithNoRequiredParametersPresent() {
         final ResourceModel desiredModel = ResourceModel.builder()
-            .name(NEW_NAME)
+            .name(UPDATED_NAME)
             .build();
 
         final ResourceModel previousModel = ResourceModel.builder()
@@ -145,7 +155,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    void handleRequestThrowsTranslatedServiceException() {
+    void handleUpdateRequestThrowsTranslatedServiceException() {
         final ResourceModel.ResourceModelBuilder resourceModelBuilder =
             ResourceModel.builder()
                 .name(NAME)
@@ -154,7 +164,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final ResourceModel previousModel = resourceModelBuilder.build();
         final ResourceModel desiredModel = resourceModelBuilder
-            .name(NEW_NAME)
+            .name(UPDATED_NAME)
             .windowId(WINDOW_ID)
             .windowTargetId(WINDOW_TARGET_ID)
             .build();
@@ -166,14 +176,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final UpdateMaintenanceWindowTargetRequest expectedUpdateMaintenanceWindowTargetRequest =
             UpdateMaintenanceWindowTargetRequest.builder()
-                .windowId(desiredModel.getWindowId())
                 .name(desiredModel.getName())
+                .windowId(desiredModel.getWindowId())
+                .windowTargetId(desiredModel.getWindowTargetId())
                 .build();
 
         when(updateMaintenanceWindowTargetTranslator.resourceModelToRequest(desiredModel))
             .thenReturn(expectedUpdateMaintenanceWindowTargetRequest);
 
-        final TooManyUpdatesException serviceException = TooManyUpdatesException.builder().build();
+        final InternalServerErrorException serviceException = InternalServerErrorException.builder().build();
 
         when(
             proxy.injectCredentialsAndInvokeV2(
@@ -184,8 +195,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
         when(
             exceptionTranslator.translateFromServiceException(
                 serviceException,
-                expectedUpdateMaintenanceWindowTargetRequest))
-            .thenReturn(new CfnThrottlingException("UpdateMaintenanceWindow", serviceException));
+                expectedUpdateMaintenanceWindowTargetRequest,
+                request.getDesiredResourceState()))
+            .thenReturn(new CfnThrottlingException(expectedUpdateMaintenanceWindowTargetRequest.toString(), serviceException));
 
         Assertions.assertThrows(CfnThrottlingException.class, () -> {
             handler.handleRequest(proxy, request, null, logger);
@@ -194,6 +206,54 @@ public class UpdateHandlerTest extends AbstractTestBase {
         verify(exceptionTranslator)
             .translateFromServiceException(
                 serviceException,
-                expectedUpdateMaintenanceWindowTargetRequest);
+                expectedUpdateMaintenanceWindowTargetRequest,
+                request.getDesiredResourceState());
+    }
+
+    @Test
+    public void handleUpdateRequestThrowsDoesNotExistsException() {
+        final ResourceModel.ResourceModelBuilder resourceModelBuilder =
+                ResourceModel.builder()
+                        .name(NAME)
+                        .windowId(WINDOW_ID)
+                        .windowTargetId(WINDOW_TARGET_ID);
+
+        final ResourceModel previousModel = resourceModelBuilder.build();
+        final ResourceModel desiredModel = resourceModelBuilder
+                .name(NAME)
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(desiredModel)
+                .previousResourceState(previousModel)
+                .build();
+
+        final UpdateMaintenanceWindowTargetRequest expectedUpdateMaintenanceWindowTargetRequest =
+                UpdateMaintenanceWindowTargetRequest.builder()
+                        .name(desiredModel.getName())
+                        .windowId(desiredModel.getWindowId())
+                        .windowTargetId(desiredModel.getWindowTargetId())
+                        .build();
+
+        when(updateMaintenanceWindowTargetTranslator.resourceModelToRequest(desiredModel))
+                .thenReturn(expectedUpdateMaintenanceWindowTargetRequest);
+
+        final DoesNotExistException doesNotExistsException = DoesNotExistException.builder().build();
+
+        when(
+                proxy.injectCredentialsAndInvokeV2(
+                        eq(expectedUpdateMaintenanceWindowTargetRequest),
+                        ArgumentMatchers.<Function<UpdateMaintenanceWindowTargetRequest, UpdateMaintenanceWindowTargetResponse>>any()))
+                .thenThrow(doesNotExistsException);
+
+
+        when(exceptionTranslator.translateFromServiceException(doesNotExistsException, expectedUpdateMaintenanceWindowTargetRequest, request.getDesiredResourceState()))
+                .thenReturn(new CfnNotFoundException(doesNotExistsException));
+
+        Assertions.assertThrows(CfnNotFoundException.class, () -> {
+            handler.handleRequest(proxy, request, null, logger);
+        });
+        verify(exceptionTranslator)
+                .translateFromServiceException(doesNotExistsException, expectedUpdateMaintenanceWindowTargetRequest,request.getDesiredResourceState());
     }
 }

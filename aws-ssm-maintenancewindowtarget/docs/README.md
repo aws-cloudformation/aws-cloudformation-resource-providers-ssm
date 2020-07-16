@@ -216,3 +216,4 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 #### WindowId
 
 The ID of the maintenance window to register the target with.
+
