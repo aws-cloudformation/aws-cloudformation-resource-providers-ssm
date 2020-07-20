@@ -97,5 +97,4 @@ public class ResourceHandlerRequestToStringConverterTest {
         verify(resourceModelToStringConverter).convert(DESIRED_RESOURCE_STATE);
         verify(resourceModelToStringConverter).convert(PREVIOUS_RESOURCE_STATE);
     }
-
 }

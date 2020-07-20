@@ -20,6 +20,7 @@ import java.util.Optional;
 public class DeleteHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient SSM_CLIENT = SsmClientBuilder.getClient();
+
     private final ExceptionTranslator exceptionTranslator;
     private final ResourceHandlerRequestToStringConverter requestToStringConverter;
 
