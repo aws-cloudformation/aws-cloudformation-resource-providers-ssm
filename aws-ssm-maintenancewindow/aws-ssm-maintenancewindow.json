@@ -75,10 +75,16 @@
             "additionalProperties": false,
             "properties": {
                 "Key": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^((?!aws:)[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
                 },
                 "Value": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^((?!aws:)[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
                 }
             },
             "required": [
