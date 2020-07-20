@@ -1,6 +1,5 @@
 package software.amazon.ssm.maintenancewindowtarget.translator.request;
 
-
 import software.amazon.awssdk.services.ssm.model.UpdateMaintenanceWindowTargetRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateMaintenanceWindowTargetResponse;
 import software.amazon.ssm.maintenancewindowtarget.ResourceModel;
@@ -37,7 +36,8 @@ public class UpdateMaintenanceWindowTargetTranslator {
         final UpdateMaintenanceWindowTargetRequest.Builder updateMaintenanceWindowTargetRequestBuilder =
             UpdateMaintenanceWindowTargetRequest.builder()
                 .windowId(model.getWindowId())
-                .windowTargetId(model.getWindowTargetId());
+                .windowTargetId(model.getWindowTargetId())
+                .replace(true);
 
         targetsListTranslator.resourceModelPropertyToServiceModel(model.getTargets())
             .ifPresent(updateMaintenanceWindowTargetRequestBuilder::targets);
@@ -51,15 +51,6 @@ public class UpdateMaintenanceWindowTargetTranslator {
         simpleTypeValidator.getValidatedString(model.getOwnerInformation())
             .ifPresent(updateMaintenanceWindowTargetRequestBuilder::ownerInformation);
 
-        simpleTypeValidator.getValidatedBoolean(model.getReplace())
-            .ifPresent(updateMaintenanceWindowTargetRequestBuilder::replace);
-
-        simpleTypeValidator.getValidatedString(model.getWindowId())
-            .ifPresent(updateMaintenanceWindowTargetRequestBuilder::windowId);
-
-        simpleTypeValidator.getValidatedString(model.getWindowTargetId())
-            .ifPresent(updateMaintenanceWindowTargetRequestBuilder::windowTargetId);
-
         return updateMaintenanceWindowTargetRequestBuilder.build();
     }
 
@@ -68,9 +59,6 @@ public class UpdateMaintenanceWindowTargetTranslator {
      */
     public ResourceModel responseToResourceModel(final UpdateMaintenanceWindowTargetResponse response) {
         final ResourceModel model = new ResourceModel();
-
-        model.setWindowId(response.windowId());
-        model.setWindowTargetId(response.windowTargetId());
 
         simpleTypeValidator.getValidatedString(response.description())
             .ifPresent(model::setDescription);

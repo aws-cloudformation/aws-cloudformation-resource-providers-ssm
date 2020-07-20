@@ -13,31 +13,38 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.ssm.maintenancewindowtarget.translator.ExceptionTranslator;
 import software.amazon.ssm.maintenancewindowtarget.translator.request.UpdateMaintenanceWindowTargetTranslator;
-import software.amazon.ssm.maintenancewindowtarget.util.ClientBuilder;
+import software.amazon.ssm.maintenancewindowtarget.util.SsmClientBuilder;
+import software.amazon.ssm.maintenancewindowtarget.util.ResourceHandlerRequestToStringConverter;
+import software.amazon.ssm.maintenancewindowtarget.util.ResourceModelToStringConverter;
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
-    private static final SsmClient SSM_CLIENT = ClientBuilder.getClient();
+    private static final SsmClient SSM_CLIENT = SsmClientBuilder.getClient();
 
     private final UpdateMaintenanceWindowTargetTranslator updateMaintenanceWindowTargetTranslator;
     private final ExceptionTranslator exceptionTranslator;
+    private final ResourceHandlerRequestToStringConverter requestToStringConverter;
+
 
     UpdateHandler() {
         this.updateMaintenanceWindowTargetTranslator = new UpdateMaintenanceWindowTargetTranslator();
         this.exceptionTranslator = new ExceptionTranslator();
+        this.requestToStringConverter = new ResourceHandlerRequestToStringConverter(new ResourceModelToStringConverter());
     }
 
     /**
      * Used for unit tests.
      *
-     * @param updateMaintenanceWindowTargetTranslator Generate UpdateMaintenanceWindowTargetRequest from the ResourceModel.
      * @param updateMaintenanceWindowTargetTranslator Translates UpdateMaintenanceWindowTargetResponse into ResourceModel objects.
      * @param exceptionTranslator Translates service model exceptions.
+     * @param requestToStringConverter ResourceHandlerRequestToStringConverter used to convert requests to Strings.
      */
     UpdateHandler(final UpdateMaintenanceWindowTargetTranslator updateMaintenanceWindowTargetTranslator,
-                  final ExceptionTranslator exceptionTranslator) {
+                  final ExceptionTranslator exceptionTranslator,
+                  final ResourceHandlerRequestToStringConverter requestToStringConverter) {
         this.updateMaintenanceWindowTargetTranslator = updateMaintenanceWindowTargetTranslator;
         this.exceptionTranslator = exceptionTranslator;
+        this.requestToStringConverter = requestToStringConverter;
     }
 
     @Override
@@ -47,7 +54,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        logger.log(String.format("Processing UpdateHandler request %s", request));
+        logger.log(String.format("Processing UpdateHandler request: %s", requestToStringConverter.convert(request)));
 
         final ResourceModel model = request.getDesiredResourceState();
 
@@ -80,7 +87,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
-                .translateFromServiceException(e, updateMaintenanceWindowTargetRequest);
+                .translateFromServiceException(e, updateMaintenanceWindowTargetRequest, request.getDesiredResourceState());
 
             logger.log(cfnException.getCause().getMessage());
 

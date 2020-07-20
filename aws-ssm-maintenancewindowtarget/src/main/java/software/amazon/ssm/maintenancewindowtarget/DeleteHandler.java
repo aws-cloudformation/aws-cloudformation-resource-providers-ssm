@@ -11,26 +11,33 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.ssm.maintenancewindowtarget.translator.ExceptionTranslator;
-import software.amazon.ssm.maintenancewindowtarget.util.ClientBuilder;
+import software.amazon.ssm.maintenancewindowtarget.util.SsmClientBuilder;
+import software.amazon.ssm.maintenancewindowtarget.util.ResourceHandlerRequestToStringConverter;
+import software.amazon.ssm.maintenancewindowtarget.util.ResourceModelToStringConverter;
 
 import java.util.Optional;
 
 public class DeleteHandler extends BaseHandler<CallbackContext> {
 
-    private static final SsmClient SSM_CLIENT = ClientBuilder.getClient();
+    private static final SsmClient SSM_CLIENT = SsmClientBuilder.getClient();
     private final ExceptionTranslator exceptionTranslator;
+    private final ResourceHandlerRequestToStringConverter requestToStringConverter;
 
     DeleteHandler() {
         this.exceptionTranslator = new ExceptionTranslator();
+        this.requestToStringConverter = new ResourceHandlerRequestToStringConverter(new ResourceModelToStringConverter());
     }
 
     /**
      * Used for unit tests.
      *
      * @param exceptionTranslator Used for translating service model exceptions.
+     * @param requestToStringConverter ResourceHandlerRequestToStringConverter used to convert requests to Strings.
      */
-    DeleteHandler(final ExceptionTranslator exceptionTranslator) {
+    DeleteHandler(final ExceptionTranslator exceptionTranslator,
+                  final ResourceHandlerRequestToStringConverter requestToStringConverter) {
         this.exceptionTranslator = exceptionTranslator;
+        this.requestToStringConverter = requestToStringConverter;
     }
 
     @Override
@@ -40,11 +47,12 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        logger.log(String.format("Processing DeleteHandler request %s", request));
+        logger.log(String.format("Processing DeleteHandler request: %s", requestToStringConverter.convert(request)));
 
         final ResourceModel model = request.getDesiredResourceState();
+
         final ProgressEvent<ResourceModel, CallbackContext> progressEvent =
-            ProgressEvent.<ResourceModel, CallbackContext>builder()
+                ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
                 .build();
 
@@ -66,7 +74,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             progressEvent.setStatus(OperationStatus.SUCCESS);
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
-                .translateFromServiceException(e, deregisterTargetFromMaintenanceWindowRequest);
+                .translateFromServiceException(e, deregisterTargetFromMaintenanceWindowRequest, request.getDesiredResourceState());
 
             logger.log(cfnException.getCause().getMessage());
 

@@ -1,12 +1,15 @@
 package software.amazon.ssm.maintenancewindowtarget;
 
+
+
 import java.util.Collections;
 import java.util.List;
 
 public class TestsInputs {
     public static final String DESCRIPTION = "TestTargetDescription";
-    public static final String NEW_NAME = "NewTestTargetName";
+    public static final String UPDATED_NAME = "NewTestTargetName";
     public static final String NAME = "TestTargetName";
+    public static final String NEXT_TOKEN = "TestNextToken";
     public static final String OWNER_INFORMATION = "TestTargetOwnerInformation";
     public static final String RESOURCE_TYPE = "TestTargetResourceType";
     public static final String WINDOW_ID = "mw-01234567890123456";
@@ -24,4 +27,32 @@ public class TestsInputs {
                 .key(TARGET_KEY)
                 .values(TARGET_VALUE)
                 .build());
+
+    public static final String FILTER_KEY = "TestWindowTargetId";
+    public static final String FILTER_VALUE = WINDOW_TARGET_ID;
+    public static final List<MaintenanceWindowFilter> MODEL_FILTERS =
+            Collections.singletonList(
+                    new MaintenanceWindowFilter(FILTER_KEY, Collections.singletonList(FILTER_VALUE)));
+    public static final List<software.amazon.awssdk.services.ssm.model.MaintenanceWindowFilter> SERVICE_FILTERS =
+            Collections.singletonList(
+                    software.amazon.awssdk.services.ssm.model.MaintenanceWindowFilter.builder()
+                            .key(FILTER_KEY)
+                            .values(FILTER_VALUE)
+                            .build());
+
+    public static final List<software.amazon.awssdk.services.ssm.model.MaintenanceWindowTarget> SERVICE_MAINTENANCE_WINDOW_TARGETS =
+            Collections.singletonList(
+                    software.amazon.awssdk.services.ssm.model.MaintenanceWindowTarget.builder()
+                            .description(DESCRIPTION)
+                            .name(NAME)
+                            .ownerInformation(OWNER_INFORMATION)
+                            .resourceType(RESOURCE_TYPE)
+                            .targets(SERVICE_TARGETS)
+                            .windowId(WINDOW_ID)
+                            .windowTargetId(WINDOW_TARGET_ID)
+                            .build());
+
+    public static final int WAIT_FOR_SUCCESS_TIMEOUT_IN_SECONDS = 45;
+
+    public static final String LOGGED_RESOURCE_HANDLER_REQUEST = "StringifiedResourceHandlerRequest";
 }
