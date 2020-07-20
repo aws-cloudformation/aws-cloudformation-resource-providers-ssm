@@ -32,8 +32,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class InitialCreateHandlerTest {
 
-    private static final int CALLBACK_DELAY_SECONDS = 15;
-
     private static final String DOCUMENT_NAME = "TestDocument";
     private static final String SCHEDULE_EXPRESSION = "rate(30)";
     private static final String ASSOCIATION_ID = "test-12345-associationId";
@@ -51,14 +49,21 @@ class InitialCreateHandlerTest {
     private AssociationDescriptionTranslator associationDescriptionTranslator;
     @Mock
     private ExceptionTranslator exceptionTranslator;
+    @Mock
+    private InProgressEventCreator inProgressEventCreator;
 
     @BeforeEach
     void setUp() {
-        handler = new InitialCreateHandler(CALLBACK_DELAY_SECONDS,
-            ssmClient,
+        handler = new InitialCreateHandler(ssmClient,
             createAssociationTranslator,
             associationDescriptionTranslator,
-            exceptionTranslator);
+            exceptionTranslator,
+            inProgressEventCreator);
+    }
+
+    @Test
+    void defaultConstructorWorks() {
+        new InitialCreateHandler(ssmClient);
     }
 
     @Test
@@ -161,20 +166,25 @@ class InitialCreateHandlerTest {
         when(associationDescriptionTranslator.associationDescriptionToResourceModel(associationDescription))
             .thenReturn(expectedModel);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
-
+        final int callbackDelaySeconds = 15;
         final CallbackContext expectedCallbackContext =
             CallbackContext.builder()
-                .remainingTimeoutSeconds(waitForSuccessTimeoutSeconds - CALLBACK_DELAY_SECONDS)
+                .remainingTimeoutSeconds(waitForSuccessTimeoutSeconds - callbackDelaySeconds)
                 .associationId(expectedModel.getAssociationId())
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
-            ProgressEvent.defaultInProgressHandler(expectedCallbackContext, CALLBACK_DELAY_SECONDS, expectedModel);
+            ProgressEvent.defaultInProgressHandler(expectedCallbackContext, callbackDelaySeconds, expectedModel);
+
+        when(inProgressEventCreator.nextInProgressEvent(waitForSuccessTimeoutSeconds, expectedModel))
+            .thenReturn(expectedProgressEvent);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+            = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isEqualTo(expectedProgressEvent);
         verifyZeroInteractions(exceptionTranslator);
+        verify(inProgressEventCreator).nextInProgressEvent(waitForSuccessTimeoutSeconds, expectedModel);
     }
 
     @Test

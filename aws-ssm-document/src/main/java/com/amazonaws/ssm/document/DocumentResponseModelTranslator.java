@@ -28,7 +28,7 @@ class DocumentResponseModelTranslator {
                 .documentFormat(response.documentFormatAsString())
                 .documentType(response.documentTypeAsString())
                 .documentVersion(response.documentVersion())
-                .contentAsString(response.content())
+                .content(response.content())
                 .requires(translateRequires(response))
                 .attachmentsContent(translateAttachments(response))
                 .build();

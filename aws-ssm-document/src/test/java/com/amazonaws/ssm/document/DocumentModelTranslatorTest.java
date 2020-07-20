@@ -231,7 +231,6 @@ public class DocumentModelTranslatorTest {
     @Test
     public void testGenerateCreateDocumentRequest_ContentJsonIsProvided_verifyResult() {
         final ResourceModel resourceModel = createResourceModel();
-        resourceModel.setContentAsString(null);
         resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
 
         final CreateDocumentRequest expectedRequest = CreateDocumentRequest.builder()
@@ -318,7 +317,6 @@ public class DocumentModelTranslatorTest {
     @Test
     public void testGenerateUpdateDocumentRequest_ContentJsonIsProvided_verifyResult() {
         final ResourceModel resourceModel = createResourceModel();
-        resourceModel.setContentAsString(null);
         resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
 
         final UpdateDocumentRequest expectedRequest = UpdateDocumentRequest.builder()
@@ -355,7 +353,7 @@ public class DocumentModelTranslatorTest {
     private ResourceModel createResourceModel() {
         return ResourceModel.builder()
                 .name(SAMPLE_DOCUMENT_NAME)
-                .contentAsString(SAMPLE_DOCUMENT_CONTENT)
+                .content(SAMPLE_DOCUMENT_CONTENT)
                 .versionName(SAMPLE_VERSION_NAME)
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)
                 .documentType(SAMPLE_DOCUMENT_TYPE)
