@@ -7,7 +7,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 /**
  * Builder of AWS SDK's SsmClient.
  */
-public class SsmClientBuilder {
+public class ClientBuilder {
     /**
      * Builds and returns SsmClient with configuration overrides.
      *

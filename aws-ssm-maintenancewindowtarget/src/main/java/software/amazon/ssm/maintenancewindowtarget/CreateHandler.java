@@ -11,13 +11,13 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.ssm.maintenancewindowtarget.translator.request.RegisterTargetWithMaintenanceWindowTranslator;
 import software.amazon.ssm.maintenancewindowtarget.translator.ExceptionTranslator;
-import software.amazon.ssm.maintenancewindowtarget.util.SsmClientBuilder;
+import software.amazon.ssm.maintenancewindowtarget.util.ClientBuilder;
 import software.amazon.ssm.maintenancewindowtarget.util.ResourceHandlerRequestToStringConverter;
 import software.amazon.ssm.maintenancewindowtarget.util.ResourceModelToStringConverter;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
-    private static final SsmClient SSM_CLIENT = SsmClientBuilder.getClient();
+    private static final SsmClient SSM_CLIENT = ClientBuilder.getClient();
 
     private final RegisterTargetWithMaintenanceWindowTranslator registerTargetWithMaintenanceWindowTranslator;
     private final ExceptionTranslator exceptionTranslator;

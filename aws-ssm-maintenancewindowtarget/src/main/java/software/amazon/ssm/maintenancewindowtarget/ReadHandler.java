@@ -15,11 +15,11 @@ import software.amazon.ssm.maintenancewindowtarget.translator.ExceptionTranslato
 import software.amazon.ssm.maintenancewindowtarget.translator.request.GetMaintenanceWindowTargetTranslator;
 import software.amazon.ssm.maintenancewindowtarget.util.ResourceHandlerRequestToStringConverter;
 import software.amazon.ssm.maintenancewindowtarget.util.ResourceModelToStringConverter;
-import software.amazon.ssm.maintenancewindowtarget.util.SsmClientBuilder;
+import software.amazon.ssm.maintenancewindowtarget.util.ClientBuilder;
 
 public class ReadHandler extends BaseHandler<CallbackContext> {
 
-    private static final SsmClient SSM_CLIENT = SsmClientBuilder.getClient();
+    private static final SsmClient SSM_CLIENT = ClientBuilder.getClient();
 
     private final GetMaintenanceWindowTargetTranslator getMaintenanceWindowTargetTranslator;
     private final ExceptionTranslator exceptionTranslator;
