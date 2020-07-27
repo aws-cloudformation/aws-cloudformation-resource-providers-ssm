@@ -18,9 +18,6 @@ import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_TAR
 
 public class ResourceModelToStringConverterTest {
     private static final ResourceModel RESOURCE_MODEL = ResourceModel.builder()
-            .description(DESCRIPTION)
-            .name(NAME)
-            .ownerInformation(OWNER_INFORMATION)
             .resourceType(RESOURCE_TYPE)
             .targets(MODEL_TARGETS)
             .windowId(WINDOW_ID)
@@ -45,9 +42,6 @@ public class ResourceModelToStringConverterTest {
     void convertModelReturnsModelParameters() {
         final String result = converter.convert(RESOURCE_MODEL);
 
-        assertTrue(result.contains(String.format("description=%s", DESCRIPTION)));
-        assertTrue(result.contains(String.format("name=%s", NAME)));
-        assertTrue(result.contains(String.format("ownerInformation=%s", OWNER_INFORMATION)));
         assertTrue(result.contains(String.format("resourceType=%s", RESOURCE_TYPE)));
         assertTrue(result.contains(String.format("windowId=%s", WINDOW_ID)));
         assertTrue(result.contains(String.format("windowTargetId=%s", WINDOW_TARGET_ID)));
