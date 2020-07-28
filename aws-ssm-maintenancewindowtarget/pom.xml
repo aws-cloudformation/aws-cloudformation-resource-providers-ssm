@@ -153,8 +153,6 @@
                     <excludes>
                         <exclude>**/BaseConfiguration*</exclude>
                         <exclude>**/BaseHandler*</exclude>
-                        <exclude>**/CallbackContext*</exclude>
-                        <exclude>**/Configuration*</exclude>
                         <exclude>**/HandlerWrapper*</exclude>
                         <exclude>**/ResourceModel*</exclude>
                     </excludes>

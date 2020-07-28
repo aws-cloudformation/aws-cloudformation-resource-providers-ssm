@@ -2,30 +2,29 @@ package software.amazon.ssm.maintenancewindowtarget;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.DescribeMaintenanceWindowTargetsRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeMaintenanceWindowTargetsResponse;
 import software.amazon.awssdk.services.ssm.model.DoesNotExistException;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowFilter;
 import software.amazon.awssdk.services.ssm.model.MaintenanceWindowTarget;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.ssm.maintenancewindowtarget.translator.ExceptionTranslator;
 import software.amazon.ssm.maintenancewindowtarget.translator.request.GetMaintenanceWindowTargetTranslator;
 import software.amazon.ssm.maintenancewindowtarget.util.ResourceHandlerRequestToStringConverter;
-import software.amazon.awssdk.services.ssm.model.MaintenanceWindowFilter;
 
 import java.util.function.Function;
 
@@ -70,6 +69,7 @@ public class ReadHandlerTest {
     private static final DescribeMaintenanceWindowTargetsRequest describeMaintenanceWindowTargetsRequest =
             DescribeMaintenanceWindowTargetsRequest.builder()
                     .windowId(WINDOW_ID)
+                    .filters(windowTargetIdFilter)
                     .build();
 
     @Mock
@@ -119,7 +119,7 @@ public class ReadHandlerTest {
                 .build();
 
         when(getMaintenanceWindowTargetTranslator.resourceModelToRequest(model))
-                .thenReturn(expectedGetMaintenanceWindowTargetRequest);
+            .thenReturn(describeMaintenanceWindowTargetsRequest);
 
         when(
                 proxy.injectCredentialsAndInvokeV2(

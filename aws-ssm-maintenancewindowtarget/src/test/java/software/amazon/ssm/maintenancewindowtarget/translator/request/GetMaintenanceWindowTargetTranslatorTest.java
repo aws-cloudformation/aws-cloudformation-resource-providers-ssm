@@ -11,21 +11,22 @@ import software.amazon.ssm.maintenancewindowtarget.ResourceModel;
 import software.amazon.ssm.maintenancewindowtarget.translator.property.FiltersListTranslator;
 import software.amazon.ssm.maintenancewindowtarget.translator.property.TargetsListTranslator;
 import software.amazon.ssm.maintenancewindowtarget.util.SimpleTypeValidator;
+
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.DESCRIPTION;
+import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.MODEL_TARGETS;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.NAME;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.NEXT_TOKEN;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.OWNER_INFORMATION;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.RESOURCE_TYPE;
-import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.SERVICE_MAINTENANCE_WINDOW_TARGETS;
-import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_ID;
-import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.MODEL_TARGETS;
-import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.SERVICE_TARGETS;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.SERVICE_FILTERS;
-import static org.assertj.core.api.Assertions.assertThat;
+import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.SERVICE_MAINTENANCE_WINDOW_TARGETS;
+import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.SERVICE_TARGETS;
+import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_ID;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.WINDOW_TARGET_ID;
 
 @ExtendWith(MockitoExtension.class)
