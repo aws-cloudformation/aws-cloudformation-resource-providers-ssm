@@ -52,7 +52,5 @@ public class TestsInputs {
                             .windowTargetId(WINDOW_TARGET_ID)
                             .build());
 
-    public static final int WAIT_FOR_SUCCESS_TIMEOUT_IN_SECONDS = 45;
-
     public static final String LOGGED_RESOURCE_HANDLER_REQUEST = "StringifiedResourceHandlerRequest";
 }

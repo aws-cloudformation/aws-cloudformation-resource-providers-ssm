@@ -127,7 +127,7 @@
             "maxItems": 5
         },
         "MaxResults": {
-            "description": "\"The maximum number of items to return for this call. The call also returns a token that you can specify in a subsequent call to get the next set of results.",
+            "description": "The maximum number of items to return for this call. The call also returns a token that you can specify in a subsequent call to get the next set of results.",
             "type": "integer",
             "minLength": 10,
             "maxLength": 100
