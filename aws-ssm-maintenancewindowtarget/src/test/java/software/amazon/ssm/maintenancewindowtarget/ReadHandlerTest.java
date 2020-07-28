@@ -96,6 +96,7 @@ public class ReadHandlerTest {
                 requestToStringConverter);
     }
 
+    @Test
     public void handleReadRequestWithRequiredParametersPresent() {
         final ResourceModel model = ResourceModel.builder()
                 .windowId(WINDOW_ID)
@@ -118,7 +119,7 @@ public class ReadHandlerTest {
                 .build();
 
         when(getMaintenanceWindowTargetTranslator.resourceModelToRequest(model))
-                .thenReturn(describeMaintenanceWindowTargetsRequest);
+                .thenReturn(expectedGetMaintenanceWindowTargetRequest);
 
         when(
                 proxy.injectCredentialsAndInvokeV2(
@@ -127,7 +128,6 @@ public class ReadHandlerTest {
                 .thenReturn(result);
 
         final ResourceModel expectedModel = request.getDesiredResourceState();
-        //expectedModel.setName(NAME);
 
         when(getMaintenanceWindowTargetTranslator.responseToResourceModel(result))
                 .thenReturn(expectedModel);

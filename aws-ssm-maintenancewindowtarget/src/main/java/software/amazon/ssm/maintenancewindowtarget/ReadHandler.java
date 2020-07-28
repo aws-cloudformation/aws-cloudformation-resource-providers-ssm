@@ -87,6 +87,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
             progressEvent.setStatus(OperationStatus.SUCCESS);
             progressEvent.setResourceModel(readModel);
+
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, describeMaintenanceWindowTargetsRequest, request.getDesiredResourceState());
