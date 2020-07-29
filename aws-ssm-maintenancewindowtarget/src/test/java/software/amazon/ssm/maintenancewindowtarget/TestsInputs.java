@@ -28,7 +28,7 @@ public class TestsInputs {
                 .values(TARGET_VALUE)
                 .build());
 
-    public static final String FILTER_KEY = "TestWindowTargetId";
+    public static final String FILTER_KEY = "WindowTargetId";
     public static final String FILTER_VALUE = WINDOW_TARGET_ID;
     public static final List<MaintenanceWindowFilter> MODEL_FILTERS =
             Collections.singletonList(
