@@ -89,7 +89,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
     }
 
     public Optional<DeregisterTargetFromMaintenanceWindowRequest.Builder> initializeRequestBuilder(final ResourceModel model) {
-        if (!StringUtils.isNullOrEmpty(model.getWindowId()) && !StringUtils.isNullOrEmpty(model.getWindowId())) {
+        if (!StringUtils.isNullOrEmpty(model.getWindowId()) && !StringUtils.isNullOrEmpty(model.getWindowTargetId())) {
 
             return Optional.of(
                 DeregisterTargetFromMaintenanceWindowRequest.builder()

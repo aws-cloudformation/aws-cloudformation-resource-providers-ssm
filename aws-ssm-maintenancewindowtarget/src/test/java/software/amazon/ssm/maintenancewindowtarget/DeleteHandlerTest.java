@@ -90,6 +90,58 @@ public class DeleteHandlerTest {
     }
 
     @Test
+    void handleDeleteRequestWithoutWindowTargetId() {
+        final ResourceModel model = ResourceModel.builder()
+            .windowId(WINDOW_ID)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+            handler.handleRequest(proxy, request, null, logger);
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
+            ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(model)
+                .status(OperationStatus.FAILED)
+                .errorCode(HandlerErrorCode.InvalidRequest)
+                .message("Both WindowId and WindowTargetId must be specified to delete a maintenance window target.")
+                .build();
+
+        assertThat(response).isEqualTo(expectedProgressEvent);
+        verifyZeroInteractions(proxy);
+        verifyZeroInteractions(exceptionTranslator);
+    }
+
+    @Test
+    void handleDeleteRequestWithoutWindowId() {
+        final ResourceModel model = ResourceModel.builder()
+            .windowTargetId(WINDOW_TARGET_ID)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+            handler.handleRequest(proxy, request, null, logger);
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
+            ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(model)
+                .status(OperationStatus.FAILED)
+                .errorCode(HandlerErrorCode.InvalidRequest)
+                .message("Both WindowId and WindowTargetId must be specified to delete a maintenance window target.")
+                .build();
+
+        assertThat(response).isEqualTo(expectedProgressEvent);
+        verifyZeroInteractions(proxy);
+        verifyZeroInteractions(exceptionTranslator);
+    }
+
+    @Test
     void handleDeleteRequestWithNoRequiredParametersPresent() {
         final ResourceModel model = ResourceModel.builder()
             .build();
