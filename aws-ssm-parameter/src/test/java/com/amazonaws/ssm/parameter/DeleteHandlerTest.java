@@ -59,7 +59,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .description(DESCRIPTION)
                 .name(NAME)
                 .value(VALUE)
-                .type(TYPE)
+                .type(TYPE_STRING)
                 .tags(TAG_SET)
                 .build();
     }

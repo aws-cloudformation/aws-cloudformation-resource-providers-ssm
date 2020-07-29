@@ -1,0 +1,232 @@
+{
+    "typeName": "AWS::SSM::MaintenanceWindowTarget",
+    "description": "Resource Type definition for AWS::SSM::MaintenanceWindowTarget",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-ssm.git",
+    "definitions": {
+        "Target": {
+            "type": "object",
+            "properties": {
+                "Key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*$|resource-groups:Name"
+                },
+                "Values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 0,
+                    "maxItems": 50
+                }
+            },
+            "required": [
+                "Key",
+                "Values"
+            ]
+        },
+        "MaintenanceWindowFilter": {
+            "type": "object",
+            "properties": {
+                "Key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "Values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "maxItems": 256
+                }
+            },
+            "required": [
+                "Key",
+                "Values"
+            ]
+        },
+        "MaintenanceWindowTarget": {
+            "type": "object",
+            "properties": {
+                "Description": {
+                    "description": "A description for the target.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "Name": {
+                    "description": "The name for the maintenance window target.",
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 128,
+                    "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
+                },
+                "OwnerInformation": {
+                    "description": "A user-provided value that will be included in any CloudWatch events that are raised while running tasks for these targets in this maintenance window.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "ResourceType": {
+                    "description": "The type of target that is being registered with the maintenance window.",
+                    "type": "string",
+                    "enum": [
+                        "INSTANCE",
+                        "RESOURCE_GROUP"
+                    ]
+                },
+                "Targets": {
+                    "description": "The targets, either instances or tags.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Target"
+                    },
+                    "minItems": 0,
+                    "maxItems": 5
+                },
+                "WindowId": {
+                    "description": "The ID of the maintenance window to register the target with.",
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 20,
+                    "pattern": "^mw-[0-9a-f]{17}$"
+                },
+                "WindowTargetId": {
+                    "description": "The ID of the target.",
+                    "type": "string",
+                    "minLength": 36,
+                    "maxLength": 36,
+                    "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+                }
+            }
+        }
+    },
+    "properties": {
+        "ClientToken": {
+            "description": "User-provided idempotency token.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+        },
+        "Description": {
+            "description": "A description for the target.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "Filters": {
+            "description": "Optional filters that can be used to narrow down the scope of the returned window targets. The supported filter keys are Type, WindowTargetId and OwnerInformation.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/MaintenanceWindowFilter"
+            },
+            "minItems": 0,
+            "maxItems": 5
+        },
+        "MaxResults": {
+            "description": "The maximum number of items to return for this call. The call also returns a token that you can specify in a subsequent call to get the next set of results.",
+            "type": "integer",
+            "minLength": 10,
+            "maxLength": 100
+        },
+        "Name": {
+            "description": "The name for the maintenance window target.",
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
+        },
+        "NextToken": {
+            "description": "The token for the next set of items to return. (You received this token from a previous call.",
+            "type": "string"
+        },
+        "OwnerInformation": {
+            "description": "A user-provided value that will be included in any CloudWatch events that are raised while running tasks for these targets in this maintenance window.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "Replace": {
+            "description": "If True, then all fields that are required by the RegisterTargetWithMaintenanceWindow action are also required for this API request. Optional fields that are not specified are set to null.",
+            "type": "boolean"
+        },
+        "ResourceType": {
+            "description": "The type of target that is being registered with the maintenance window.",
+            "type": "string",
+            "enum": [
+                "INSTANCE",
+                "RESOURCE_GROUP"
+            ]
+        },
+        "Safe": {
+            "description": "The system checks if the target is being referenced by a task. If the target is being referenced, the system returns an error and does not deregister the target from the maintenance window.",
+            "type": "boolean"
+        },
+        "Targets": {
+            "description": "The targets to register with the maintenance window. In other words, the instances to run commands on when the maintenance window runs.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Target"
+            },
+            "minItems": 0,
+            "maxItems": 5
+        },
+        "WindowId": {
+            "description": "The ID of the maintenance window to register the target with.",
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 20,
+            "pattern": "^mw-[0-9a-f]{17}$"
+        },
+        "WindowTargetId": {
+            "description": "The ID of the target.",
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "ResourceType",
+        "Targets",
+        "WindowId"
+    ],
+    "readOnlyProperties": [
+        "/properties/WindowId"
+    ],
+    "primaryIdentifier": [
+        "/properties/WindowId"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "ssm:RegisterTargetWithMaintenanceWindow",
+                "ssm:DescribeMaintenanceWindowTargets"
+            ]
+        },
+        "read": {
+            "permissions": [
+                "ssm:DescribeMaintenanceWindowTargets"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "ssm:UpdateMaintenanceWindowTarget"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeregisterTargetFromMaintenanceWindow"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "ssm:DescribeMaintenanceWindowTargets"
+            ]
+        }
+    }
+}

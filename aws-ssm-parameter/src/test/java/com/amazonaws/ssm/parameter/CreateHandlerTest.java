@@ -17,6 +17,7 @@ import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -34,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -65,14 +67,13 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .description(DESCRIPTION)
                 .name(NAME)
                 .value(VALUE)
-                .type(TYPE)
+                .type(TYPE_STRING)
                 .tags(TAG_SET)
                 .build();
     }
 
     @AfterEach
     public void post_execute() {
-        verify(ssmClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(proxySsmClient.client());
     }
 
@@ -81,7 +82,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
                         .name(NAME)
-                        .type(TYPE)
+                        .type(TYPE_STRING)
                         .value(VALUE)
                         .version(VERSION).build())
                 .build();
@@ -110,6 +111,36 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_SecureStringFailure() {
+        RESOURCE_MODEL = ResourceModel.builder()
+                .description(DESCRIPTION)
+                .value(VALUE)
+                .type(TYPE_SECURE_STRING)
+                .tags(TAG_SET)
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isEqualTo("SSM Parameters of type SecureString cannot be created using CloudFormation");
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+
+        verify(ssmClient, never()).serviceName();
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -117,7 +148,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
                         .name(NAME)
-                        .type(TYPE)
+                        .type(TYPE_STRING)
                         .value(VALUE)
                         .version(VERSION).build())
                 .build();
@@ -132,7 +163,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         RESOURCE_MODEL = ResourceModel.builder()
                 .description(DESCRIPTION)
                 .value(VALUE)
-                .type(TYPE)
+                .type(TYPE_STRING)
                 .tags(TAG_SET)
                 .build();
 
@@ -153,6 +184,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -160,7 +192,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
                         .name(NAME)
-                        .type(TYPE)
+                        .type(TYPE_STRING)
                         .value(VALUE)
                         .version(VERSION).build())
                 .build();
@@ -175,7 +207,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         RESOURCE_MODEL = ResourceModel.builder()
                 .description(DESCRIPTION)
                 .value(VALUE)
-                .type(TYPE)
+                .type(TYPE_STRING)
                 .tags(TAG_SET)
                 .build();
 
@@ -196,6 +228,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -204,7 +237,7 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .description(DESCRIPTION)
                 .name(NAME)
                 .value(VALUE)
-                .type(TYPE)
+                .type(TYPE_STRING)
                 .tags(TAG_SET)
                 .dataType("aws:ec2:image")
                 .build();
@@ -212,7 +245,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
                         .name(NAME)
-                        .type(TYPE)
+                        .type(TYPE_STRING)
                         .value(VALUE)
                         .version(VERSION).build())
                 .build();
@@ -241,6 +274,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -266,6 +300,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -287,6 +322,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -311,6 +347,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -336,6 +373,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -357,5 +395,6 @@ public class CreateHandlerTest extends AbstractTestBase {
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 }
