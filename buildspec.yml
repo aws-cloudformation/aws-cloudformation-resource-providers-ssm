@@ -20,6 +20,10 @@ phases:
       - cd "$CODEBUILD_SRC_DIR"
       - cd aws-ssm-parameter
       - mvn clean verify --no-transfer-progress
+      # end-to-end test child repo for aws-ssm-maintenancewindow(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-maintenancewindow
+      - mvn clean verify --no-transfer-progress
       # end-to-end test child repo for aws-ssm-maintenancewindowtask(s)
       - cd "$CODEBUILD_SRC_DIR"
       - cd aws-ssm-maintenancewindowtask
@@ -27,4 +31,5 @@ phases:
     finally:
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-association/rpdk.log"
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-parameter/rpdk.log"
+      - cat "$CODEBUILD_SRC_DIR/aws-ssm-maintenancewindow/rpdk.log"
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-maintenancewindowtask/rpdk.log"

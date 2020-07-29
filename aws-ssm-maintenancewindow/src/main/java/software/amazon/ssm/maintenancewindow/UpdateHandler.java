@@ -4,6 +4,7 @@ import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.UpdateMaintenanceWindowRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateMaintenanceWindowResponse;
+import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.Logger;
@@ -15,6 +16,16 @@ import software.amazon.ssm.maintenancewindow.translator.ExceptionTranslator;
 import software.amazon.ssm.maintenancewindow.translator.resourcemodel.UpdateMaintenanceWindowToResourceModelTranslator;
 import software.amazon.ssm.maintenancewindow.translator.request.UpdateMaintenanceWindowTranslator;
 import software.amazon.ssm.maintenancewindow.util.ClientBuilder;
+import software.amazon.ssm.maintenancewindow.translator.resourcemodel.ResourceModelPropertyTranslator;
+import software.amazon.ssm.maintenancewindow.util.TagUtil;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
@@ -35,7 +46,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
      *
      * @param updateMaintenanceWindowTranslator Generate UpdateMaintenanceWindowRequest from the ResourceModel.
      * @param updateMaintenanceWindowTranslator Translates UpdateMaintenanceWindowResponse into ResourceModel objects.
-     * @param exceptionTranslator Translates service model exceptions.
+     * @param exceptionTranslator               Translates service model exceptions.
      */
     UpdateHandler(final UpdateMaintenanceWindowTranslator updateMaintenanceWindowTranslator,
                   final UpdateMaintenanceWindowToResourceModelTranslator updateMaintenanceWindowToResourceModelTranslator,
@@ -78,11 +89,11 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             final ResourceModel updatedModel =
                     updateMaintenanceWindowToResourceModelTranslator.updateMaintenanceWindowResponseToResourceModel(response);
 
+            updateTags(request.getDesiredResourceTags(), request.getSystemTags(), windowId, proxy);
             progressEvent.setResourceModel(updatedModel);
 
             progressEvent.setStatus(OperationStatus.SUCCESS);
 
-            return progressEvent;
         } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, updateMaintenanceWindowRequest);
@@ -91,5 +102,37 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
+
+        return progressEvent;
+    }
+
+    private void updateTags(final Map<String, String> resourceModelTags,
+                            final Map<String, String> systemTags,
+                            final String windowId,
+                            final AmazonWebServicesClientProxy proxy) {
+        final List<Tag> consolidatedTags = TagUtil.consolidateTags(resourceModelTags, systemTags);
+        final Set<software.amazon.awssdk.services.ssm.model.Tag> newTags =
+                TagUtil.translateTagsToSdk(consolidatedTags)
+                        == null ? Collections.emptySet() : new HashSet<>(TagUtil.translateTagsToSdk(consolidatedTags));
+        final Set<software.amazon.awssdk.services.ssm.model.Tag> existingTags =
+                new HashSet<software.amazon.awssdk.services.ssm.model.Tag>(proxy.injectCredentialsAndInvokeV2(
+                        TagUtil.buildListTagsForResourceRequest(windowId),
+                        SSM_CLIENT::listTagsForResource).tagList());
+
+        final List<String> tagsToRemove = existingTags.stream()
+                .filter(tag -> !newTags.contains(tag))
+                .map(tag -> tag.key())
+                .collect(Collectors.toList());
+        // request.getSystemTag() is null
+        tagsToRemove.removeIf(tagKey -> tagKey.toLowerCase().startsWith("aws:"));
+
+        final List<software.amazon.awssdk.services.ssm.model.Tag> tagsToAdd = newTags.stream()
+                .filter(tag -> !existingTags.contains(tag))
+                .collect(Collectors.toList());
+
+        if (!CollectionUtils.isNullOrEmpty(tagsToRemove))
+            proxy.injectCredentialsAndInvokeV2(TagUtil.buildRemoveTagsFromResourceRequest(windowId, tagsToRemove), SSM_CLIENT::removeTagsFromResource);
+        if (!CollectionUtils.isNullOrEmpty(tagsToAdd))
+            proxy.injectCredentialsAndInvokeV2(TagUtil.buildAddTagsToResourceRequest(windowId, tagsToAdd), SSM_CLIENT::addTagsToResource);
     }
 }
