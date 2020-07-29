@@ -21,6 +21,7 @@ import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import java.util.function.Function;
 
 import org.mockito.ArgumentMatchers;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;

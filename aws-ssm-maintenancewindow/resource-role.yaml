@@ -23,10 +23,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "ssm:AddTagsToResource"
                 - "ssm:CreateMaintenanceWindow"
                 - "ssm:DeleteMaintenanceWindow"
                 - "ssm:DescribeMaintenanceWindow"
                 - "ssm:GetMaintenanceWindow"
+                - "ssm:ListTagsForResource"
+                - "ssm:RemoveTagsFromResource"
                 - "ssm:UpdateMaintenanceWindow"
                 Resource: "*"
 Outputs:

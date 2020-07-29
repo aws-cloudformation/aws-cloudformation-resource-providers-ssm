@@ -53,6 +53,9 @@ public class GetMaintenanceWindowTranslator {
         simpleTypeValidator.getValidatedInteger(response.cutoff())
                 .ifPresent(model::setCutoff);
 
+        simpleTypeValidator.getValidatedInteger(response.scheduleOffset())
+                .ifPresent(model::setScheduleOffset);
+
         return model;
     }
 }

@@ -30,7 +30,8 @@ public class UpdateMaintenanceWindowTranslator {
     public UpdateMaintenanceWindowRequest resourceModelToRequest(final ResourceModel model) {
         final UpdateMaintenanceWindowRequest.Builder updateMaintenanceWindowRequestBuilder =
                 UpdateMaintenanceWindowRequest.builder()
-                        .windowId(model.getWindowId() );
+                        .replace(true)
+                        .windowId(model.getWindowId());
 
         updateMaintenanceWindowRequestBuilder.allowUnassociatedTargets(model.getAllowUnassociatedTargets());
 
@@ -57,6 +58,9 @@ public class UpdateMaintenanceWindowTranslator {
 
         simpleTypeValidator.getValidatedString(model.getScheduleTimezone())
                 .ifPresent(updateMaintenanceWindowRequestBuilder::scheduleTimezone);
+
+        simpleTypeValidator.getValidatedInteger(model.getScheduleOffset())
+                .ifPresent(updateMaintenanceWindowRequestBuilder::scheduleOffset);
 
         return updateMaintenanceWindowRequestBuilder.build();
     }

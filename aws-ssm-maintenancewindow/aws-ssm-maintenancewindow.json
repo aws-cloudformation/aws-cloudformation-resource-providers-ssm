@@ -67,6 +67,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 128
+        },
+        "ScheduleOffset": {
+            "description": "The number of days to wait to run a maintenance window after the scheduled CRON expression date and time.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
         }
     },
     "definitions": {
@@ -97,7 +103,10 @@
         "create": {
             "permissions": [
                 "ssm:CreateMaintenanceWindow",
-                "ssm:DescribeMaintenanceWindow"
+                "ssm:DescribeMaintenanceWindow",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
             ]
         },
         "delete": {
@@ -108,7 +117,10 @@
         "update": {
             "permissions": [
                 "ssm:GetMaintenanceWindow",
-                "ssm:UpdateMaintenanceWindow"
+                "ssm:UpdateMaintenanceWindow",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
             ]
         },
         "list": {

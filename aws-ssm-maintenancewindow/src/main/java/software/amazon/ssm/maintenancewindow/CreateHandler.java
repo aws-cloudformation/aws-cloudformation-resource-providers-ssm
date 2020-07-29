@@ -28,7 +28,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      * Used for unit tests.
      *
      * @param createMaintenanceWindowTranslator Translates ResourceModel objects into CreateMaintenanceWindow requests.
-     * @param exceptionTranslator Used for translating service model exceptions..
+     * @param exceptionTranslator               Used for translating service model exceptions..
      */
     CreateHandler(final CreateMaintenanceWindowTranslator createMaintenanceWindowTranslator, final ExceptionTranslator exceptionTranslator) {
         this.createMaintenanceWindowTranslator = createMaintenanceWindowTranslator;
@@ -51,7 +51,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         progressEvent.setStatus(OperationStatus.FAILED);
 
         final CreateMaintenanceWindowRequest createMaintenanceWindowRequest =
-                createMaintenanceWindowTranslator.resourceModelToRequest(model);
+                createMaintenanceWindowTranslator.resourceModelToRequest(model, request.getDesiredResourceTags(), request.getSystemTags());
 
         final CreateMaintenanceWindowResponse response;
 
@@ -63,8 +63,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             progressEvent.setStatus(OperationStatus.SUCCESS);
 
             progressEvent.setResourceModel(model);
-
-            return progressEvent;
         } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, createMaintenanceWindowRequest);
@@ -73,5 +71,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
+
+        return progressEvent;
     }
 }

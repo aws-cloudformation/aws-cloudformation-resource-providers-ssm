@@ -6,6 +6,8 @@ import org.mockito.ArgumentMatchers;
 import software.amazon.awssdk.services.ssm.model.CreateMaintenanceWindowRequest;
 import software.amazon.awssdk.services.ssm.model.CreateMaintenanceWindowResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.awssdk.services.ssm.model.AlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -26,6 +28,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static software.amazon.ssm.maintenancewindow.TestConstants.RESOURCE_MODEL_TAGS;
+import static software.amazon.ssm.maintenancewindow.TestConstants.SCHEDULE_OFFSET;
+import static software.amazon.ssm.maintenancewindow.TestConstants.SCHEDULE_OFFSET_SCHEDULE;
+import static software.amazon.ssm.maintenancewindow.TestConstants.SERVICE_MODEL_TAG_WITHOUT_RESOURCE_TAGS;
+import static software.amazon.ssm.maintenancewindow.TestConstants.SERVICE_MODEL_TAG_WITH_RESOURCE_TAGS;
+import static software.amazon.ssm.maintenancewindow.TestConstants.SYSTEM_TAGS;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -45,7 +53,10 @@ public class CreateHandlerTest {
             .build();
     private static final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .desiredResourceTags(RESOURCE_MODEL_TAGS)
+            .systemTags(SYSTEM_TAGS)
             .build();
+
     private static final CreateMaintenanceWindowRequest createMaintenanceWindowRequest =
             CreateMaintenanceWindowRequest.builder()
                     .name(model.getName())
@@ -53,6 +64,7 @@ public class CreateHandlerTest {
                     .schedule(model.getSchedule())
                     .duration(model.getDuration())
                     .cutoff(model.getCutoff())
+                    .tags(SERVICE_MODEL_TAG_WITH_RESOURCE_TAGS)
                     .build();
 
     private CreateHandler handler;
@@ -79,9 +91,9 @@ public class CreateHandlerTest {
     }
 
     @Test
-    public void handleCreateRequestForSuccess() {
+    public void handleCreateRequestForSuccessWithResourceTags() {
 
-        when(createMaintenanceWindowTranslator.resourceModelToRequest(model))
+        when(createMaintenanceWindowTranslator.resourceModelToRequest(model, RESOURCE_MODEL_TAGS, SYSTEM_TAGS))
                 .thenReturn(createMaintenanceWindowRequest);
 
         final CreateMaintenanceWindowResponse result =
@@ -109,9 +121,63 @@ public class CreateHandlerTest {
     }
 
     @Test
+    public void handleCreateRequestForSuccessWithScheduleOffset() {
+
+        ResourceModel scheduleOffsetModel = ResourceModel.builder()
+                .name(NAME)
+                .allowUnassociatedTargets(ALLOWED_UNASSOCIATED_TARGETS)
+                .schedule(SCHEDULE_OFFSET_SCHEDULE)
+                .scheduleOffset(SCHEDULE_OFFSET)
+                .duration(DURATION)
+                .cutoff(CUTOFF)
+                .build();
+
+        CreateMaintenanceWindowRequest scheduleOffsetCreateMaintenanceWindowRequest =
+                CreateMaintenanceWindowRequest.builder()
+                        .name(scheduleOffsetModel.getName())
+                        .allowUnassociatedTargets(scheduleOffsetModel.getAllowUnassociatedTargets())
+                        .schedule(scheduleOffsetModel.getSchedule())
+                        .scheduleOffset(scheduleOffsetModel.getScheduleOffset())
+                        .duration(scheduleOffsetModel.getDuration())
+                        .cutoff(scheduleOffsetModel.getCutoff())
+                        .tags(SERVICE_MODEL_TAG_WITHOUT_RESOURCE_TAGS)
+                        .build();
+
+        ResourceHandlerRequest<ResourceModel> scheduleOffsetRequest = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(scheduleOffsetModel)
+                .systemTags(SYSTEM_TAGS)
+                .build();
+        when(createMaintenanceWindowTranslator.resourceModelToRequest(scheduleOffsetModel, null, SYSTEM_TAGS))
+                .thenReturn(scheduleOffsetCreateMaintenanceWindowRequest);
+
+        final CreateMaintenanceWindowResponse result =
+                CreateMaintenanceWindowResponse.builder()
+                        .windowId(WINDOW_ID)
+                        .build();
+
+        when(
+                proxy.injectCredentialsAndInvokeV2(
+                        eq(scheduleOffsetCreateMaintenanceWindowRequest),
+                        ArgumentMatchers.<Function<CreateMaintenanceWindowRequest, CreateMaintenanceWindowResponse>>any()))
+                .thenReturn(result);
+
+        final ResourceModel expectedModel = scheduleOffsetRequest.getDesiredResourceState();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, scheduleOffsetRequest, null, logger);
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
+                ProgressEvent.defaultSuccessHandler(expectedModel);
+
+        assertThat(response).isEqualTo(expectedProgressEvent);
+        verifyZeroInteractions(exceptionTranslator);
+
+    }
+
+    @Test
     void handleCreateRequestThrowsTranslatedServiceException() {
 
-        when(createMaintenanceWindowTranslator.resourceModelToRequest(model))
+        when(createMaintenanceWindowTranslator.resourceModelToRequest(model,RESOURCE_MODEL_TAGS, SYSTEM_TAGS))
                 .thenReturn(createMaintenanceWindowRequest);
 
         final InternalServerErrorException serviceException = InternalServerErrorException.builder().build();
@@ -131,6 +197,32 @@ public class CreateHandlerTest {
 
         verify(exceptionTranslator)
                 .translateFromServiceException(serviceException, createMaintenanceWindowRequest);
+
+    }
+
+    @Test
+    void handleCreateRequestThrowsAlreadyExistException() {
+
+        when(createMaintenanceWindowTranslator.resourceModelToRequest(model,RESOURCE_MODEL_TAGS, SYSTEM_TAGS))
+                .thenReturn(createMaintenanceWindowRequest);
+
+        final AlreadyExistsException alreadyExistsException = AlreadyExistsException.builder().build();
+
+        when(
+                proxy.injectCredentialsAndInvokeV2(
+                        eq(createMaintenanceWindowRequest),
+                        ArgumentMatchers.<Function<CreateMaintenanceWindowRequest, CreateMaintenanceWindowResponse>>any()))
+                .thenThrow(alreadyExistsException);
+
+        when(exceptionTranslator.translateFromServiceException(alreadyExistsException, createMaintenanceWindowRequest))
+                .thenReturn(new CfnAlreadyExistsException(alreadyExistsException));
+
+        Assertions.assertThrows(CfnAlreadyExistsException.class, () -> {
+            handler.handleRequest(proxy, request, null, logger);
+        });
+
+        verify(exceptionTranslator)
+                .translateFromServiceException(alreadyExistsException, createMaintenanceWindowRequest);
 
     }
 }
