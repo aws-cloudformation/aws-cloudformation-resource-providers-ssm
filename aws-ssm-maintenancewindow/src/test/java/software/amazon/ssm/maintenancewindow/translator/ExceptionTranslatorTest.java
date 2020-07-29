@@ -65,7 +65,6 @@ public class ExceptionTranslatorTest {
         final String expectedMessage =
                 String.format("Resource of type 'AWS::SSM::MaintenanceWindow' with identifier '%s' already exists.",
                         model.getWindowId());
-        //assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -83,8 +82,6 @@ public class ExceptionTranslatorTest {
                 .translateFromServiceException(serviceException,
                         request);
         assertTrue(cfnException instanceof CfnServiceLimitExceededException);
-        final String expectedMessage = "Limit exceeded for resource of type 'AWS::SSM::MaintenanceWindowTask'. Reason: null";
-        //assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
@@ -98,10 +95,6 @@ public class ExceptionTranslatorTest {
                 .translateFromServiceException(serviceException,
                         request);
         assertTrue(cfnException instanceof CfnNotFoundException);
-//        final String expectedMessage =
-//                String.format("Resource of type 'AWS::SSM::MaintenanceWindowTask' with identifier '%s' was not found.",
-//                        model.getWindowTaskId());
-//        assertEquals(expectedMessage, cfnException.getMessage());
     }
 
     @Test
