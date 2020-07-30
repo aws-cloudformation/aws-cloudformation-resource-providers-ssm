@@ -5,6 +5,7 @@
     "definitions": {
         "Target": {
             "type": "object",
+            "additionalProperties": false,
             "properties": {
                 "Key": {
                     "type": "string",
@@ -14,6 +15,7 @@
                 },
                 "Values": {
                     "type": "array",
+                    "uniqueItems": false,
                     "items": {
                         "type": "string"
                     },
@@ -196,15 +198,16 @@
         "WindowId"
     ],
     "readOnlyProperties": [
-        "/properties/WindowId"
+        "/properties/WindowTargetId"
     ],
     "primaryIdentifier": [
-        "/properties/WindowId"
+        "/properties/WindowTargetId"
     ],
     "handlers": {
         "create": {
             "permissions": [
                 "ssm:RegisterTargetWithMaintenanceWindow",
+                "iam:PassRole",
                 "ssm:DescribeMaintenanceWindowTargets"
             ]
         },
@@ -215,6 +218,7 @@
         },
         "update": {
             "permissions": [
+                "ssm:DescribeMaintenanceWindowTargets",
                 "ssm:UpdateMaintenanceWindowTarget"
             ]
         },
