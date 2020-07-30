@@ -196,10 +196,10 @@
         "WindowId"
     ],
     "readOnlyProperties": [
-        "/properties/WindowId"
+        "/properties/WindowTargetId"
     ],
     "primaryIdentifier": [
-        "/properties/WindowId"
+        "/properties/WindowTargetId"
     ],
     "handlers": {
         "create": {
@@ -215,6 +215,7 @@
         },
         "update": {
             "permissions": [
+                "ssm:DescribeMaintenanceWindowTargets",
                 "ssm:UpdateMaintenanceWindowTarget"
             ]
         },
