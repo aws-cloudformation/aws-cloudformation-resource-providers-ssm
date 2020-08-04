@@ -30,7 +30,6 @@ class DocumentResponseModelTranslator {
                 .documentVersion(response.documentVersion())
                 .content(response.content())
                 .requires(translateRequires(response))
-                .attachmentsContent(translateAttachments(response))
                 .build();
 
         final ResourceStatus state = translateStatus(response.status());
@@ -70,27 +69,6 @@ class DocumentResponseModelTranslator {
                 documentRequires -> DocumentRequires.builder()
                         .name(documentRequires.name())
                         .version(documentRequires.version())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    private List<AttachmentContent> translateAttachments(final GetDocumentResponse response) {
-        if (!response.hasAttachmentsContent()) {
-            return null;
-        }
-
-        final List<software.amazon.awssdk.services.ssm.model.AttachmentContent> attachmentContents = response.attachmentsContent();
-        if (CollectionUtils.isEmpty(attachmentContents)) {
-            return null;
-        }
-
-        return attachmentContents.stream().map(
-                attachmentContent -> AttachmentContent.builder()
-                        .name(attachmentContent.name())
-                        .hash(attachmentContent.hash())
-                        .hashType(attachmentContent.hashTypeAsString())
-                        .size(attachmentContent.size().intValue())
-                        .url(attachmentContent.url())
                         .build())
                 .collect(Collectors.toList());
     }
