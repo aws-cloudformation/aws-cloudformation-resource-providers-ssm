@@ -151,9 +151,7 @@
         },
         "DocumentVersion": {
             "description": "The latest version number of document",
-            "type": "string",
-            "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)",
-            "maxLength": 8
+            "type": "string"
         }
     },
     "additionalProperties": false,
