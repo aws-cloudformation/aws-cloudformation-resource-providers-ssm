@@ -131,8 +131,8 @@
         "MaxResults": {
             "description": "The maximum number of items to return for this call. The call also returns a token that you can specify in a subsequent call to get the next set of results.",
             "type": "integer",
-            "minLength": 10,
-            "maxLength": 100
+            "minimum": 10,
+            "maximum": 100
         },
         "Name": {
             "description": "The name for the maintenance window target.",
@@ -198,6 +198,7 @@
         "WindowId"
     ],
     "readOnlyProperties": [
+        "/properties/WindowId",
         "/properties/WindowTargetId"
     ],
     "primaryIdentifier": [
