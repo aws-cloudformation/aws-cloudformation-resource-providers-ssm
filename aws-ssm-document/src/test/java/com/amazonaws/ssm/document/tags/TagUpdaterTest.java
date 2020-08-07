@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -65,8 +66,7 @@ public class TagUpdaterTest {
 
         unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_RESOURCE_REQUEST_TAGS, ssmClient, proxy);
 
-        Mockito.verify(tagClient, Mockito.times(1)).addTags(SAMPLE_RESOURCE_REQUEST_TAGS_SSM_FORMAT, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.verify(tagClient, Mockito.times(1)).removeTags(ImmutableList.of(), SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
+        verifyTagClientCalls(SAMPLE_RESOURCE_REQUEST_TAGS_SSM_FORMAT, ImmutableList.of());
     }
 
     @Test
@@ -86,8 +86,7 @@ public class TagUpdaterTest {
             Tag.builder().key("tagKey3").value("tagValue3").build()
         );
 
-        Mockito.verify(tagClient, Mockito.times(1)).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.verify(tagClient, Mockito.times(1)).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
+        verifyTagClientCalls(expectedTagsToAdd, expectedTagsToRemove);
     }
 
     @Test
@@ -108,7 +107,43 @@ public class TagUpdaterTest {
 
         unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_RESOURCE_REQUEST_TAGS, ssmClient, proxy);
 
-        Mockito.verify(tagClient, Mockito.times(1)).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.verify(tagClient, Mockito.times(1)).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
+        verifyTagClientCalls(expectedTagsToAdd, expectedTagsToRemove);
+   }
+
+    @Test
+    public void testUpdateTags_existingTagKeyIsUpdated_verifyTagsAddedAndRemoved() {
+        final Map<String, String> SAMPLE_RESOURCE_REQUEST_TAGS = ImmutableMap.of(
+            "tagKey1", "tagValue2",
+            "tagKey5", "tagValue5",
+            "tagKey6", "tagValue6"
+        );
+
+        Mockito.when(tagClient.listTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_EXISTING_TAGS);
+
+        // Expected tags to add
+        final List<Tag> expectedTagsToAdd = ImmutableList.of(
+            Tag.builder().key("tagKey1").value("tagValue2").build(),
+            Tag.builder().key("tagKey5").value("tagValue5").build(),
+            Tag.builder().key("tagKey6").value("tagValue6").build()
+        );
+
+        // expected tags to remove
+        final List<Tag> expectedTagsToRemove = ImmutableList.of(
+            Tag.builder().key("tagKey1").value("tagValue1").build(),
+            Tag.builder().key("tagKey2").value("tagValue2").build(),
+            Tag.builder().key("tagKey3").value("tagValue3").build()
+        );
+
+        unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_RESOURCE_REQUEST_TAGS, ssmClient, proxy);
+
+        verifyTagClientCalls(expectedTagsToAdd, expectedTagsToRemove);
+    }
+
+    private void verifyTagClientCalls(final List<Tag> expectedTagsToAdd, final List<Tag> expectedTagsToRemove) {
+        InOrder inOrder = Mockito.inOrder(tagClient);
+
+        inOrder.verify(tagClient, Mockito.times(1)).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
+        inOrder.verify(tagClient, Mockito.times(1)).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
+
     }
 }

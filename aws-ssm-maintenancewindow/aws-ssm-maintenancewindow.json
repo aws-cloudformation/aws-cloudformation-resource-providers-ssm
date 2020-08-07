@@ -27,8 +27,8 @@
         "Cutoff": {
             "description": "The number of hours before the end of the maintenance window that Systems Manager stops scheduling new tasks for execution.",
             "type": "integer",
-            "minLength": 0,
-            "maxLength": 23
+            "minimum": 0,
+            "maximum": 23
         },
         "Schedule": {
             "description": "The schedule of the maintenance window in the form of a cron or rate expression.",
@@ -39,8 +39,8 @@
         "Duration": {
             "description": "The duration of the maintenance window in hours.",
             "type": "integer",
-            "minLength": 1,
-            "maxLength": 24
+            "minimum": 1,
+            "maximum": 24
         },
         "EndDate": {
             "description": "The date and time, in ISO-8601 Extended format, for when the maintenance window is scheduled to become inactive.",
@@ -67,6 +67,12 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 128
+        },
+        "ScheduleOffset": {
+            "description": "The number of days to wait to run a maintenance window after the scheduled CRON expression date and time.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
         }
     },
     "definitions": {
@@ -75,10 +81,16 @@
             "additionalProperties": false,
             "properties": {
                 "Key": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^((?!aws:)[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
                 },
                 "Value": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^((?!aws:)[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
                 }
             },
             "required": [
@@ -91,7 +103,10 @@
         "create": {
             "permissions": [
                 "ssm:CreateMaintenanceWindow",
-                "ssm:DescribeMaintenanceWindow"
+                "ssm:DescribeMaintenanceWindow",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
             ]
         },
         "delete": {
@@ -102,7 +117,10 @@
         "update": {
             "permissions": [
                 "ssm:GetMaintenanceWindow",
-                "ssm:UpdateMaintenanceWindow"
+                "ssm:UpdateMaintenanceWindow",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
             ]
         },
         "list": {
@@ -113,6 +131,7 @@
         },
         "read": {
             "permissions": [
+                "ssm:GetMaintenanceWindow",
                 "ssm:DescribeMaintenanceWindow"
             ]
         }

@@ -21,10 +21,7 @@ public class DocumentResponseModelTranslatorTest {
             Tag.builder().key("tagKey1").value("tagValue1").build(),
             Tag.builder().key("tagKey2").value("tagValue2").build()
     );
-    private static final List<AttachmentContent> SAMPLE_RESOURCE_MODEL_ATTACHMENTS = ImmutableList.of(
-            AttachmentContent.builder().name("name1").size(1).hashType("hashType1").hash("hash1").url("url1").build(),
-            AttachmentContent.builder().name("name2").size(2).hashType("hashType2").hash("hash2").url("url2").build()
-    );
+
     private static final List<software.amazon.awssdk.services.ssm.model.AttachmentContent> SAMPLE_GET_RESPONSE_ATTACHMENTS = ImmutableList.of(
             software.amazon.awssdk.services.ssm.model.AttachmentContent.builder()
                     .name("name1").size(1L).hash("hash1").hashType("hashType1").url("url1").build(),
@@ -55,26 +52,6 @@ public class DocumentResponseModelTranslatorTest {
 
         final ResourceInformation resourceInformation =
                 unitUnderTest.generateResourceInformation(createGetDocumentResponseWithAllAttributes());
-
-        Assertions.assertEquals(expectedResourceInformation, resourceInformation);
-    }
-
-    @Test
-    public void testGenerateCreateDocumentRequest_DocumentAttachmentsIsNull_verifyResult() {
-        final ResourceModel expectedModel = createResourceModelWithAllAttributes();
-        expectedModel.setAttachmentsContent(null);
-
-        final ResourceInformation expectedResourceInformation = ResourceInformation.builder()
-                .resourceModel(expectedModel)
-                .status(RESOURCE_MODEL_ACTIVE_STATE)
-                .statusInformation(SAMPLE_STATUS_INFO)
-                .build();
-
-        final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
-                .attachmentsContent((Collection<software.amazon.awssdk.services.ssm.model.AttachmentContent>) null).build();
-
-        final ResourceInformation resourceInformation =
-                unitUnderTest.generateResourceInformation(getDocumentResponse);
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
@@ -182,12 +159,11 @@ public class DocumentResponseModelTranslatorTest {
     private ResourceModel createResourceModelWithAllAttributes() {
         return ResourceModel.builder()
                 .name(SAMPLE_DOCUMENT_NAME)
-                .contentAsString(SAMPLE_DOCUMENT_CONTENT)
+                .content(SAMPLE_DOCUMENT_CONTENT)
                 .documentVersion(SAMPLE_DOCUMENT_VERSION)
                 .versionName(SAMPLE_VERSION_NAME)
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)
                 .documentType(SAMPLE_DOCUMENT_TYPE)
-                .attachmentsContent(SAMPLE_RESOURCE_MODEL_ATTACHMENTS)
                 .requires(SAMPLE_RESOURCE_MODEL_REQUIRES)
                 .build();
     }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.AutomationDefinitionNotFoundException;
 import software.amazon.awssdk.services.ssm.model.DocumentAlreadyExistsException;
@@ -33,6 +34,8 @@ public class DocumentExceptionTranslatorTest {
 
     @Test
     public void testGetCfnException_verifyExceptionsReturned() {
+        Mockito.when(ssmException.statusCode()).thenReturn(500);
+
         Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnNotFoundException);
 
         Assertions.assertTrue(unitUnderTest.getCfnException(DocumentLimitExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnServiceLimitExceededException);
@@ -50,5 +53,19 @@ public class DocumentExceptionTranslatorTest {
         Assertions.assertTrue(unitUnderTest.getCfnException(AutomationDefinitionNotFoundException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
 
         Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+    }
+
+    @Test
+    public void testGetCfnException_Non400StatusCode_verifyExceptionsReturned() {
+        Mockito.when(ssmException.statusCode()).thenReturn(500);
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+    }
+
+    @Test
+    public void testGetCfnException_400StatusCode_verifyExceptionsReturned() {
+        Mockito.when(ssmException.statusCode()).thenReturn(400);
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
     }
 }

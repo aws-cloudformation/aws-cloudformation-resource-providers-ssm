@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::SSM::MaintenanceWindowTarget",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.ssm.maintenancewindowtarget.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.ssm.maintenancewindowtarget.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "ssm",
+            "maintenancewindowtarget"
+        ],
+        "codegen_template_path": "default",
+        "protocolVersion": "2.0.0"
+    }
+}

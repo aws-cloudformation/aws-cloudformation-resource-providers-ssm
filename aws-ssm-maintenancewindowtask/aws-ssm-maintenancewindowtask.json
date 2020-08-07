@@ -1,0 +1,376 @@
+{
+    "typeName": "AWS::SSM::MaintenanceWindowTask",
+    "description": "Resource Type definition for AWS::SSM::MaintenanceWindowTask",
+    "additionalProperties": false,
+    "properties": {
+        "WindowTaskId": {
+            "description": "Unique identifier of the maintenance window task.",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+        },
+        "MaxErrors": {
+            "description": "The maximum number of errors allowed before this task stops being scheduled.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 7,
+            "pattern": "^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$"
+        },
+        "Description": {
+            "description": "A description of the task.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "ServiceRoleArn": {
+            "description": "The ARN of the IAM service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks. ",
+            "type": "string"
+        },
+        "Priority": {
+            "description": "The priority of the task in the maintenance window.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "MaxConcurrency": {
+            "description": "The maximum number of targets this task can be run for, in parallel.",
+            "type": "string",
+            "pattern": "^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$",
+            "minLength": 1,
+            "maxLength": 7
+        },
+        "Targets": {
+            "description": "The targets, either instances or window target IDs.",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "$ref": "#/definitions/Target"
+            },
+            "maxItems": 5
+        },
+        "Name": {
+            "description": "The task name.",
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$",
+            "minLength": 3,
+            "maxLength": 128
+        },
+        "TaskArn": {
+            "description": "The resource that the task uses during execution.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1600
+        },
+        "TaskInvocationParameters": {
+            "$ref": "#/definitions/TaskInvocationParameters"
+        },
+        "WindowId": {
+            "type": "string",
+            "pattern": "^mw-[0-9a-f]{17}$"
+        },
+        "TaskParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "patternProperties": {
+                ".*{1,255}": {
+                    "$ref": "#/definitions/ParameterValues"
+                }
+            }
+        },
+        "TaskType": {
+            "description": "The type of task. ",
+            "type": "string",
+            "enum": [
+                "AUTOMATION",
+                "LAMBDA",
+                "RUN_COMMAND",
+                "STEP_FUNCTIONS"
+            ]
+        },
+        "LoggingInfo": {
+            "$ref": "#/definitions/LoggingInfo"
+        }
+    },
+    "definitions": {
+        "Target": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*$|resource-groups:Name"
+                },
+                "Values": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 0,
+                    "maxItems": 50
+                }
+            },
+            "required": [
+                "Key",
+                "Values"
+            ]
+        },
+        "LoggingInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "S3Bucket": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 63
+                },
+                "Region": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 20
+                },
+                "S3Prefix": {
+                    "type": "string",
+                    "maxLength": 500
+                }
+            },
+            "required": [
+                "S3Bucket",
+                "Region"
+            ]
+        },
+        "TaskInvocationParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "MaintenanceWindowRunCommandParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowRunCommandParameters"
+                },
+                "MaintenanceWindowAutomationParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowAutomationParameters"
+                },
+                "MaintenanceWindowStepFunctionsParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowStepFunctionsParameters"
+                },
+                "MaintenanceWindowLambdaParameters": {
+                    "$ref": "#/definitions/MaintenanceWindowLambdaParameters"
+                }
+            }
+        },
+        "MaintenanceWindowRunCommandParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "TimeoutSeconds": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 2592000
+                },
+                "Comment": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "OutputS3KeyPrefix": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "Parameters": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "patternProperties": {
+                        ".*{1,255}": {
+                            "$ref": "#/definitions/ParameterValues"
+                        }
+                    }
+                },
+                "DocumentHashType": {
+                    "type": "string",
+                    "enum": [
+                        "Sha1",
+                        "Sha256"
+                    ]
+                },
+                "ServiceRoleArn": {
+                    "type": "string"
+                },
+                "NotificationConfig": {
+                    "$ref": "#/definitions/NotificationConfig"
+                },
+                "OutputS3BucketName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 63
+                },
+                "DocumentHash": {
+                    "type": "string",
+                    "maxLength": 256
+                },
+                "CloudWatchOutputConfig": {
+                    "$ref": "#/definitions/CloudWatchOutputConfig"
+                }
+            }
+        },
+        "MaintenanceWindowLambdaParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ClientContext": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8000
+                },
+                "Qualifier": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "Payload": {
+                    "type": "string"
+                }
+            }
+        },
+        "MaintenanceWindowStepFunctionsParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Input": {
+                    "type": "string",
+                    "maxLength": 4096
+                },
+                "Name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                }
+            }
+        },
+        "MaintenanceWindowAutomationParameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Parameters": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "patternProperties": {
+                        ".*{1,255}": {
+                            "$ref": "#/definitions/ParameterValues"
+                        }
+                    }
+                },
+                "DocumentVersion": {
+                    "type": "string",
+                    "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"
+                }
+            }
+        },
+        "NotificationConfig": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "NotificationArn": {
+                    "type": "string"
+                },
+                "NotificationType": {
+                    "type": "string",
+                    "enum": [
+                        "Command",
+                        "Invocation"
+                    ]
+                },
+                "NotificationEvents": {
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "NotificationArn"
+            ]
+        },
+        "CloudWatchOutputConfig": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "CloudWatchLogGroupName": {
+                    "description": "The name of the CloudWatch log group where you want to send command output. ",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                },
+                "CloudWatchOutputEnabled": {
+                    "description": "Enables Systems Manager to send command output to CloudWatch Logs.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "ParameterValues": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "MaintenanceWindowTaskParameterValueExpression": {
+            "type": "object",
+            "additionalProperties": false,
+            "patternProperties": {
+                "Value": {
+                    "$ref": "#/definitions/ParameterValues"
+                }
+            }
+        }
+    },
+    "handlers": {
+        "create": {
+            "permissions": [
+                "ssm:RegisterTaskWithMaintenanceWindow",
+                "iam:PassRole",
+                "ssm:GetMaintenanceWindow",
+                "ssm:DescribeMaintenanceWindowTasks"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeregisterTaskFromMaintenanceWindow"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "ssm:GetMaintenanceWindowTask",
+                "ssm:UpdateMaintenanceWindowTask"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "ssm:DescribeMaintenanceWindowTask",
+                "ssm:GetMaintenanceWindowTask"
+            ]
+        },
+        "read": {
+            "permissions": [
+                "ssm:DescribeMaintenanceWindowTask",
+                "ssm:GetMaintenanceWindowTask"
+            ]
+        }
+    },
+    "required": [
+        "MaxErrors",
+        "WindowId",
+        "Priority",
+        "TaskType",
+        "MaxConcurrency",
+        "Targets",
+        "TaskArn"
+    ],
+    "createOnlyProperties": [
+        "/properties/WindowId",
+        "/properties/TaskType"
+    ],
+    "primaryIdentifier": [
+        "/properties/WindowTaskId"
+    ],
+    "readOnlyProperties": [
+        "/properties/WindowTaskId"
+    ]
+}

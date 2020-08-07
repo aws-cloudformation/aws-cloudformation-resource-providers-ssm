@@ -27,13 +27,12 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class InProgressCreateHandlerTest {
+class InProgressHandlerTest {
 
     private static final int CALLBACK_DELAY_SECONDS = 15;
 
@@ -41,7 +40,7 @@ class InProgressCreateHandlerTest {
     private static final String SCHEDULE_EXPRESSION = "rate(30)";
     private static final String ASSOCIATION_ID = "test-12345-associationId";
 
-    private InProgressCreateHandler handler;
+    private InProgressHandler handler;
     private ResourceModel model;
     @Mock
     private SsmClient ssmClient;
@@ -53,21 +52,26 @@ class InProgressCreateHandlerTest {
     private AssociationDescriptionTranslator associationDescriptionTranslator;
     @Mock
     private ExceptionTranslator exceptionTranslator;
+    @Mock
+    private InProgressEventCreator inProgressEventCreator;
 
     @BeforeEach
     void setUp() {
-        ssmClient = mock(SsmClient.class);
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
-        associationDescriptionTranslator = mock(AssociationDescriptionTranslator.class);
-        exceptionTranslator = mock(ExceptionTranslator.class);
         model = ResourceModel.builder()
             .associationId(ASSOCIATION_ID)
             .name(DOCUMENT_NAME)
             .scheduleExpression(SCHEDULE_EXPRESSION)
             .waitForSuccessTimeoutSeconds(90)
             .build();
-        handler = new InProgressCreateHandler(CALLBACK_DELAY_SECONDS, ssmClient, associationDescriptionTranslator, exceptionTranslator);
+        handler = new InProgressHandler(ssmClient,
+            associationDescriptionTranslator,
+            exceptionTranslator,
+            inProgressEventCreator);
+    }
+
+    @Test
+    void defaultConstructorWorks() {
+        new InProgressHandler(ssmClient);
     }
 
     @Test
@@ -124,7 +128,7 @@ class InProgressCreateHandlerTest {
     }
 
     @Test
-    public void handleInProgressRequestWithTimeoutLargerThanCallbackDelayAndAssociationPendingStatus() {
+    public void handleInProgressRequestWithTimeoutRemainingAndAssociationPendingStatusReturnsInProgressEventFromCreator() {
         final DescribeAssociationRequest describeAssociationRequest =
             DescribeAssociationRequest.builder()
                 .associationId(ASSOCIATION_ID)
@@ -166,9 +170,6 @@ class InProgressCreateHandlerTest {
             .associationId(expectedModel.getAssociationId())
             .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, callbackContext, logger);
-
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
             .remainingTimeoutSeconds(remainingTimeoutSeconds - CALLBACK_DELAY_SECONDS)
             .associationId(expectedModel.getAssociationId())
@@ -177,68 +178,15 @@ class InProgressCreateHandlerTest {
         final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
             ProgressEvent.defaultInProgressHandler(expectedCallbackContext, CALLBACK_DELAY_SECONDS, expectedModel);
 
-        assertThat(response).isEqualTo(expectedProgressEvent);
-        verifyZeroInteractions(exceptionTranslator);
-    }
-
-    @Test
-    public void handleInProgressRequestWithTimeoutSmallerThanCallbackDelayAndAssociationPendingStatus() {
-        final DescribeAssociationRequest describeAssociationRequest =
-            DescribeAssociationRequest.builder()
-                .associationId(ASSOCIATION_ID)
-                .build();
-
-        final AssociationDescription associationDescription =
-            AssociationDescription.builder()
-                .associationId(ASSOCIATION_ID)
-                .name(DOCUMENT_NAME)
-                .scheduleExpression(SCHEDULE_EXPRESSION)
-                .overview(AssociationOverview.builder()
-                    .status(AssociationStatusName.PENDING.name())
-                    .build())
-                .build();
-
-        final DescribeAssociationResponse result =
-            DescribeAssociationResponse.builder()
-                .associationDescription(associationDescription)
-                .build();
-
-        when(
-            proxy.injectCredentialsAndInvokeV2(
-                eq(describeAssociationRequest),
-                ArgumentMatchers.<Function<DescribeAssociationRequest, DescribeAssociationResponse>>any()))
-            .thenReturn(result);
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
-            .build();
-
-        final ResourceModel expectedModel = request.getDesiredResourceState();
-
-        when(associationDescriptionTranslator.associationDescriptionToResourceModel(associationDescription))
-            .thenReturn(expectedModel);
-
-        final int remainingTimeoutSeconds = 10;
-        final CallbackContext callbackContext = CallbackContext.builder()
-            .remainingTimeoutSeconds(remainingTimeoutSeconds)
-            .associationId(expectedModel.getAssociationId())
-            .build();
+        when(inProgressEventCreator.nextInProgressEvent(remainingTimeoutSeconds, expectedModel))
+            .thenReturn(expectedProgressEvent);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = handler.handleRequest(proxy, request, callbackContext, logger);
 
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-            .remainingTimeoutSeconds(0)
-            .associationId(expectedModel.getAssociationId())
-            .build();
-
-        // expecting the callback delay period to be the same as the remaining timeout, because it is less than the
-        // default callback delay period.
-        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
-            ProgressEvent.defaultInProgressHandler(expectedCallbackContext, remainingTimeoutSeconds, expectedModel);
-
         assertThat(response).isEqualTo(expectedProgressEvent);
         verifyZeroInteractions(exceptionTranslator);
+        verify(inProgressEventCreator).nextInProgressEvent(remainingTimeoutSeconds, expectedModel);
     }
 
     @Test
@@ -328,6 +276,7 @@ class InProgressCreateHandlerTest {
             handler.handleRequest(proxy, request, callbackContext, logger);
         });
         verifyZeroInteractions(exceptionTranslator);
+        verifyZeroInteractions(inProgressEventCreator);
     }
 
     @Test

@@ -15,26 +15,26 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.ASSOCIATION_ID;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.ASSOCIATION_NAME;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.ASSOCIATION_VERSION;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.AUTOMATION_TARGET_PARAMETER_NAME;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.COMPLIANCE_SEVERITY;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.DOCUMENT_NAME;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.DOCUMENT_VERSION;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.INSTANCE_ID;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.LAST_EXECUTION_DATE;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.LAST_SUCCESSFUL_EXECUTION_DATE;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.LAST_UPDATE_ASSOCIATION_DATE;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MAX_CONCURRENCY;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MAX_ERRORS;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_OUTPUT_LOCATION;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.MODEL_TARGETS;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.PARAMETERS;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SCHEDULE_EXPRESSION;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_OUTPUT_LOCATION;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SERVICE_TARGETS;
-import static com.amazonaws.ssm.association.translator.TranslatorTestsInputs.SYNC_COMPLIANCE;
+import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_ID;
+import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_NAME;
+import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_VERSION;
+import static com.amazonaws.ssm.association.TestsInputs.AUTOMATION_TARGET_PARAMETER_NAME;
+import static com.amazonaws.ssm.association.TestsInputs.COMPLIANCE_SEVERITY;
+import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_NAME;
+import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_VERSION;
+import static com.amazonaws.ssm.association.TestsInputs.INSTANCE_ID;
+import static com.amazonaws.ssm.association.TestsInputs.LAST_EXECUTION_DATE;
+import static com.amazonaws.ssm.association.TestsInputs.LAST_SUCCESSFUL_EXECUTION_DATE;
+import static com.amazonaws.ssm.association.TestsInputs.LAST_UPDATE_ASSOCIATION_DATE;
+import static com.amazonaws.ssm.association.TestsInputs.MAX_CONCURRENCY;
+import static com.amazonaws.ssm.association.TestsInputs.MAX_ERRORS;
+import static com.amazonaws.ssm.association.TestsInputs.MODEL_OUTPUT_LOCATION;
+import static com.amazonaws.ssm.association.TestsInputs.MODEL_TARGETS;
+import static com.amazonaws.ssm.association.TestsInputs.PARAMETERS;
+import static com.amazonaws.ssm.association.TestsInputs.SCHEDULE_EXPRESSION;
+import static com.amazonaws.ssm.association.TestsInputs.SERVICE_OUTPUT_LOCATION;
+import static com.amazonaws.ssm.association.TestsInputs.SERVICE_TARGETS;
+import static com.amazonaws.ssm.association.TestsInputs.SYNC_COMPLIANCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -88,6 +88,7 @@ class AssociationDescriptionTranslatorTest {
                 .lastExecutionDate(LAST_EXECUTION_DATE)
                 .lastSuccessfulExecutionDate(LAST_SUCCESSFUL_EXECUTION_DATE)
                 .syncCompliance(SYNC_COMPLIANCE)
+                .applyOnlyAtCronInterval(true)
                 .build();
 
         final ResourceModel resultModel =
@@ -109,6 +110,7 @@ class AssociationDescriptionTranslatorTest {
                 .automationTargetParameterName(AUTOMATION_TARGET_PARAMETER_NAME)
                 .instanceId(INSTANCE_ID)
                 .syncCompliance(SYNC_COMPLIANCE)
+                .applyOnlyAtCronInterval(true)
                 .build();
 
         assertThat(resultModel).isEqualTo(expectedModel);

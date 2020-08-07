@@ -1,8 +1,5 @@
-package com.amazonaws.ssm.association.translator;
+package com.amazonaws.ssm.association;
 
-import com.amazonaws.ssm.association.InstanceAssociationOutputLocation;
-import com.amazonaws.ssm.association.S3OutputLocation;
-import com.amazonaws.ssm.association.Target;
 import com.google.common.collect.ImmutableMap;
 
 import java.time.Instant;
@@ -13,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class TranslatorTestsInputs {
+public class TestsInputs {
     public static final String DOCUMENT_NAME = "NewTestDocument";
     public static final String ASSOCIATION_ID = "test-12345-associationId";
     public static final String ASSOCIATION_NAME = "TestAssociation";
@@ -68,4 +65,8 @@ public class TranslatorTestsInputs {
                 .key(TARGET_KEY)
                 .values(TARGET_VALUE)
                 .build());
+
+    public static final int WAIT_FOR_SUCCESS_TIMEOUT_IN_SECONDS = 45;
+
+    public static final String LOGGED_RESOURCE_HANDLER_REQUEST = "StringifiedResourceHandlerRequest";
 }
