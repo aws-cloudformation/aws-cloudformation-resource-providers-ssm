@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.ssm.model.PatchAction;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.LoggerProxy;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
@@ -34,12 +34,14 @@ import java.util.Collections;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestBase {
+    protected static final LoggerProxy logger;
+    static {
+        logger = new LoggerProxy();
+    }
     @Mock
     private AmazonWebServicesClientProxy proxy;
     @Mock
     protected SsmClient ssmClient;
-    @Mock
-    protected Logger logger;
 
     protected ResourceHandlerRequest<ResourceModel> buildDefaultInputRequest() {
         List<software.amazon.ssm.patchbaseline.Tag> tags = tags(TAG_KEY, TAG_VALUE);

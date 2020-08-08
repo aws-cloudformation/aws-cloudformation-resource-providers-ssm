@@ -159,7 +159,7 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert(response.getMessage().contains(exception400.getMessage()));
         assertThat(actualCreatePatchBaselineRequest).isEqualTo(createPatchBaselineRequestMissingName);
@@ -193,7 +193,7 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert(response.getMessage().contains("limit exceeded"));
     }
@@ -226,7 +226,7 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert (response.getMessage().contains("already registered!"));
     }
@@ -260,7 +260,7 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert (response.getMessage().contains("Too many patch groups!"));
     }
@@ -294,7 +294,7 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert (response.getMessage().contains("Server error"));
     }
@@ -313,7 +313,7 @@ public class CreateHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert (response.getMessage().contains("Bad data"));
     }

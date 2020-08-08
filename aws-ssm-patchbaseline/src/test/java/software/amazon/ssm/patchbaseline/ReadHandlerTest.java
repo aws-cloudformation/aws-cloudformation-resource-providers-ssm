@@ -99,7 +99,7 @@ public class ReadHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert(response.getMessage().contains(exception400.getMessage()));
     }
@@ -129,7 +129,7 @@ public class ReadHandlerTest extends TestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assert(response.getMessage().contains(exception500.getMessage()));
     }

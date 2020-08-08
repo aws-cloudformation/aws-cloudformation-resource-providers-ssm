@@ -159,8 +159,7 @@ public class UpdateHandlerTest extends TestBase{
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getPreviousResourceState());
-        assertThat(response.getResourceModel()).isNotEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
     }
 
     private UpdatePatchBaselineRequest setUpExpectedUpdatePatchBaselineRequest() {
