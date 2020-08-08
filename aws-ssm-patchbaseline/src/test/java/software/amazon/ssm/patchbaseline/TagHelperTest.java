@@ -403,7 +403,7 @@ public class TagHelperTest extends TestBase{
         Collections.sort(expectedAddTags, Comparator.comparing(Tag::key));
         List<Tag> actualAddTagsList = actualAddTags.tags();
         List<Tag> actualAddTagsListConvertType = new ArrayList<>(actualAddTagsList);
-        Collections.sort(actualAddTagsListConvertType, Comparator.comparing(Tag::key));  // why is this reporting error?
+        Collections.sort(actualAddTagsListConvertType, Comparator.comparing(Tag::key));
         assertThat(expectedAddTags).isEqualTo(actualAddTagsListConvertType);
     }
 
@@ -478,6 +478,32 @@ public class TagHelperTest extends TestBase{
     public void testUpdateTagsForResource_EmptyRequest() {
         cfnTagHelper.updateTagsForResource(new ResourceHandlerRequest<ResourceModel>(), TEST_RESOURCE_TYPE, ssmClient, proxy);
         verifyZeroInteractions(proxy);
+    }
+
+    @Test
+    public void testListTagsForResource_Nominal() {
+        List<Tag> expected = Arrays.asList(
+                Tag.builder().key("resourcekey1").value("newresource1").build(),
+                Tag.builder().key("stackkey1").value("newstack1").build()
+        );
+        List<Tag> tagList = Arrays.asList(
+                Tag.builder().key("resourcekey1").value("newresource1").build(),
+                Tag.builder().key("stackkey1").value("newstack1").build(),
+                Tag.builder().key("aws:systemkey1").value("newsystem1").build()
+        );
+
+        listTagsForResourceRequest = ListTagsForResourceRequest.builder().resourceType(TEST_RESOURCE_TYPE).resourceId(TEST_RESOURCE_ID).build();
+        listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(tagList).build();
+        when(proxy.injectCredentialsAndInvokeV2(
+                eq(listTagsForResourceRequest),
+                ArgumentMatchers.<Function<ListTagsForResourceRequest, ListTagsForResourceResponse>>any()))
+                .thenReturn(listTagsForResourceResponse);
+
+        List<Tag> actual = cfnTagHelper.listTagsForResource(TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, ssmClient, proxy);
+
+        Collections.sort(expected, Comparator.comparing(Tag::key));
+        Collections.sort(actual, Comparator.comparing(Tag::key));
+        assertThat(actual).isEqualTo(expected);
     }
 
     private List<software.amazon.ssm.patchbaseline.Tag> buildCfnTagList(Map<String, String> tags) {

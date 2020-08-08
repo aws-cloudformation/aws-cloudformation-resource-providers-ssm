@@ -1,15 +1,19 @@
 package software.amazon.ssm.patchbaseline.translator.resourcemodel;
 
+import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
 import software.amazon.ssm.patchbaseline.ResourceModel;
 import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
+
+import java.util.List;
 
 public class ReadResourceModelTranslator {
 
     /**
      * Translate Read Response to Resource Model
      */
-    public static ResourceModel translateToResourceModel(final GetPatchBaselineResponse getPatchBaselineResponse) {
+    public static ResourceModel translateToResourceModel(final GetPatchBaselineResponse getPatchBaselineResponse,
+                                                         final List<Tag> tags) {
 
         final ResourceModel model = new ResourceModel();
 
@@ -48,6 +52,9 @@ public class ReadResourceModelTranslator {
 
         ResourceModelPropertyTranslator.translateToResourceModelApprovalRules(getPatchBaselineResponse.approvalRules())
                 .ifPresent(model::setApprovalRules);
+
+        ResourceModelPropertyTranslator.translateToResourceModelTags(tags)
+                .ifPresent(model::setTags);
 
         return model;
     }

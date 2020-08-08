@@ -9,8 +9,10 @@ import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
+import software.amazon.awssdk.services.ssm.model.Tag;
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -19,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.mockito.ArgumentMatchers;
@@ -38,6 +42,14 @@ public class ReadHandlerTest extends TestBase {
     private AmazonWebServicesClientProxy proxy;
     @Mock
     private Resource resource;
+    @Mock
+    private TagHelper cfnTagHelper;
+
+    @BeforeEach
+    public void setup() {
+        cfnTagHelper = mock(TagHelper.class);
+        readHandler = new ReadHandler(cfnTagHelper);
+    }
 
     @Test
     public void testSuccess() {
@@ -48,6 +60,10 @@ public class ReadHandlerTest extends TestBase {
         when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
                 .thenReturn(getPatchBaselineResponse);
+
+        //set up mock for TagHelper.listTagsForResource()
+        List<Tag> tagList = requestTags(TAG_KEY, TAG_VALUE);
+        when(cfnTagHelper.listTagsForResource(any(), any(), any(), any())).thenReturn(tagList);
 
         //Simple unit test to verify the reading-in of read requests.
         ResourceModel model = ResourceModel.builder().id(BASELINE_ID).build();
@@ -60,7 +76,6 @@ public class ReadHandlerTest extends TestBase {
                 = readHandler.handleRequest(proxy, request, null, logger);
 
         final ResourceModel expectedModel =  buildDefaultInputRequest().getDesiredResourceState();
-        expectedModel.setTags(null);
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
                 ProgressEvent.defaultSuccessHandler(expectedModel);

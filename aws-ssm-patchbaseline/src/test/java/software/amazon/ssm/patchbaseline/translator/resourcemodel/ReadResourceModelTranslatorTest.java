@@ -4,6 +4,7 @@ import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
+import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.ssm.patchbaseline.ResourceModel;
 import software.amazon.ssm.patchbaseline.TestBase;
 import static software.amazon.ssm.patchbaseline.TestConstants.*;
@@ -27,6 +28,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
         List<PatchSource> sources = requestSources();
         PatchFilterGroup globalFilters = requestGlobalFilters();
         PatchRuleGroup approvalRules = requestApprovalRules();
+        List<Tag> tagList = requestTags(TAG_KEY, TAG_VALUE);
         getPatchBaselineResponse = GetPatchBaselineResponse.builder()
                 .baselineId(BASELINE_ID)
                 .name(BASELINE_NAME)
@@ -44,10 +46,9 @@ public class ReadResourceModelTranslatorTest extends TestBase {
                 .build();
 
         final ResourceModel resultModel =
-                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
+                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse, tagList);
 
         final ResourceModel expectedModel = buildDefaultInputRequest().getDesiredResourceState();
-        expectedModel.setTags(null);
 
         assertThat(resultModel).isEqualTo(expectedModel);
     }
@@ -59,8 +60,9 @@ public class ReadResourceModelTranslatorTest extends TestBase {
                 .baselineId(BASELINE_ID)
                 .build();
 
+        List<Tag> tagList = new ArrayList<>();
         final ResourceModel resultModel =
-                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
+                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse, tagList);
 
         final ResourceModel expectedModel = ResourceModel.builder().id(BASELINE_ID).build();
 
@@ -70,6 +72,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
     @Test
     void testReadResourceModelTranslator_Empty() {
 
+        List<Tag> tagList = new ArrayList<>();
         getPatchBaselineResponse = GetPatchBaselineResponse.builder()
                 .baselineId(BASELINE_ID)
                 .rejectedPatches(new ArrayList<>())
@@ -81,7 +84,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
                 .build();
 
         final ResourceModel resultModel =
-                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse);
+                ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse, tagList);
 
         final ResourceModel expectedModel = ResourceModel.builder().id(BASELINE_ID).build();
 
