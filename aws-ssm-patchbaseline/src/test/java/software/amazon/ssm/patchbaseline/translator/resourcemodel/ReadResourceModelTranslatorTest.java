@@ -47,6 +47,7 @@ public class ReadResourceModelTranslatorTest extends TestBase {
 
         final ResourceModel resultModel =
                 ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse, tagList);
+        resultModel.setDefaultBaseline(true);
 
         final ResourceModel expectedModel = buildDefaultInputRequest().getDesiredResourceState();
 

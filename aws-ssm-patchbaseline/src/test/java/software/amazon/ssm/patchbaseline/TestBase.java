@@ -131,6 +131,7 @@ public class TestBase {
                 .sources(sources)
                 .tags(tags)
                 .patchGroups(patchGroups)
+                .defaultBaseline(true)
                 .build();
     }
 

@@ -10,6 +10,10 @@
             "minLength": 20,
             "maxLength": 128
         },
+        "DefaultBaseline": {
+            "description": "Set the baseline as default baseline. Only registering to default patch baseline is allowed.",
+            "type": "boolean"
+        },
         "OperatingSystem": {
             "description": "Defines the operating system the patch baseline applies to. The Default value is WINDOWS.",
             "type": "string",
@@ -212,7 +216,7 @@
             "properties": {
                 "ApproveUntilDate": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 0,
                     "maxLength": 10
                 },
                 "EnableNonSecurity": {

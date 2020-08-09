@@ -4,6 +4,8 @@ import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
+import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.PatchFilter;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
@@ -29,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -55,6 +58,8 @@ public class CreateHandlerTest extends TestBase {
     private CreatePatchBaselineRequest.Builder createPatchBaselineRequestBuilder;
     private CreatePatchBaselineResponse createPatchBaselineResponse;
     private RegisterPatchBaselineForPatchGroupResponse registerResponse;
+    private RegisterDefaultPatchBaselineRequest registerDefaultPatchBaselineRequest;
+    private RegisterDefaultPatchBaselineResponse registerDefaultPatchBaselineResponse;
     private List<Tag> tagsList;
 
     @InjectMocks
@@ -79,6 +84,12 @@ public class CreateHandlerTest extends TestBase {
         registerResponse = RegisterPatchBaselineForPatchGroupResponse.builder()
                 .baselineId(BASELINE_ID)
                 .build();
+        registerDefaultPatchBaselineRequest = RegisterDefaultPatchBaselineRequest.builder()
+                .baselineId(BASELINE_ID)
+                .build();
+        registerDefaultPatchBaselineResponse = RegisterDefaultPatchBaselineResponse.builder()
+                .baselineId(BASELINE_ID)
+                .build();
     }
 
     @Test
@@ -95,6 +106,10 @@ public class CreateHandlerTest extends TestBase {
                     eq(buildRegisterGroupRequest(createPatchBaselineResponse.baselineId(), group)),
                     ArgumentMatchers.<Function<RegisterPatchBaselineForPatchGroupRequest, RegisterPatchBaselineForPatchGroupResponse>>any())).thenReturn(registerResponse);
         }
+
+        when(proxy.injectCredentialsAndInvokeV2(
+                eq(registerDefaultPatchBaselineRequest),
+                ArgumentMatchers.<Function<RegisterDefaultPatchBaselineRequest, RegisterDefaultPatchBaselineResponse>>any())).thenReturn(registerDefaultPatchBaselineResponse);
 
         //Invoke the handler
         final ProgressEvent<ResourceModel, CallbackContext> response

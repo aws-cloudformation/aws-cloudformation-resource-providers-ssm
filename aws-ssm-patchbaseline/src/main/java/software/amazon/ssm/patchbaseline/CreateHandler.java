@@ -12,6 +12,8 @@ import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.CreatePatchBaselineResponse;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
+import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineResponse;
 import software.amazon.ssm.patchbaseline.translator.request.CreatePatchBaselineRequestTranslator;
 import software.amazon.ssm.patchbaseline.translator.resourcemodel.ResourceModelPropertyTranslator;
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
@@ -19,6 +21,7 @@ import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang.BooleanUtils;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
@@ -82,6 +85,17 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             // If we made it here, no exceptions related to the requests were thrown. Success.
             logger.log(String.format("INFO Registered groups to patch baseline %s successfully %n", baselineId));
+
+            // Set to default patch baseline
+            if (BooleanUtils.isTrue(model.getDefaultBaseline())) {
+                RegisterDefaultPatchBaselineRequest registerDefaultPatchBaselineRequest = RegisterDefaultPatchBaselineRequest.builder()
+                                                                                                    .baselineId(baselineId)
+                                                                                                    .build();
+                RegisterDefaultPatchBaselineResponse registerDefaultPatchBaselineResponse =
+                        proxy.injectCredentialsAndInvokeV2(registerDefaultPatchBaselineRequest, ssmClient::registerDefaultPatchBaseline);
+
+                logger.log(String.format("INFO Registered patch baseline %s to default patch baseline successfully %n", baselineId));
+            }
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

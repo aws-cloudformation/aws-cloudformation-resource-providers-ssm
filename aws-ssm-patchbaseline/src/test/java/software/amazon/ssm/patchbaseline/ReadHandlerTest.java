@@ -6,6 +6,9 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.GetDefaultPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.GetDefaultPatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.OperatingSystem;
 import software.amazon.awssdk.services.ssm.model.PatchRuleGroup;
 import software.amazon.awssdk.services.ssm.model.PatchFilterGroup;
 import software.amazon.awssdk.services.ssm.model.PatchSource;
@@ -35,6 +38,8 @@ public class ReadHandlerTest extends TestBase {
 
     private GetPatchBaselineRequest getPatchBaselineRequest;
     private GetPatchBaselineResponse getPatchBaselineResponse;
+    private GetDefaultPatchBaselineRequest getDefaultPatchBaselineRequest;
+    private GetDefaultPatchBaselineResponse getDefaultPatchBaselineResponse;
 
     @InjectMocks
     private ReadHandler readHandler;
@@ -57,9 +62,16 @@ public class ReadHandlerTest extends TestBase {
         getPatchBaselineRequest = GetPatchBaselineRequest.builder().baselineId(BASELINE_ID).build();
         getPatchBaselineResponse = setUpGetPatchBaselineResponse();
 
+        getDefaultPatchBaselineRequest = GetDefaultPatchBaselineRequest.builder().operatingSystem((OperatingSystem.fromValue(OPERATING_SYSTEM))).build();
+        getDefaultPatchBaselineResponse = GetDefaultPatchBaselineResponse.builder().baselineId(BASELINE_ID).build();
+
         when(proxy.injectCredentialsAndInvokeV2(eq(getPatchBaselineRequest),
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
                 .thenReturn(getPatchBaselineResponse);
+
+        when(proxy.injectCredentialsAndInvokeV2(eq(getDefaultPatchBaselineRequest),
+                ArgumentMatchers.<Function<GetDefaultPatchBaselineRequest, GetDefaultPatchBaselineResponse>>any()))
+                .thenReturn(getDefaultPatchBaselineResponse);
 
         //set up mock for TagHelper.listTagsForResource()
         List<Tag> tagList = requestTags(TAG_KEY, TAG_VALUE);
