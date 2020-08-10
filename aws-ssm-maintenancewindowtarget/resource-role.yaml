@@ -23,6 +23,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "iam:PassRole"
                 - "ssm:DeregisterTargetFromMaintenanceWindow"
                 - "ssm:DescribeMaintenanceWindowTargets"
                 - "ssm:RegisterTargetWithMaintenanceWindow"
