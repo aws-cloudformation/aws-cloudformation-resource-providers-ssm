@@ -8,14 +8,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.DescribeMaintenanceWindowTargetsRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeMaintenanceWindowTargetsResponse;
 import software.amazon.ssm.maintenancewindowtarget.ResourceModel;
-import software.amazon.ssm.maintenancewindowtarget.translator.property.FiltersListTranslator;
 import software.amazon.ssm.maintenancewindowtarget.translator.property.TargetsListTranslator;
 import software.amazon.ssm.maintenancewindowtarget.util.SimpleTypeValidator;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.DESCRIPTION;
 import static software.amazon.ssm.maintenancewindowtarget.TestsInputs.MODEL_TARGETS;
@@ -34,8 +32,6 @@ public class GetMaintenanceWindowTargetTranslatorTest {
     @Mock
     private SimpleTypeValidator simpleTypeValidator;
     @Mock
-    private FiltersListTranslator filtersListTranslator;
-    @Mock
     private TargetsListTranslator targetsListTranslator;
 
 
@@ -48,7 +44,7 @@ public class GetMaintenanceWindowTargetTranslatorTest {
 
         getMaintenanceWindowTargetTranslator =
                 new GetMaintenanceWindowTargetTranslator(simpleTypeValidator,
-                        filtersListTranslator, targetsListTranslator);
+                        targetsListTranslator);
     }
 
     @Test
@@ -58,9 +54,6 @@ public class GetMaintenanceWindowTargetTranslatorTest {
                         .windowId(WINDOW_ID)
                         .windowTargetId(WINDOW_TARGET_ID)
                         .build();
-
-        when(filtersListTranslator.resourceModelPropertyToServiceModel(anyList()))
-                .thenReturn(Optional.of(SERVICE_FILTERS));
 
         final DescribeMaintenanceWindowTargetsRequest describeMaintenanceWindowTargetsRequest =
                 getMaintenanceWindowTargetTranslator.resourceModelToRequest(modelToTranslate);
