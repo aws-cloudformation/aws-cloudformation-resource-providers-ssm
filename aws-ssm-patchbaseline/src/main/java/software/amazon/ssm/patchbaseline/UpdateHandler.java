@@ -23,7 +23,7 @@ import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang3.BooleanUtils;
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
