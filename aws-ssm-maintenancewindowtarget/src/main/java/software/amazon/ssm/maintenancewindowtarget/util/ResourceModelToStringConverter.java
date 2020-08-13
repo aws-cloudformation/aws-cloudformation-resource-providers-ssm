@@ -20,18 +20,12 @@ public class ResourceModelToStringConverter {
 
         return String.format("ResourceModel(" +
                 "clientToken=%s," +
-                "filters=%s," +
-                "maxResults=%s," +
-                "nextToken=%s," +
                 "resourceType=%s," +
                 "targets=%s," +
                 "windowId=%s," +
                 "windowTargetId=%s" +
                 ")",
             resourceModel.getClientToken(),
-            resourceModel.getFilters(),
-            resourceModel.getMaxResults(),
-            resourceModel.getNextToken(),
             resourceModel.getResourceType(),
             resourceModel.getTargets(),
             resourceModel.getWindowId(),
