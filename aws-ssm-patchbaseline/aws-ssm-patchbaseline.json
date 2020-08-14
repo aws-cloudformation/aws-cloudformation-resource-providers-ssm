@@ -306,11 +306,18 @@
             ]
         },
         "list": {
-            "permissions": []
+            "permissions": [
+                "ssm:DescribePatchBaselines",
+                "ssm:GetDefaultPatchBaseline",
+                "ssm:GetPatchBaseline",
+                "ssm:ListTagsForResource"
+            ]
         },
         "read": {
             "permissions": [
-                "ssm:DescribePatchBaselines"
+                "ssm:GetDefaultPatchBaseline",
+                "ssm:GetPatchBaseline",
+                "ssm:ListTagsForResource"
             ]
         },
         "update": {
