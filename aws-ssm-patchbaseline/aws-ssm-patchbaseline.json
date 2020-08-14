@@ -295,7 +295,9 @@
                 "ssm:RegisterPatchBaselineForPatchGroup",
                 "ssm:AddTagsToResource",
                 "ssm:RemoveTagsFromResource",
-                "ssm:ListTagsForResource"
+                "ssm:ListTagsForResource",
+                "ssm:GetDefaultPatchBaseline",
+                "ssm:RegisterDefaultPatchBaseline"
             ]
         },
         "delete": {
@@ -326,7 +328,9 @@
                 "ssm:DeregisterPatchBaselineForPatchGroup",
                 "ssm:AddTagsToResource",
                 "ssm:RemoveTagsFromResource",
-                "ssm:ListTagsForResource"
+                "ssm:ListTagsForResource",
+                "ssm:GetDefaultPatchBaseline",
+                "ssm:RegisterDefaultPatchBaseline"
             ]
         }
     }
