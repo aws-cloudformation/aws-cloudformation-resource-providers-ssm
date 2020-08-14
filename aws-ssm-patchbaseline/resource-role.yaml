@@ -28,6 +28,7 @@ Resources:
                 - "ssm:DeletePatchBaseline"
                 - "ssm:DeregisterPatchBaselineForPatchGroup"
                 - "ssm:DescribePatchBaselines"
+                - "ssm:GetDefaultPatchBaseline"
                 - "ssm:GetPatchBaseline"
                 - "ssm:ListTagsForResource"
                 - "ssm:RegisterPatchBaselineForPatchGroup"

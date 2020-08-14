@@ -187,12 +187,6 @@ public class DeleteHandlerTest extends TestBase{
                 ArgumentMatchers.<Function<GetPatchBaselineRequest, GetPatchBaselineResponse>>any()))
                 .thenThrow(DoesNotExistException.builder().message("Oops, not exist").build());
 
-        when(proxy.injectCredentialsAndInvokeV2(eq(deletePatchBaselineRequest),
-                ArgumentMatchers.<Function<DeletePatchBaselineRequest, DeletePatchBaselineResponse>>any()))
-                .thenReturn(deletePatchBaselineResponse);
-
-        // This tests the case where a user deleted a baseline outside of CloudFormation. We count this as successful,
-        // otherwise stack deletion won't succeed unless the user specifies to ignore the resource.
         ResourceModel model = ResourceModel.builder().id(BASELINE_ID).build();
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
@@ -210,17 +204,17 @@ public class DeleteHandlerTest extends TestBase{
         verify(proxy, never()).injectCredentialsAndInvokeV2(
                     any(DeregisterPatchBaselineForPatchGroupRequest.class), any());
 
-        verify(proxy)
+        verify(proxy, never())
                 .injectCredentialsAndInvokeV2(
-                        eq(deletePatchBaselineRequest),
-                        ArgumentMatchers.<Function<DeletePatchBaselineRequest, DeletePatchBaselineResponse>>any());
+                        any(DeletePatchBaselineRequest.class), any());
 
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
+        assert(response.getMessage().contains("Oops, not exist"));
     }
 
     @Test
