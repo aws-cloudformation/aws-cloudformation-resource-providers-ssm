@@ -37,10 +37,7 @@ public class TagReader {
     }
 
     private Map<String, String> translateTags(final List<Tag> tags) {
-        final ImmutableMap.Builder<String, String> tagBuilder = ImmutableMap.builder();
-
-        tags.forEach(tag -> tagBuilder.put(tag.key(), tag.value()));
-
-        return tagBuilder.build();
+        return tags.stream()
+            .collect(ImmutableMap.toImmutableMap(Tag::key, Tag::value));
     }
 }
