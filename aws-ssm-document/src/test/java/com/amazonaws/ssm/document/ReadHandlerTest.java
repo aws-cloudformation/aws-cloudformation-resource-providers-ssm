@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.document;
 
+import com.amazonaws.ssm.document.tags.TagReader;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,6 +41,10 @@ public class ReadHandlerTest {
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
             .build();
+    private static final Map<String, String> SAMPLE_TAG_MAP = ImmutableMap.of(
+        "tagKey1", "tagValue1",
+        "tagKey2", "tagValue2"
+    );
     private static final GetDocumentRequest SAMPLE_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
             .build();
@@ -64,6 +70,9 @@ public class ReadHandlerTest {
     private SsmClient ssmClient;
 
     @Mock
+    private TagReader tagReader;
+
+    @Mock
     private DocumentExceptionTranslator exceptionTranslator;
 
     @Mock
@@ -76,7 +85,8 @@ public class ReadHandlerTest {
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new ReadHandler(documentModelTranslator, documentResponseModelTranslator, ssmClient, exceptionTranslator);
+        unitUnderTest = new ReadHandler(documentModelTranslator, documentResponseModelTranslator,
+            ssmClient, tagReader, exceptionTranslator);
     }
 
     @Test
@@ -93,7 +103,9 @@ public class ReadHandlerTest {
 
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
-        when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE)).thenReturn(expectedResourceInformation);
+        when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
+        when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE, SAMPLE_TAG_MAP))
+            .thenReturn(expectedResourceInformation);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
             = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);

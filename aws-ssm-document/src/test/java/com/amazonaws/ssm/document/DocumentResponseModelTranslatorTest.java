@@ -1,6 +1,7 @@
 package com.amazonaws.ssm.document;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
@@ -8,6 +9,7 @@ import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class DocumentResponseModelTranslatorTest {
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
@@ -20,6 +22,10 @@ public class DocumentResponseModelTranslatorTest {
     private static final List<Tag> SAMPLE_RESOURCE_MODEL_TAGS = ImmutableList.of(
             Tag.builder().key("tagKey1").value("tagValue1").build(),
             Tag.builder().key("tagKey2").value("tagValue2").build()
+    );
+    private static final Map<String, String> SAMPLE_TAG_MAP = ImmutableMap.of(
+        "tagKey1", "tagValue1",
+        "tagKey2", "tagValue2"
     );
 
     private static final List<software.amazon.awssdk.services.ssm.model.AttachmentContent> SAMPLE_GET_RESPONSE_ATTACHMENTS = ImmutableList.of(
@@ -43,7 +49,7 @@ public class DocumentResponseModelTranslatorTest {
     private final DocumentResponseModelTranslator unitUnderTest = new DocumentResponseModelTranslator();
 
     @Test
-    public void testGenerateCreateDocumentRequest_DocumentNameIsProvided_verifyResult() {
+    public void testGenerateResourceInformation_DocumentNameIsProvided_verifyResult() {
         final ResourceInformation expectedResourceInformation = ResourceInformation.builder()
                 .resourceModel(createResourceModelWithAllAttributes())
                 .status(RESOURCE_MODEL_ACTIVE_STATE)
@@ -51,13 +57,13 @@ public class DocumentResponseModelTranslatorTest {
                 .build();
 
         final ResourceInformation resourceInformation =
-                unitUnderTest.generateResourceInformation(createGetDocumentResponseWithAllAttributes());
+                unitUnderTest.generateResourceInformation(createGetDocumentResponseWithAllAttributes(), SAMPLE_TAG_MAP);
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
 
     @Test
-    public void testGenerateCreateDocumentRequest_DocumentRequiresIsNull_verifyResult() {
+    public void testGenerateResourceInformation_DocumentRequiresIsNull_verifyResult() {
         final ResourceModel expectedModel = createResourceModelWithAllAttributes();
         expectedModel.setRequires(null);
         final ResourceInformation expectedResourceInformation = ResourceInformation.builder()
@@ -70,13 +76,13 @@ public class DocumentResponseModelTranslatorTest {
                 .requires((Collection<software.amazon.awssdk.services.ssm.model.DocumentRequires>)null).build();
 
         final ResourceInformation resourceInformation =
-                unitUnderTest.generateResourceInformation(getDocumentResponse);
+                unitUnderTest.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP);
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
 
     @Test
-    public void testGenerateCreateDocumentRequest_DocumentStatusIsActive_verifyResult() {
+    public void testGenerateResourceInformation_DocumentStatusIsActive_verifyResult() {
         final ResourceInformation expectedResourceInformation = ResourceInformation.builder()
                 .resourceModel(createResourceModelWithAllAttributes())
                 .status(RESOURCE_MODEL_ACTIVE_STATE)
@@ -85,11 +91,12 @@ public class DocumentResponseModelTranslatorTest {
 
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation,
+            unitUnderTest.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP));
     }
 
     @Test
-    public void testGenerateCreateDocumentRequest_DocumentStatusIsCreating_verifyResult() {
+    public void testGenerateResourceInformation_DocumentStatusIsCreating_verifyResult() {
         final DocumentStatus documentStatus = DocumentStatus.CREATING;
         final ResourceStatus creating = ResourceStatus.CREATING;
 
@@ -102,11 +109,12 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation,
+            unitUnderTest.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP));
     }
 
     @Test
-    public void testGenerateCreateDocumentRequest_DocumentStatusIsUpdating_verifyResult() {
+    public void testGenerateResourceInformation_DocumentStatusIsUpdating_verifyResult() {
         final DocumentStatus documentStatus = DocumentStatus.UPDATING;
         final ResourceStatus expectedResourceStatus = ResourceStatus.UPDATING;
 
@@ -119,11 +127,12 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation,
+            unitUnderTest.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP));
     }
 
     @Test
-    public void testGenerateCreateDocumentRequest_DocumentStatusIsDeleting_verifyResult() {
+    public void testGenerateResourceInformation_DocumentStatusIsDeleting_verifyResult() {
         final DocumentStatus documentStatus = DocumentStatus.DELETING;
         final ResourceStatus expectedResourceStatus = ResourceStatus.DELETING;
 
@@ -136,11 +145,12 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation,
+            unitUnderTest.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP));
     }
 
     @Test
-    public void testGenerateCreateDocumentRequest_DocumentStatusIsFailed_verifyResult() {
+    public void testGenerateResourceInformation_DocumentStatusIsFailed_verifyResult() {
         final DocumentStatus documentStatus = DocumentStatus.FAILED;
         final ResourceStatus expectedResourceStatus = ResourceStatus.FAILED;
 
@@ -153,7 +163,8 @@ public class DocumentResponseModelTranslatorTest {
         final GetDocumentResponse getDocumentResponse = createGetDocumentResponseWithAllAttributes().toBuilder()
                 .status(documentStatus).build();
 
-        Assertions.assertEquals(expectedResourceInformation, unitUnderTest.generateResourceInformation(getDocumentResponse));
+        Assertions.assertEquals(expectedResourceInformation,
+            unitUnderTest.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP));
     }
 
     private ResourceModel createResourceModelWithAllAttributes() {
@@ -164,6 +175,7 @@ public class DocumentResponseModelTranslatorTest {
                 .versionName(SAMPLE_VERSION_NAME)
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)
                 .documentType(SAMPLE_DOCUMENT_TYPE)
+                .tags(SAMPLE_RESOURCE_MODEL_TAGS)
                 .requires(SAMPLE_RESOURCE_MODEL_REQUIRES)
                 .build();
     }

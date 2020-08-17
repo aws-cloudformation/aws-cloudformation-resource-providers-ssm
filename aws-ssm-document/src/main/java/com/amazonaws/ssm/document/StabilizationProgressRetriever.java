@@ -11,6 +11,9 @@ import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
 import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
+import com.amazonaws.ssm.document.tags.TagReader;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
 /**
  * Updates the progression status of Create or Update Resource Operations.
@@ -21,6 +24,9 @@ class StabilizationProgressRetriever {
     private static StabilizationProgressRetriever INSTANCE;
 
     @NonNull
+    private final TagReader tagReader;
+
+    @NonNull
     private final DocumentModelTranslator documentModelTranslator;
 
     @NonNull
@@ -28,7 +34,7 @@ class StabilizationProgressRetriever {
 
     static StabilizationProgressRetriever getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new StabilizationProgressRetriever(DocumentModelTranslator.getInstance(),
+            INSTANCE = new StabilizationProgressRetriever(TagReader.getInstance(), DocumentModelTranslator.getInstance(),
                     DocumentResponseModelTranslator.getInstance());
         }
 
@@ -60,7 +66,9 @@ class StabilizationProgressRetriever {
         final GetDocumentResponse response =
                 proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::getDocument);
 
-        final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceInformation(response);
+        final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
+
+        final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceInformation(response, documentTags);
 
         return GetProgressResponse.builder()
                 .resourceInformation(resourceInformation)
