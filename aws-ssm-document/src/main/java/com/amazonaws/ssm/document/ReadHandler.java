@@ -1,8 +1,10 @@
 package com.amazonaws.ssm.document;
 
+import com.amazonaws.ssm.document.tags.TagReader;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import java.util.Map;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
@@ -31,12 +33,15 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
     private final SsmClient ssmClient;
 
     @NonNull
+    private final TagReader tagReader;
+
+    @NonNull
     private final DocumentExceptionTranslator exceptionTranslator;
 
     @VisibleForTesting
     public ReadHandler() {
         this(DocumentModelTranslator.getInstance(), DocumentResponseModelTranslator.getInstance(), ClientBuilder.getClient(),
-                DocumentExceptionTranslator.getInstance());
+            TagReader.getInstance(), DocumentExceptionTranslator.getInstance());
     }
 
     @Override
@@ -53,7 +58,9 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             final GetDocumentResponse getDocumentResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
 
-            final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceInformation(getDocumentResponse);
+            final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
+            final ResourceInformation resourceInformation =
+                documentResponseModelTranslator.generateResourceInformation(getDocumentResponse, documentTags);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(resourceInformation.getResourceModel())
