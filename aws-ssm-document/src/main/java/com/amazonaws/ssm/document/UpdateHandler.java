@@ -103,19 +103,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         }
     }
 
-    private ProgressEvent<ResourceModel, CallbackContext> getNotUpdatableProgressEvent() {
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .status(OperationStatus.FAILED)
-            .errorCode(HandlerErrorCode.NotUpdatable)
-            .build();
-    }
-
-    private boolean isCreateOnlyPropertiesModified(final ResourceModel previousModel, final ResourceModel model) {
-        return !previousModel.getName().equals(model.getName()) || !previousModel.getDocumentType().equals(model.getDocumentType());
-    }
-
-
-
     private ProgressEvent<ResourceModel, CallbackContext> updateProgress(@NonNull final ResourceModel model,
                                                                          @NonNull final CallbackContext context,
                                                                          @NonNull final AmazonWebServicesClientProxy proxy,
