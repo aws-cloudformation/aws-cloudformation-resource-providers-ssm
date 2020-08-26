@@ -105,13 +105,18 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
 
+        final OperationStatus operationStatus = getOperationStatus(resourceInformation.getStatus());
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(resourceInformation.getResourceModel())
-                .status(getOperationStatus(resourceInformation.getStatus()))
+                .status(operationStatus)
                 .message(resourceInformation.getStatusInformation())
                 .callbackContext(progressResponse.getCallbackContext())
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .callbackDelaySeconds(setCallbackDelay(operationStatus))
                 .build();
+    }
+
+    private int setCallbackDelay(final OperationStatus operationStatus) {
+        return operationStatus == OperationStatus.SUCCESS ? 0 : CALLBACK_DELAY_SECONDS;
     }
 
     private OperationStatus getOperationStatus(@NonNull final ResourceStatus status) {

@@ -191,11 +191,6 @@
             "permissions": [
                 "ssm:DeleteDocument"
             ]
-        },
-        "list": {
-            "permissions": [
-                "ssm:ListDocuments"
-            ]
         }
     }
 }

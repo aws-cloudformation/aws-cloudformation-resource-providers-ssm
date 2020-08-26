@@ -198,7 +198,6 @@ public class CreateHandlerTest {
                 .status(OperationStatus.SUCCESS)
                 .message(SAMPLE_STATUS_INFO)
                 .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
