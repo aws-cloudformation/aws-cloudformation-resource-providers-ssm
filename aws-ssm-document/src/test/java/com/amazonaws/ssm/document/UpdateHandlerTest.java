@@ -43,6 +43,10 @@ public class UpdateHandlerTest {
             "schemaVersion", "1.2",
             "description", "Join instances to an AWS Directory Service domain."
     );
+    private static final Map<String, Object> SAMPLE_PREVIOUS_DOCUMENT_CONTENT = ImmutableMap.of(
+        "schemaVersion", "1.1",
+        "description", "Join instances to an AWS Directory Service domain."
+    );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final Map<String, String> SAMPLE_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey1", "tagValue1");
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
@@ -55,6 +59,10 @@ public class UpdateHandlerTest {
             .name(SAMPLE_DOCUMENT_NAME)
             .content(SAMPLE_DOCUMENT_CONTENT)
             .build();
+    private static final ResourceModel SAMPLE_PREVIOUS_RESOURCE_MODEL = ResourceModel.builder()
+        .name(SAMPLE_DOCUMENT_NAME)
+        .content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
+        .build();
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .systemTags(SAMPLE_SYSTEM_TAGS)
             .desiredResourceTags(SAMPLE_DESIRED_RESOURCE_TAGS)
@@ -252,7 +260,6 @@ public class UpdateHandlerTest {
                 .status(OperationStatus.SUCCESS)
                 .message(SAMPLE_STATUS_INFO)
                 .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))

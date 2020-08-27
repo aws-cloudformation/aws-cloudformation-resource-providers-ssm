@@ -28,7 +28,6 @@ Resources:
                 - "ssm:CreateDocument"
                 - "ssm:DeleteDocument"
                 - "ssm:GetDocument"
-                - "ssm:ListDocuments"
                 - "ssm:ListTagsForResource"
                 - "ssm:RemoveTagsFromResource"
                 - "ssm:UpdateDocument"

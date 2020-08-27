@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -116,12 +117,13 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
        final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
 
+       final OperationStatus operationStatus = getOperationStatus(resourceInformation.getStatus());
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(resourceInformation.getResourceModel())
-                .status(getOperationStatus(resourceInformation.getStatus()))
+                .status(operationStatus)
                 .message(resourceInformation.getStatusInformation())
                 .callbackContext(progressResponse.getCallbackContext())
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .callbackDelaySeconds(setCallbackDelay(operationStatus))
                 .build();
     }
 
@@ -151,5 +153,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             default:
                 return OperationStatus.FAILED;
         }
+    }
+
+    private int setCallbackDelay(final OperationStatus operationStatus) {
+        return operationStatus == OperationStatus.SUCCESS ? 0 : CALLBACK_DELAY_SECONDS;
     }
 }
