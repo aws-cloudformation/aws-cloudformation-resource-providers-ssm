@@ -28,7 +28,6 @@ class DocumentResponseModelTranslator {
                 .versionName(response.versionName())
                 .documentFormat(response.documentFormatAsString())
                 .documentType(response.documentTypeAsString())
-                .documentVersion(response.documentVersion())
                 .content(response.content())
                 .tags(translateToResourceModelTags(documentTagMap))
                 .requires(translateRequires(response))
