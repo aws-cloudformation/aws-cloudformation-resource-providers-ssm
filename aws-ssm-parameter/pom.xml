@@ -19,7 +19,7 @@
     </properties>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/software.samazon.awssdk/ssm -->
+        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/ssm -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>ssm</artifactId>
