@@ -110,7 +110,6 @@
                 "ApplicationConfiguration",
                 "ApplicationConfigurationSchema",
                 "Automation",
-                "ChangeCalendar",
                 "Command",
                 "DeploymentStrategy",
                 "Package",
@@ -119,12 +118,11 @@
             ]
         },
         "DocumentFormat": {
-            "description": "Specify the document format for the request. The document format can be either JSON, YAML or TEXT. JSON is the default format.",
+            "description": "Specify the document format for the request. The document format can be either JSON or YAML. JSON is the default format.",
             "type": "string",
             "enum": [
                 "YAML",
-                "JSON",
-                "TEXT"
+                "JSON"
             ],
             "default": "JSON"
         },
