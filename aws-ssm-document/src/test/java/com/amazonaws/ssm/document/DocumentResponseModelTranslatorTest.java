@@ -171,7 +171,6 @@ public class DocumentResponseModelTranslatorTest {
         return ResourceModel.builder()
                 .name(SAMPLE_DOCUMENT_NAME)
                 .content(SAMPLE_DOCUMENT_CONTENT)
-                .documentVersion(SAMPLE_DOCUMENT_VERSION)
                 .versionName(SAMPLE_VERSION_NAME)
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)
                 .documentType(SAMPLE_DOCUMENT_TYPE)

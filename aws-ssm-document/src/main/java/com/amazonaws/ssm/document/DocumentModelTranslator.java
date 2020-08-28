@@ -84,7 +84,7 @@ class DocumentModelTranslator {
     GetDocumentRequest generateGetDocumentRequest(@NonNull final ResourceModel model) {
         return GetDocumentRequest.builder()
                 .name(model.getName())
-                .documentVersion(model.getDocumentVersion())
+                .documentVersion(LATEST_DOCUMENT_VERSION)
                 .documentFormat(model.getDocumentFormat())
                 .build();
     }

@@ -148,10 +148,6 @@
                 "$ref": "#/definitions/DocumentRequires"
             },
             "minItems": 1
-        },
-        "DocumentVersion": {
-            "description": "The latest version number of document",
-            "type": "string"
         }
     },
     "additionalProperties": false,
@@ -159,9 +155,6 @@
     "createOnlyProperties": [
         "/properties/Name",
         "/properties/DocumentType"
-    ],
-    "readOnlyProperties": [
-        "/properties/DocumentVersion"
     ],
     "primaryIdentifier": [
         "/properties/Name"
