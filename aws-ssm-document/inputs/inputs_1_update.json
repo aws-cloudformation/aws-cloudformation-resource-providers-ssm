@@ -1,0 +1,33 @@
+{
+    "Name": "calendarTest1",
+    "Content": {
+        "schemaVersion": "2.2",
+        "description": "Command Document Example Update JSON Template",
+        "parameters": {
+            "Message": {
+                "type": "String",
+                "description": "Example",
+                "default": "Hello World"
+            }
+        },
+        "mainSteps": [
+            {
+                "action": "aws:runPowerShellScript",
+                "name": "example",
+                "inputs": {
+                    "runCommand": [
+                        "Write-Output {{Message}}"
+                    ]
+                }
+            }
+        ]
+    },
+    "DocumentType": "Command",
+    "DocumentFormat": "JSON",
+    "Tags": [
+        {
+            "Key": "CanaryTagKey",
+            "Value": "CanaryTagValueA"
+        }
+    ]
+}

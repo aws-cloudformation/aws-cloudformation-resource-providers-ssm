@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
@@ -18,6 +19,9 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import com.amazonaws.ssm.document.tags.TagReader;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
 public class StabilizationProgressRetrieverTest {
@@ -25,6 +29,10 @@ public class StabilizationProgressRetrieverTest {
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_DOCUMENT_CONTENT = "sampleDocumentContent";
     private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).build();
+    private static final Map<String, String> SAMPLE_TAG_MAP = ImmutableMap.of(
+        "tagKey1", "tagValue1",
+        "tagKey2", "tagValue2"
+    );
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
             .build();
@@ -39,6 +47,9 @@ public class StabilizationProgressRetrieverTest {
     private static final String FAILED_MESSAGE = "failed";
     private static final String SAMPLE_STATUS_INFO = "sample status info";
     private static final ResourceStatus SAMPLE_RESOURCE_STATE = ResourceStatus.ACTIVE;
+
+    @Mock
+    private TagReader tagReader;
 
     @Mock
     private DocumentModelTranslator documentModelTranslator;
@@ -59,7 +70,8 @@ public class StabilizationProgressRetrieverTest {
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new StabilizationProgressRetriever(documentModelTranslator, responseModelTranslator);
+        tagReader = Mockito.mock(TagReader.class);
+        unitUnderTest = new StabilizationProgressRetriever(tagReader, documentModelTranslator, responseModelTranslator);
     }
 
     @Test
@@ -90,7 +102,8 @@ public class StabilizationProgressRetrieverTest {
 
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(getDocumentResponse);
-        when(responseModelTranslator.generateResourceInformation(getDocumentResponse)).thenReturn(expectedResourceInformation);
+        when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
+        when(responseModelTranslator.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP)).thenReturn(expectedResourceInformation);
 
         final GetProgressResponse response
                 = unitUnderTest.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger);

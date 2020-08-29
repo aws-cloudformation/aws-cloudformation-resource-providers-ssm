@@ -3,18 +3,17 @@ package software.amazon.ssm.maintenancewindowtarget.translator.request;
 import com.google.common.collect.ImmutableList;
 import software.amazon.awssdk.services.ssm.model.DescribeMaintenanceWindowTargetsRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeMaintenanceWindowTargetsResponse;
+import software.amazon.awssdk.services.ssm.model.MaintenanceWindowFilter;
 import software.amazon.awssdk.services.ssm.model.MaintenanceWindowTarget;
-import software.amazon.ssm.maintenancewindowtarget.MaintenanceWindowFilter;
 import software.amazon.ssm.maintenancewindowtarget.ResourceModel;
-import software.amazon.ssm.maintenancewindowtarget.translator.property.FiltersListTranslator;
 import software.amazon.ssm.maintenancewindowtarget.translator.property.TargetsListTranslator;
 import software.amazon.ssm.maintenancewindowtarget.util.SimpleTypeValidator;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 public class GetMaintenanceWindowTargetTranslator {
     private final SimpleTypeValidator simpleTypeValidator;
-    private final FiltersListTranslator filtersListTranslator;
     private final TargetsListTranslator targetsListTranslator;
 
     /**
@@ -22,7 +21,6 @@ public class GetMaintenanceWindowTargetTranslator {
      */
     public GetMaintenanceWindowTargetTranslator() {
         this.simpleTypeValidator = new SimpleTypeValidator();
-        this.filtersListTranslator = new FiltersListTranslator();
         this.targetsListTranslator = new TargetsListTranslator();
     }
 
@@ -32,10 +30,8 @@ public class GetMaintenanceWindowTargetTranslator {
      * @param simpleTypeValidator Validator for simple data types.
      */
     public GetMaintenanceWindowTargetTranslator(final SimpleTypeValidator simpleTypeValidator,
-                                                final FiltersListTranslator filtersListTranslator,
                                                 final TargetsListTranslator targetsListTranslator) {
         this.simpleTypeValidator = simpleTypeValidator;
-        this.filtersListTranslator = filtersListTranslator;
         this.targetsListTranslator = targetsListTranslator;
     }
 
@@ -51,18 +47,13 @@ public class GetMaintenanceWindowTargetTranslator {
                         .windowId(model.getWindowId());
 
         // Add windowTargetId into the filter
-        final MaintenanceWindowFilter windowTargetIdFilter = new MaintenanceWindowFilter();
-        windowTargetIdFilter.setKey("WindowTargetId");
-        windowTargetIdFilter.setValues(ImmutableList.of(model.getWindowTargetId()));
+        final MaintenanceWindowFilter windowTargetIdFilter = MaintenanceWindowFilter.builder()
+            .key("WindowTargetId")
+            .values(ImmutableList.of(model.getWindowTargetId()))
+            .build();
 
-        filtersListTranslator.resourceModelPropertyToServiceModel(Arrays.asList(windowTargetIdFilter))
+        Optional.of(Arrays.asList(windowTargetIdFilter))
                 .ifPresent(describeMaintenanceWindowTargetsRequestBuilder::filters);
-
-        simpleTypeValidator.getValidatedInteger(model.getMaxResults())
-                .ifPresent(describeMaintenanceWindowTargetsRequestBuilder::maxResults);
-
-        simpleTypeValidator.getValidatedString(model.getNextToken())
-                .ifPresent(describeMaintenanceWindowTargetsRequestBuilder::nextToken);
 
         return describeMaintenanceWindowTargetsRequestBuilder.build();
     }

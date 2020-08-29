@@ -1,7 +1,5 @@
 package software.amazon.ssm.maintenancewindowtarget;
 
-
-
 import java.util.Collections;
 import java.util.List;
 
@@ -28,11 +26,8 @@ public class TestsInputs {
                 .values(TARGET_VALUE)
                 .build());
 
-    public static final String FILTER_KEY = "TestWindowTargetId";
+    public static final String FILTER_KEY = "WindowTargetId";
     public static final String FILTER_VALUE = WINDOW_TARGET_ID;
-    public static final List<MaintenanceWindowFilter> MODEL_FILTERS =
-            Collections.singletonList(
-                    new MaintenanceWindowFilter(FILTER_KEY, Collections.singletonList(FILTER_VALUE)));
     public static final List<software.amazon.awssdk.services.ssm.model.MaintenanceWindowFilter> SERVICE_FILTERS =
             Collections.singletonList(
                     software.amazon.awssdk.services.ssm.model.MaintenanceWindowFilter.builder()

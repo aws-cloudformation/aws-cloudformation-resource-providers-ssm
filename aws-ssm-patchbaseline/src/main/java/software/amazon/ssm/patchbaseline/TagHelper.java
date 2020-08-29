@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.ssm.patchbaseline.utils.TagUtils;
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
+import software.amazon.ssm.patchbaseline.translator.resourcemodel.ResourceModelPropertyTranslator;
 import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_DUPLICATE_TAGS;
 import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.NO_SYSTEM_TAGS;
 import static software.amazon.ssm.patchbaseline.utils.ErrorMessage.TAG_KEY_NULL;
@@ -214,5 +215,33 @@ public class TagHelper {
         }
 
         return tagSet;
+    }
+
+    /**
+     * Make one SSM call to list tags, excluding system tags, including stack level tags
+     * @param ssmResourceType SSM resource type that would be used in AddTagsToResource (or Remove...) SSM calls
+     * @param baselineId  Request data passed to update handler
+     * @param ssmClient Amazon SSM client
+     * @param proxy AmazonWebServicesClientProxy
+     * @return Tags as a List
+     */
+    public List<Tag> listTagsForResource(String ssmResourceType,
+                                         String baselineId,
+                                         SsmClient ssmClient,
+                                         final AmazonWebServicesClientProxy proxy) {
+
+        ListTagsForResourceRequest listTagsForResourceRequest = ListTagsForResourceRequest.builder()
+                .resourceType(ssmResourceType)
+                .resourceId(baselineId)
+                .build();
+
+        ListTagsForResourceResponse listTagsForResourceResponse =
+                proxy.injectCredentialsAndInvokeV2(listTagsForResourceRequest, ssmClient::listTagsForResource);
+
+        List<Tag> tags = listTagsForResourceResponse.tagList();
+        return tags.stream()
+                .filter(entry -> !entry.key().toLowerCase().startsWith(SYSTEM_TAG_PREFIX))
+                .collect(Collectors.toList());
+
     }
 }

@@ -1,12 +1,12 @@
 package com.amazonaws.ssm.document;
 
 import lombok.NonNull;
-import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 class DocumentResponseModelTranslator {
@@ -21,16 +21,16 @@ class DocumentResponseModelTranslator {
         return INSTANCE;
     }
 
-    ResourceInformation generateResourceInformation(@NonNull final GetDocumentResponse response) {
+    ResourceInformation generateResourceInformation(@NonNull final GetDocumentResponse response,
+                                                    @NonNull final Map<String, String> documentTagMap) {
         final ResourceModel model = ResourceModel.builder()
                 .name(response.name())
                 .versionName(response.versionName())
                 .documentFormat(response.documentFormatAsString())
                 .documentType(response.documentTypeAsString())
-                .documentVersion(response.documentVersion())
                 .content(response.content())
+                .tags(translateToResourceModelTags(documentTagMap))
                 .requires(translateRequires(response))
-                .attachmentsContent(translateAttachments(response))
                 .build();
 
         final ResourceStatus state = translateStatus(response.status());
@@ -59,6 +59,15 @@ class DocumentResponseModelTranslator {
         }
     }
 
+    private List<Tag> translateToResourceModelTags(final Map<String, String> tagMap) {
+        return tagMap.entrySet().stream()
+            .map(tagEntry -> Tag.builder()
+                .key(tagEntry.getKey())
+                .value(tagEntry.getValue())
+                .build())
+            .collect(Collectors.toList());
+    }
+
     private List<DocumentRequires> translateRequires(final GetDocumentResponse response) {
         if (!response.hasRequires()) {
             return null;
@@ -70,27 +79,6 @@ class DocumentResponseModelTranslator {
                 documentRequires -> DocumentRequires.builder()
                         .name(documentRequires.name())
                         .version(documentRequires.version())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    private List<AttachmentContent> translateAttachments(final GetDocumentResponse response) {
-        if (!response.hasAttachmentsContent()) {
-            return null;
-        }
-
-        final List<software.amazon.awssdk.services.ssm.model.AttachmentContent> attachmentContents = response.attachmentsContent();
-        if (CollectionUtils.isEmpty(attachmentContents)) {
-            return null;
-        }
-
-        return attachmentContents.stream().map(
-                attachmentContent -> AttachmentContent.builder()
-                        .name(attachmentContent.name())
-                        .hash(attachmentContent.hash())
-                        .hashType(attachmentContent.hashTypeAsString())
-                        .size(attachmentContent.size().intValue())
-                        .url(attachmentContent.url())
                         .build())
                 .collect(Collectors.toList());
     }

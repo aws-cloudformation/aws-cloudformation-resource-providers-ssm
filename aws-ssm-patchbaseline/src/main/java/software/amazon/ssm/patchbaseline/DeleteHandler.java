@@ -63,36 +63,27 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                                                final Logger logger,
                                                final AmazonWebServicesClientProxy proxy,
                                                final SsmClient ssmClient) {
+        //First, get a list of all the registered groups of the baseline
+        GetPatchBaselineRequest getPatchBaselineRequest = GetPatchBaselineRequest.builder()
+                                                                .baselineId(baselineId)
+                                                                .build();
 
-        try {
-            //First, get a list of all the registered groups of the baseline
-            GetPatchBaselineRequest getPatchBaselineRequest = GetPatchBaselineRequest.builder()
-                                                                    .baselineId(baselineId)
-                                                                    .build();
+        GetPatchBaselineResponse getPatchBaselineResponse =
+                proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
 
-            GetPatchBaselineResponse getPatchBaselineResponse =
-                    proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
+        //Remove each group from the baseline
+        //TODO: Look into rate limiting this if we get large numbers of patch groups registered with a baseline
+        for (String group : getPatchBaselineResponse.patchGroups()) {
+            DeregisterPatchBaselineForPatchGroupRequest deregisterRequest =
+                    DeregisterPatchBaselineForPatchGroupRequest.builder()
+                                .baselineId(baselineId)
+                                .patchGroup(group)
+                                .build();
 
-            //Remove each group from the baseline
-            //TODO: Look into rate limiting this if we get large numbers of patch groups registered with a baseline
-            for (String group : getPatchBaselineResponse.patchGroups()) {
-                DeregisterPatchBaselineForPatchGroupRequest deregisterRequest =
-                        DeregisterPatchBaselineForPatchGroupRequest.builder()
-                                    .baselineId(baselineId)
-                                    .patchGroup(group)
-                                    .build();
-
-                DeregisterPatchBaselineForPatchGroupResponse deregisterResponse =
-                        proxy.injectCredentialsAndInvokeV2(deregisterRequest, ssmClient::deregisterPatchBaselineForPatchGroup);
-            }
-
-            logger.log(String.format("INFO Deregistered group(s) from patch baseline %s %n", baselineId));
-
-        } catch (DoesNotExistException e) {
-            // If the baseline doesn't exist, GetPatchBaseline will throw an exception, but we should
-            // still consider this successful.
-            logger.log(String.format("INFO Unable to retrieve group(s) for patch baseline %s."
-                    + "The baseline might not exist. %n", baselineId));
+            DeregisterPatchBaselineForPatchGroupResponse deregisterResponse =
+                    proxy.injectCredentialsAndInvokeV2(deregisterRequest, ssmClient::deregisterPatchBaselineForPatchGroup);
         }
+
+        logger.log(String.format("INFO Deregistered group(s) from patch baseline %s %n", baselineId));
     }
 }

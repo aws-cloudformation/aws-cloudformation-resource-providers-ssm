@@ -6,7 +6,6 @@ import software.amazon.awssdk.services.ssm.model.ResourceLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.FeatureNotAvailableException;
 import software.amazon.awssdk.services.ssm.model.TargetInUseException;
 import software.amazon.awssdk.services.ssm.model.IdempotentParameterMismatchException;
-import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.SsmRequest;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
@@ -14,7 +13,6 @@ import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 
@@ -27,8 +25,8 @@ public class ExceptionTranslator {
      * Translates service model exceptions to CloudFormation exceptions.
      *
      * @param serviceException Service model exception to translate.
-     * @param request Type of SsmRequest where the service exception came from.
-     * used for better exception messaging for the customer.
+     * @param request          Type of SsmRequest where the service exception came from.
+     *                         used for better exception messaging for the customer.
      * @return CloudFormation-type exception converted from a service model exception.
      */
     public BaseHandlerException translateFromServiceException(final Exception serviceException,
@@ -50,7 +48,7 @@ public class ExceptionTranslator {
                     serviceException);
         } else if (serviceException instanceof FeatureNotAvailableException
                 || serviceException instanceof TargetInUseException
-                || serviceException instanceof IdempotentParameterMismatchException){
+                || serviceException instanceof IdempotentParameterMismatchException) {
 
             return new CfnInvalidRequestException(request.toString(), serviceException);
         } else {

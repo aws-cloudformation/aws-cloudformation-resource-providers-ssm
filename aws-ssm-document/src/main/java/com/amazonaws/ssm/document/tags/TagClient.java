@@ -2,6 +2,7 @@ package com.amazonaws.ssm.document.tags;
 
 import java.util.List;
 import com.google.common.collect.ImmutableList;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
@@ -12,6 +13,7 @@ import software.amazon.awssdk.services.ssm.model.ResourceTypeForTagging;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 
+@NoArgsConstructor
 public class TagClient {
 
     private static TagClient INSTANCE;

@@ -1,12 +1,8 @@
 package software.amazon.ssm.maintenancewindow.util;
 
 import com.amazonaws.util.StringUtils;
-import software.amazon.awssdk.services.ssm.model.Tag;
-import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.util.Optional;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**

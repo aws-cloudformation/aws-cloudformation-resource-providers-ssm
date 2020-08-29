@@ -31,7 +31,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
      * Used for unit tests.
      *
      * @param getMaintenanceWindowTranslator Translates GetMaintenanceWindow into ResourceModel objects.
-     * @param exceptionTranslator Translates service model exceptions.
+     * @param exceptionTranslator            Translates service model exceptions.
      */
     ReadHandler(final GetMaintenanceWindowTranslator getMaintenanceWindowTranslator, final ExceptionTranslator exceptionTranslator) {
         this.getMaintenanceWindowTranslator = getMaintenanceWindowTranslator;
@@ -77,7 +77,6 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
             progressEvent.setStatus(OperationStatus.SUCCESS);
 
-            return progressEvent;
         } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, getMaintenanceWindowRequest);
@@ -86,5 +85,6 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
+        return progressEvent;
     }
 }

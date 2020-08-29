@@ -4,6 +4,9 @@ import software.amazon.awssdk.services.ssm.model.CreateMaintenanceWindowRequest;
 import software.amazon.ssm.maintenancewindow.ResourceModel;
 import software.amazon.ssm.maintenancewindow.util.SimpleTypeValidator;
 import software.amazon.ssm.maintenancewindow.translator.resourcemodel.ResourceModelPropertyTranslator;
+import software.amazon.ssm.maintenancewindow.util.TagUtil;
+
+import java.util.Map;
 
 public class CreateMaintenanceWindowTranslator {
 
@@ -31,7 +34,9 @@ public class CreateMaintenanceWindowTranslator {
     /**
      * Generate CreateMaintenanceWindowRequest from the CreateResource request.
      */
-    public CreateMaintenanceWindowRequest resourceModelToRequest(final ResourceModel model) {
+    public CreateMaintenanceWindowRequest resourceModelToRequest(final ResourceModel model,
+                                                                 final Map<String, String> resourceTags,
+                                                                 final Map<String, String> systemTags) {
 
         final CreateMaintenanceWindowRequest.Builder createMaintenanceWindowRequestBuilder =
                 CreateMaintenanceWindowRequest.builder()
@@ -53,8 +58,11 @@ public class CreateMaintenanceWindowTranslator {
         simpleTypeValidator.getValidatedString(model.getEndDate())
                 .ifPresent(createMaintenanceWindowRequestBuilder::endDate);
 
-        resourceModelPropertyTranslator.translateToRequestTags(model.getTags())
+        resourceModelPropertyTranslator.translateToRequestTags(TagUtil.consolidateTags(resourceTags, systemTags))
                 .ifPresent(createMaintenanceWindowRequestBuilder::tags);
+
+        simpleTypeValidator.getValidatedInteger(model.getScheduleOffset())
+                .ifPresent(createMaintenanceWindowRequestBuilder::scheduleOffset);
 
         return createMaintenanceWindowRequestBuilder.build();
     }

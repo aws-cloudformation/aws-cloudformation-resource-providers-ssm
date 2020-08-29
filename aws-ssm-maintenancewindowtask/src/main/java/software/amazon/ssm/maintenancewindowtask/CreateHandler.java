@@ -73,7 +73,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             progressEvent.setStatus(OperationStatus.SUCCESS);
             progressEvent.setResourceModel(model);
-            return progressEvent;
 
         } catch (Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
@@ -83,5 +82,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
+        return progressEvent;
     }
 }

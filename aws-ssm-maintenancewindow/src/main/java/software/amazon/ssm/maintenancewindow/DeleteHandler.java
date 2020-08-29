@@ -13,8 +13,6 @@ import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.ssm.maintenancewindow.translator.ExceptionTranslator;
 import software.amazon.ssm.maintenancewindow.util.ClientBuilder;
 
-import java.util.Optional;
-
 public class DeleteHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient SSM_CLIENT = ClientBuilder.getClient();
@@ -65,7 +63,6 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
             progressEvent.setStatus(OperationStatus.SUCCESS);
 
-            return ProgressEvent.defaultSuccessHandler(null);
         } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator
                     .translateFromServiceException(e, deleteMaintenanceWindowRequest);
@@ -74,5 +71,6 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
             throw cfnException;
         }
+        return ProgressEvent.defaultSuccessHandler(null);
     }
 }

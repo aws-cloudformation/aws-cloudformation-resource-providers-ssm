@@ -212,9 +212,7 @@ public class DeleteHandlerTest {
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(SAMPLE_RESOURCE_MODEL)
                 .status(OperationStatus.SUCCESS)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                 .build();
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))

@@ -73,37 +73,6 @@
                 }
             },
             "additionalProperties": false
-        },
-        "AttachmentContent": {
-            "type": "object",
-            "properties": {
-                "Name": {
-                    "description": "The name of an attachment.",
-                    "type": "string",
-                    "pattern": "^[a-zA-Z0-9_\\-.]{3,128}$"
-                },
-                "Size": {
-                    "description": "The size of an attachment in bytes.",
-                    "type": "integer"
-                },
-                "Hash": {
-                    "description": "The cryptographic hash value of the document content.",
-                    "type": "string",
-                    "maxLength": 256
-                },
-                "HashType": {
-                    "description": "The hash algorithm used to calculate the hash value.",
-                    "type": "string",
-                    "enum": [
-                        "Sha256"
-                    ]
-                },
-                "Url": {
-                    "description": "The URL location of the attachment content.",
-                    "type": "string"
-                }
-            },
-            "additionalProperties": false
         }
     },
     "properties": {
@@ -141,7 +110,6 @@
                 "ApplicationConfiguration",
                 "ApplicationConfigurationSchema",
                 "Automation",
-                "ChangeCalendar",
                 "Command",
                 "DeploymentStrategy",
                 "Package",
@@ -150,12 +118,11 @@
             ]
         },
         "DocumentFormat": {
-            "description": "Specify the document format for the request. The document format can be either JSON, YAML or TEXT. JSON is the default format.",
+            "description": "Specify the document format for the request. The document format can be either JSON or YAML. JSON is the default format.",
             "type": "string",
             "enum": [
                 "YAML",
-                "JSON",
-                "TEXT"
+                "JSON"
             ],
             "default": "JSON"
         },
@@ -179,19 +146,6 @@
                 "$ref": "#/definitions/DocumentRequires"
             },
             "minItems": 1
-        },
-        "DocumentVersion": {
-            "description": "The version of the document that you want to update.",
-            "type": "string",
-            "pattern": "([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)",
-            "maxLength": 8
-        },
-        "AttachmentsContent": {
-            "description": "A description of the document attachments, including names, locations, sizes, etc.",
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/AttachmentContent"
-            }
         }
     },
     "additionalProperties": false,
@@ -200,24 +154,8 @@
         "/properties/Name",
         "/properties/DocumentType"
     ],
-    "readOnlyProperties": [
-        "/properties/DocumentVersion",
-        "/properties/AttachmentsContent"
-    ],
     "primaryIdentifier": [
         "/properties/Name"
-    ],
-    "oneOf": [
-        {
-            "required": [
-                "Content"
-            ]
-        },
-        {
-            "required": [
-                "ContentAsString"
-            ]
-        }
     ],
     "handlers": {
         "create": {
@@ -243,11 +181,6 @@
         "delete": {
             "permissions": [
                 "ssm:DeleteDocument"
-            ]
-        },
-        "list": {
-            "permissions": [
-                "ssm:ListDocuments"
             ]
         }
     }

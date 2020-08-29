@@ -1,5 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.Logger;
@@ -8,6 +9,7 @@ import software.amazon.awssdk.services.ssm.model.ResourceInUseException;
 import software.amazon.awssdk.services.ssm.model.InvalidResourceIdException;
 import software.amazon.awssdk.services.ssm.model.AlreadyExistsException;
 import software.amazon.ssm.patchbaseline.utils.SsmCfnClientSideException;
+import software.amazon.awssdk.services.ssm.model.DoesNotExistException;
 import com.amazonaws.AmazonServiceException;
 
 import java.util.Arrays;
@@ -35,6 +37,10 @@ public class Resource {
                                                                                  String baselineID,
                                                                                  Logger logger) {
 
+        final ProgressEvent<ResourceModel, CallbackContext> progressEvent = new ProgressEvent<>();
+        progressEvent.setStatus(OperationStatus.FAILED);
+        progressEvent.setErrorCode(HandlerErrorCode.InvalidRequest);
+
         if (ex instanceof IllegalArgumentException) {
             logger.log(String.format("WARN Handlers were unable to parse CloudFormation request properly. "
                     + "Exception details: %s %n", ex.getMessage()));
@@ -47,6 +53,10 @@ public class Resource {
         } else if (ex instanceof ResourceLimitExceededException) {
             logger.log(String.format("WARN User tried to create patch baseline but exceeded their resource limits. "
                     + "Exception details: %s %n", ex.getMessage()));
+        } else if (ex instanceof DoesNotExistException) {
+            logger.log(String.format("WARN CloudFormation provided not existed patch baseline ID %s. "
+                    + "Exception details: %s %n", baselineID, ex.getMessage()));
+            progressEvent.setErrorCode(HandlerErrorCode.NotFound);
         } else if (ex instanceof AlreadyExistsException) {
             logger.log(String.format("WARN User tried to register baseline %s to patch group that already has a baseline. "
                     + "Exception details: %s %n", baselineID, ex.getMessage()));
@@ -76,11 +86,8 @@ public class Resource {
             logger.log(String.format("ERROR Encountered an unknown exception while processing patch baseline request. Exception details: %s %n", ex.getMessage()));
         }
 
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(model)
-                .status(OperationStatus.FAILED)
-                .message(ex.getMessage())
-                .build();
+        progressEvent.setMessage(ex.getMessage());
+        return progressEvent;
     }
 
     /**

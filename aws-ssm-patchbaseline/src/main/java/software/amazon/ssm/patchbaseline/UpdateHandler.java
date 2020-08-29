@@ -8,6 +8,8 @@ import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatch
 import software.amazon.awssdk.services.ssm.model.DeregisterPatchBaselineForPatchGroupResponse;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupRequest;
 import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGroupResponse;
+import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineResponse;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -21,6 +23,7 @@ import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.BooleanUtils;
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
@@ -107,6 +110,17 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             tagHelper.updateTagsForResource(request, PATCH_BASELINE_RESOURCE_NAME, ssmClient, proxy);
 
             logger.log(String.format("INFO Updated tags for patch baseline %s %n", baselineId));
+
+            // Set to default patch baseline
+            if (BooleanUtils.isTrue(model.getDefaultBaseline()) && !BooleanUtils.isTrue(previousModel.getDefaultBaseline())){
+                RegisterDefaultPatchBaselineRequest registerDefaultPatchBaselineRequest = RegisterDefaultPatchBaselineRequest.builder()
+                        .baselineId(baselineId)
+                        .build();
+                RegisterDefaultPatchBaselineResponse registerDefaultPatchBaselineResponse =
+                        proxy.injectCredentialsAndInvokeV2(registerDefaultPatchBaselineRequest, ssmClient::registerDefaultPatchBaseline);
+
+                logger.log(String.format("INFO Registered patch baseline %s to default patch baseline successfully %n", baselineId));
+            }
 
             //If we made it here, we're done
             logger.log(String.format("INFO Successfully updated patch baseline %s %n", baselineId));

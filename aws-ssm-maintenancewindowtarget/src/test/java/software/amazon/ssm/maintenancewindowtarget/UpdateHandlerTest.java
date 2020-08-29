@@ -67,7 +67,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleUpdateRequestWithWindowIdPresent(){
+    public void handleUpdateRequestWithRequiredParametersPresent(){
         final ResourceModel.ResourceModelBuilder resourceModelBuilder =
             ResourceModel.builder()
                 .name(NAME)
@@ -120,6 +120,72 @@ public class UpdateHandlerTest extends AbstractTestBase {
             ProgressEvent.defaultSuccessHandler(desiredModel);
 
         assertThat(response).isEqualTo(expectedProgressEvent);
+        verifyZeroInteractions(exceptionTranslator);
+    }
+
+    @Test
+    void handleUpdateRequestWithoutWindowId() {
+        final ResourceModel desiredModel = ResourceModel.builder()
+            .name(UPDATED_NAME)
+            .windowTargetId(WINDOW_TARGET_ID)
+            .build();
+
+        final ResourceModel previousModel = ResourceModel.builder()
+            .name(NAME)
+            .windowTargetId(WINDOW_TARGET_ID)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(desiredModel)
+            .previousResourceState(previousModel)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+            = handler.handleRequest(proxy, request, null, logger);
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
+            ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(previousModel)
+                .status(OperationStatus.FAILED)
+                .errorCode(HandlerErrorCode.InvalidRequest)
+                .message("Both WindowId and WindowTargetId must be present to update the existing maintenance window target.")
+                .build();
+
+        assertThat(response).isEqualTo(expectedProgressEvent);
+        verifyZeroInteractions(proxy);
+        verifyZeroInteractions(exceptionTranslator);
+    }
+
+    @Test
+    void handleUpdateRequestWithoutWindowTargetId() {
+        final ResourceModel desiredModel = ResourceModel.builder()
+            .name(UPDATED_NAME)
+            .windowId(WINDOW_ID)
+            .build();
+
+        final ResourceModel previousModel = ResourceModel.builder()
+            .name(NAME)
+            .windowId(WINDOW_ID)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(desiredModel)
+            .previousResourceState(previousModel)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+            = handler.handleRequest(proxy, request, null, logger);
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
+            ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(previousModel)
+                .status(OperationStatus.FAILED)
+                .errorCode(HandlerErrorCode.InvalidRequest)
+                .message("Both WindowId and WindowTargetId must be present to update the existing maintenance window target.")
+                .build();
+
+        assertThat(response).isEqualTo(expectedProgressEvent);
+        verifyZeroInteractions(proxy);
         verifyZeroInteractions(exceptionTranslator);
     }
 
