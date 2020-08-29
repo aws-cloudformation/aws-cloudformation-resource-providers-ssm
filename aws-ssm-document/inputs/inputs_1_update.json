@@ -1,9 +1,29 @@
 {
     "Name": "calendarTest1",
-    "Content": "BEGIN:VCALENDAR\r\nPRODID:-//AWS//Change Calendar 1.0//EN\r\nVERSION:2.0\r\nX-CALENDAR-TYPE:DEFAULT_OPEN\r\nX-WR-CALDESC:test\r\nBEGIN:VTODO\r\nDTSTAMP:20200320T004207Z\r\nUID:3b5af39a-d0b3-4049-a839-d7bb8af01f92\r\nSUMMARY:Add events to this calendar2.\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
-    "DocumentType": "ChangeCalendar",
-    "DocumentFormat": "TEXT",
-    "DocumentVersion": "5",
+    "Content": {
+        "schemaVersion": "2.2",
+        "description": "Command Document Example Update JSON Template",
+        "parameters": {
+            "Message": {
+                "type": "String",
+                "description": "Example",
+                "default": "Hello World"
+            }
+        },
+        "mainSteps": [
+            {
+                "action": "aws:runPowerShellScript",
+                "name": "example",
+                "inputs": {
+                    "runCommand": [
+                        "Write-Output {{Message}}"
+                    ]
+                }
+            }
+        ]
+    },
+    "DocumentType": "Command",
+    "DocumentFormat": "JSON",
     "Tags": [
         {
             "Key": "CanaryTagKey",
