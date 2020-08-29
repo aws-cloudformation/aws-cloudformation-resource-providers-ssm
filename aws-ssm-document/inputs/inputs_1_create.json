@@ -22,8 +22,8 @@
             }
         ]
     },
-    "DocumentType": "ChangeCalendar",
-    "DocumentFormat": "TEXT",
+    "DocumentType": "Command",
+    "DocumentFormat": "JSON",
     "Tags": [
         {
             "Key": "CanaryTagKey",
