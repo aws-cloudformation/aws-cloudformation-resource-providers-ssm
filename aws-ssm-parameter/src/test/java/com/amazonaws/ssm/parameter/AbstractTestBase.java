@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +30,7 @@ public class AbstractTestBase {
     protected static final Long VERSION;
     protected static final Map<String, String> TAG_SET;
     protected static final Map<String, String> SYSTEM_TAGS_SET;
+    protected static final Map<String, String> PREVIOUS_TAG_SET;
 
     static {
         System.setProperty("org.slf4j.simpleLogger.showDateTime", "true");
@@ -57,6 +59,15 @@ public class AbstractTestBase {
                 put("aws:cloudformation:stack-id", "DummyStackArn");
             }
         };
+        PREVIOUS_TAG_SET = new HashMap<String, String>() {
+            {
+                put("key1", "changedValue");
+                put("key2", "value2");
+                put("key3", "value3");
+            }
+        };
+        PREVIOUS_TAG_SET.putAll(TAG_SET);
+        PREVIOUS_TAG_SET.putAll(SYSTEM_TAGS_SET);
     }
 
     static ProxyClient<SsmClient> MOCK_PROXY(

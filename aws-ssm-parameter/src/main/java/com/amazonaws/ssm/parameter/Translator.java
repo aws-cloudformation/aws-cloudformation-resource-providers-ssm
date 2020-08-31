@@ -4,7 +4,6 @@ import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.ResourceTypeForTagging;
@@ -64,13 +63,6 @@ public class Translator {
     static DeleteParameterRequest deleteParameterRequest(final ResourceModel model) {
         return DeleteParameterRequest.builder()
                 .name(model.getName())
-                .build();
-    }
-
-    static ListTagsForResourceRequest listTagsForResourceRequest(final ResourceModel model) {
-        return ListTagsForResourceRequest.builder()
-                .resourceType(ResourceTypeForTagging.PARAMETER)
-                .resourceId(model.getName())
                 .build();
     }
 

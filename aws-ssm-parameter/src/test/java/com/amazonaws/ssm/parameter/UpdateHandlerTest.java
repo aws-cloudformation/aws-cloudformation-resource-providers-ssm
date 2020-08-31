@@ -3,21 +3,14 @@ package com.amazonaws.ssm.parameter;
 import com.amazonaws.AmazonServiceException;
 import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
-import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.ParameterTier;
-import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
-import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceResponse;
-import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
@@ -78,11 +71,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
     }
 
-    @AfterEach
-    public void post_execute() {
-        verifyNoMoreInteractions(proxySsmClient.client());
-    }
-
     @Test
     public void handleRequest_SimpleSuccess() {
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
@@ -100,18 +88,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
-        final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
-        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenReturn(removeTagsFromResourceResponse);
-        final AddTagsToResourceResponse addTagsToResourceResponse = AddTagsToResourceResponse.builder().build();
-        when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenReturn(addTagsToResourceResponse);
-
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logicalId").build();
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
@@ -141,6 +123,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logicalId").build();
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
@@ -182,18 +165,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
 
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().tagList(Tag.builder().key("aws").value("dummyValue").build()).build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
-        final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
-        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenReturn(removeTagsFromResourceResponse);
-        final AddTagsToResourceResponse addTagsToResourceResponse = AddTagsToResourceResponse.builder().build();
-        when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenReturn(addTagsToResourceResponse);
-
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logicalId").build();
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
@@ -223,6 +200,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logical_id").build();
 
         try {
@@ -233,6 +211,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -245,6 +224,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logical_id").build();
 
         try {
@@ -255,6 +235,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -270,6 +251,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logical_id").build();
 
         try {
@@ -280,6 +262,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -296,6 +279,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logical_id").build();
 
         try {
@@ -306,6 +290,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -318,6 +303,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logical_id").build();
 
         try {
@@ -328,5 +314,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
+        verifyNoMoreInteractions(proxySsmClient.client());
     }
 }

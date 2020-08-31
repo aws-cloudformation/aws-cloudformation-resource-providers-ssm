@@ -1,6 +1,7 @@
 package com.amazonaws.ssm.parameter;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.util.CollectionUtils;
 import com.google.common.collect.Sets;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
@@ -56,7 +57,7 @@ public class UpdateHandler extends BaseHandlerStd {
                                 .makeServiceCall(this::updateResource)
                                 .stabilize(BaseHandlerStd::stabilize)
                                 .progress())
-                .then(progress -> tagResources(proxy, proxyClient, progress, request.getDesiredResourceTags(), callbackContext, logger))
+                .then(progress -> handleTagging(proxy, proxyClient, progress, model, request.getDesiredResourceTags(), request.getPreviousResourceTags()))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
@@ -81,31 +82,33 @@ public class UpdateHandler extends BaseHandlerStd {
         }
     }
 
-    private ProgressEvent<ResourceModel,CallbackContext> tagResources(
+    private ProgressEvent<ResourceModel,CallbackContext> handleTagging(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<SsmClient> proxyClient,
             final ProgressEvent<ResourceModel, CallbackContext> progress,
+            final ResourceModel resourceModel,
             final Map<String, String> desiredResourceTags,
-            final CallbackContext callbackContext,
-            final Logger logger) {
-        return proxy.initiate("aws-ssm-parameter::resource-update-tag-key", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                .translateToServiceRequest(Translator::listTagsForResourceRequest)
-                .makeServiceCall((listResourceTagsRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(listResourceTagsRequest, proxyInvocation.client()::listTagsForResource))
-                .done((listResourceTagsRequest, listResourceTagsResponse, proxyInvocation, resourceModel, context) -> {
-                    final Set<Tag> currentTags = new HashSet<>(Translator.translateTagsToSdk(desiredResourceTags));
-                    final Set<Tag> existingTags = new HashSet<>(listResourceTagsResponse.tagList());
-                    // Remove tags with aws prefix as they should not be modified once attached
-                    existingTags.removeIf(tag -> tag.key().startsWith("aws"));
+            final Map<String, String> previousResourceTags) {
 
-                    final Set<Tag> setTagsToRemove = Sets.difference(existingTags, currentTags);
-                    final Set<Tag> setTagsToAdd = Sets.difference(currentTags, existingTags);
+        final Set<Tag> currentTags = new HashSet<>(Translator.translateTagsToSdk(desiredResourceTags));
+        final Set<Tag> existingTags = new HashSet<>(Translator.translateTagsToSdk(previousResourceTags));
+        // Remove tags with aws prefix as they should not be modified once attached
+        existingTags.removeIf(tag -> tag.key().startsWith("aws"));
 
-                    final List<Tag> tagsToRemove = setTagsToRemove.stream().collect(Collectors.toList());
-                    final List<Tag> tagsToAdd = setTagsToAdd.stream().collect(Collectors.toList());
+        final Set<Tag> setTagsToRemove = Sets.difference(existingTags, currentTags);
+        final Set<Tag> setTagsToAdd = Sets.difference(currentTags, existingTags);
 
-                    proxyInvocation.injectCredentialsAndInvokeV2(Translator.removeTagsFromResourceRequest(resourceModel.getName(),tagsToRemove), proxyInvocation.client()::removeTagsFromResource);
-                    proxyInvocation.injectCredentialsAndInvokeV2(Translator.addTagsToResourceRequest(resourceModel.getName(), tagsToAdd), proxyInvocation.client()::addTagsToResource);
-                    return ProgressEvent.progress(resourceModel, callbackContext);
-                });
+        final List<Tag> tagsToRemove = setTagsToRemove.stream().collect(Collectors.toList());
+        final List<Tag> tagsToAdd = setTagsToAdd.stream().collect(Collectors.toList());
+
+        // Deletes tags only if tagsToRemove is not empty.
+        if (!CollectionUtils.isNullOrEmpty(tagsToRemove)) proxy.injectCredentialsAndInvokeV2(
+                Translator.removeTagsFromResourceRequest(resourceModel.getName(), tagsToRemove), proxyClient.client()::removeTagsFromResource);
+
+        // Adds tags only if tagsToAdd is not empty.
+        if (!CollectionUtils.isNullOrEmpty(tagsToAdd)) proxy.injectCredentialsAndInvokeV2(
+                Translator.addTagsToResourceRequest(resourceModel.getName(), tagsToAdd), proxyClient.client()::addTagsToResource);
+
+        return ProgressEvent.progress(progress.getResourceModel(), progress.getCallbackContext());
     }
 }
