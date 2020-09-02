@@ -61,7 +61,7 @@ public class AbstractTestBase {
         };
         PREVIOUS_TAG_SET = new HashMap<String, String>() {
             {
-                put("key1", "changedValue");
+                put("key1", "value1");
                 put("key2", "value2");
                 put("key3", "value3");
             }
