@@ -16,7 +16,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 /**
- * Handles update requests on a given resource.
+ * Handles initial update requests on a given resource.
  */
 public class InitialUpdateHandler extends BaseHandler<CallbackContext> {
 
@@ -27,7 +27,7 @@ public class InitialUpdateHandler extends BaseHandler<CallbackContext> {
     private final InProgressEventCreator inProgressEventCreator;
 
     /**
-     * Constructor to use by dependencies. Processes Update requests.
+     * Constructor to use by dependencies. Processes initial UpdateHandler requests.
      */
     InitialUpdateHandler(final SsmClient ssmClient) {
         this.ssmClient = ssmClient;
