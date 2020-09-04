@@ -1,47 +1,31 @@
 package com.amazonaws.ssm.association;
 
-import com.amazonaws.ssm.association.translator.AssociationDescriptionTranslator;
-import com.amazonaws.ssm.association.translator.ExceptionTranslator;
-import com.amazonaws.ssm.association.translator.request.UpdateAssociationTranslator;
+import static com.amazonaws.ssm.association.TestsInputs.LOGGED_RESOURCE_HANDLER_REQUEST;
+import static com.amazonaws.ssm.association.TestsInputs.SCHEDULE_EXPRESSION;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+
 import com.amazonaws.ssm.association.util.ResourceHandlerRequestToStringConverter;
-import org.junit.jupiter.api.Assertions;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.ssm.model.AssociationDescription;
-import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
-import software.amazon.awssdk.services.ssm.model.UpdateAssociationRequest;
-import software.amazon.awssdk.services.ssm.model.UpdateAssociationResponse;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.util.function.Function;
-
-import static com.amazonaws.ssm.association.TestsInputs.LOGGED_RESOURCE_HANDLER_REQUEST;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UpdateHandlerTest {
 
     private static final String DOCUMENT_NAME = "NewTestDocument";
-    private static final String ASSOCIATION_ID = "test-12345-associationId";
-    private static final String ASSOCIATION_NAME = "TestAssociation";
-    private static final String NEW_ASSOCIATION_NAME = "NewTestAssociation";
 
     private UpdateHandler handler;
     @Mock
@@ -49,19 +33,16 @@ class UpdateHandlerTest {
     @Mock
     private Logger logger;
     @Mock
-    private UpdateAssociationTranslator updateAssociationTranslator;
+    private BaseHandler<CallbackContext> initialUpdateHandler;
     @Mock
-    private AssociationDescriptionTranslator associationDescriptionTranslator;
-    @Mock
-    private ExceptionTranslator exceptionTranslator;
+    private BaseHandler<CallbackContext> inProgressHandler;
     @Mock
     private ResourceHandlerRequestToStringConverter requestToStringConverter;
 
     @BeforeEach
     void setup() {
-        handler = new UpdateHandler(updateAssociationTranslator,
-            associationDescriptionTranslator,
-            exceptionTranslator,
+        handler = new UpdateHandler(initialUpdateHandler,
+            inProgressHandler,
             requestToStringConverter);
     }
 
@@ -71,153 +52,59 @@ class UpdateHandlerTest {
     }
 
     @Test
-    void handleRequestWithAssociationIdPresent() {
+    void handleRequestWithNoCallbackContextInvokesInitialHandler() {
         when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
 
-        final ResourceModel.ResourceModelBuilder resourceModelBuilder =
-            ResourceModel.builder()
-                .associationId(ASSOCIATION_ID)
-                .associationName(ASSOCIATION_NAME)
-                .name(DOCUMENT_NAME);
-
-        final ResourceModel previousModel = resourceModelBuilder.build();
-        final ResourceModel desiredModel = resourceModelBuilder
-            .associationName(NEW_ASSOCIATION_NAME)
+        final ResourceModel model = ResourceModel.builder()
+            .name(DOCUMENT_NAME)
+            .scheduleExpression(SCHEDULE_EXPRESSION)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(desiredModel)
-            .previousResourceState(previousModel)
+            .desiredResourceState(model)
             .build();
 
-        final AssociationDescription associationDescription =
-            AssociationDescription.builder()
-                .associationId(desiredModel.getAssociationId())
-                .name(desiredModel.getName())
-                .associationName(desiredModel.getAssociationName())
-                .build();
+        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
+            ProgressEvent.defaultSuccessHandler(model);
 
-        final UpdateAssociationRequest expectedUpdateAssociationRequest =
-            UpdateAssociationRequest.builder()
-                .associationId(desiredModel.getAssociationId())
-                .name(desiredModel.getName())
-                .associationName(desiredModel.getAssociationName())
-                .build();
+        final CallbackContext callbackContext = null;
 
-        when(updateAssociationTranslator.resourceModelToRequest(desiredModel))
-            .thenReturn(expectedUpdateAssociationRequest);
-
-        when(associationDescriptionTranslator.associationDescriptionToResourceModel(associationDescription))
-            .thenReturn(desiredModel);
-
-        final UpdateAssociationResponse result =
-            UpdateAssociationResponse.builder()
-                .associationDescription(associationDescription)
-                .build();
-
-        when(
-            proxy.injectCredentialsAndInvokeV2(
-                eq(expectedUpdateAssociationRequest),
-                ArgumentMatchers.<Function<UpdateAssociationRequest, UpdateAssociationResponse>>any()))
-            .thenReturn(result);
+        when(initialUpdateHandler.handleRequest(proxy, request, callbackContext, logger)).thenReturn(expectedProgressEvent);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
-            ProgressEvent.defaultSuccessHandler(desiredModel);
+            = handler.handleRequest(proxy, request, callbackContext, logger);
 
         assertThat(response).isEqualTo(expectedProgressEvent);
-        verifyZeroInteractions(exceptionTranslator);
+        verify(initialUpdateHandler).handleRequest(proxy, request, callbackContext, logger);
+        verifyZeroInteractions(inProgressHandler);
     }
 
     @Test
-    void handleRequestWithNoAssociationId() {
+    void handleRequestWithCallbackContextInvokesInProgressHandler() {
         when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
 
-        final ResourceModel desiredModel = ResourceModel.builder()
-            .associationName(NEW_ASSOCIATION_NAME)
-            .build();
-
-        final ResourceModel previousModel = ResourceModel.builder()
-            .associationName(ASSOCIATION_NAME)
+        final ResourceModel model = ResourceModel.builder()
+            .name(DOCUMENT_NAME)
+            .scheduleExpression(SCHEDULE_EXPRESSION)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(desiredModel)
-            .previousResourceState(previousModel)
+            .desiredResourceState(model)
             .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
+        final CallbackContext callbackContext = CallbackContext.builder().build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
-            ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(previousModel)
-                .status(OperationStatus.FAILED)
-                .errorCode(HandlerErrorCode.InvalidRequest)
-                .message("AssociationId must be present to update the existing association.")
-                .build();
+            ProgressEvent.progress(model, callbackContext);
+
+        when(inProgressHandler.handleRequest(proxy, request, callbackContext, logger)).thenReturn(expectedProgressEvent);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+            = handler.handleRequest(proxy, request, callbackContext, logger);
 
         assertThat(response).isEqualTo(expectedProgressEvent);
-        verifyZeroInteractions(proxy);
-        verifyZeroInteractions(associationDescriptionTranslator);
-        verifyZeroInteractions(exceptionTranslator);
-    }
-
-    @Test
-    void handleRequestThrowsTranslatedServiceException() {
-        when(requestToStringConverter.convert(any())).thenReturn(LOGGED_RESOURCE_HANDLER_REQUEST);
-
-        final ResourceModel.ResourceModelBuilder resourceModelBuilder =
-            ResourceModel.builder()
-                .associationId(ASSOCIATION_ID)
-                .associationName(ASSOCIATION_NAME)
-                .name(DOCUMENT_NAME);
-
-        final ResourceModel previousModel = resourceModelBuilder.build();
-        final ResourceModel desiredModel = resourceModelBuilder
-            .associationName(NEW_ASSOCIATION_NAME)
-            .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(desiredModel)
-            .previousResourceState(previousModel)
-            .build();
-
-        final UpdateAssociationRequest expectedUpdateAssociationRequest =
-            UpdateAssociationRequest.builder()
-                .associationId(desiredModel.getAssociationId())
-                .name(desiredModel.getName())
-                .associationName(desiredModel.getAssociationName())
-                .build();
-
-        when(updateAssociationTranslator.resourceModelToRequest(desiredModel))
-            .thenReturn(expectedUpdateAssociationRequest);
-
-        final TooManyUpdatesException serviceException = TooManyUpdatesException.builder().build();
-
-        when(
-            proxy.injectCredentialsAndInvokeV2(
-                eq(expectedUpdateAssociationRequest),
-                ArgumentMatchers.<Function<UpdateAssociationRequest, UpdateAssociationResponse>>any()))
-            .thenThrow(serviceException);
-
-        when(
-            exceptionTranslator.translateFromServiceException(
-                serviceException,
-                expectedUpdateAssociationRequest,
-                desiredModel))
-            .thenReturn(new CfnThrottlingException("UpdateAssociation", serviceException));
-
-        Assertions.assertThrows(CfnThrottlingException.class, () -> {
-            handler.handleRequest(proxy, request, null, logger);
-        });
-        verify(exceptionTranslator)
-            .translateFromServiceException(
-                serviceException,
-                expectedUpdateAssociationRequest,
-                desiredModel);
+        verify(inProgressHandler).handleRequest(proxy, request, callbackContext, logger);
+        verifyZeroInteractions(initialUpdateHandler);
     }
 
     @Test
