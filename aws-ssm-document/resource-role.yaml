@@ -23,6 +23,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "iam:PassRole"
                 - "s3:GetObject"
                 - "ssm:AddTagsToResource"
                 - "ssm:CreateDocument"
