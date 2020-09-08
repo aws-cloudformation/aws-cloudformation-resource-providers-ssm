@@ -161,7 +161,8 @@
         "create": {
             "permissions": [
                 "ssm:CreateDocument",
-                "s3:GetObject"
+                "s3:GetObject",
+                "iam:PassRole"
             ]
         },
         "read": {
@@ -175,7 +176,8 @@
                 "s3:GetObject",
                 "ssm:AddTagsToResource",
                 "ssm:RemoveTagsFromResource",
-                "ssm:ListTagsForResource"
+                "ssm:ListTagsForResource",
+                "iam:PassRole"
             ]
         },
         "delete": {
