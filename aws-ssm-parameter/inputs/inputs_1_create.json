@@ -1,5 +1,5 @@
 {
-  "Type": "String",
-  "Value": "Contract Test Create value",
-  "Name": "ContractTestCreate"
+    "Type": "String",
+    "Value": "Contract Test Create value",
+    "Name": "ContractTestCreate"
 }
