@@ -301,6 +301,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(amazonServiceException);
 
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
@@ -322,6 +331,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_ParameterAlreadyExistsException() {
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(ParameterAlreadyExistsException.builder().build());
 
@@ -346,6 +364,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_AmazonServiceException500Exception() {
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
         AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
         amazonServiceException.setStatusCode(500);
 
@@ -379,6 +406,14 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(amazonServiceException);
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -401,6 +436,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_AmazonServiceExceptionInternalServerError() {
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(InternalServerErrorException.builder().build());
 

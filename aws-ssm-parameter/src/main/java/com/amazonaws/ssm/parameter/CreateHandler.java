@@ -21,6 +21,7 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -53,8 +54,13 @@ public class CreateHandler extends BaseHandlerStd {
                     HandlerErrorCode.InvalidRequest);
         }
 
-        Map<String, String> consolidatedTagList = request.getDesiredResourceTags();
-        consolidatedTagList.putAll(request.getSystemTags());
+        Map<String, String> consolidatedTagList = new HashMap<>();
+        if (request.getDesiredResourceTags() != null) {
+            consolidatedTagList.putAll(request.getDesiredResourceTags());
+        }
+        if (request.getSystemTags() != null) {
+            consolidatedTagList.putAll(request.getSystemTags());
+        }
 
         return proxy.initiate("aws-ssm-parameter::resource-create", proxyClient, model, callbackContext)
                .translateToServiceRequest((resourceModel) -> Translator.createPutParameterRequest(resourceModel, consolidatedTagList))
