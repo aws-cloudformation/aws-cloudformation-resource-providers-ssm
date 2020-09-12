@@ -1,8 +1,5 @@
 {
     "Name": "InvalidContractTest",
-    "Description": "[Contract Test] invalid",
     "Type": "String_Invalid",
-    "Value": "Contract Test Invalid value",
-    "Tier": "Standard_Invalid",
-    "AllowedPattern": ".*?"
+    "Value": "Contract Test Invalid value"
 }
