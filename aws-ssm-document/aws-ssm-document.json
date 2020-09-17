@@ -81,8 +81,7 @@
             "type": [
                 "object",
                 "string"
-            ],
-            "minLength": 1
+            ]
         },
         "Attachments": {
             "description": "A list of key and value pairs that describe attachments to a version of a document.",
@@ -149,7 +148,9 @@
         }
     },
     "additionalProperties": false,
-    "required": [],
+    "required": [
+        "Content"
+    ],
     "createOnlyProperties": [
         "/properties/Name",
         "/properties/DocumentType"
