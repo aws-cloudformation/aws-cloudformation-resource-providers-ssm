@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.ssm.model.AutomationDefinitionNotFoundExc
 import software.amazon.awssdk.services.ssm.model.DocumentAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.DocumentLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.DocumentVersionLimitExceededException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException;
@@ -19,7 +20,9 @@ import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentExceptionTranslatorTest {
@@ -52,7 +55,16 @@ public class DocumentExceptionTranslatorTest {
 
         Assertions.assertTrue(unitUnderTest.getCfnException(AutomationDefinitionNotFoundException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
 
+        Assertions.assertTrue(unitUnderTest.getCfnException(InternalServerErrorException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnServiceInternalErrorException);
+
         Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+    }
+
+    @Test
+    public void testGetCfnException_ThrottlingException_verifyExceptionsReturned() {
+        Mockito.when(ssmException.isThrottlingException()).thenReturn(true);
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnThrottlingException);
     }
 
     @Test
