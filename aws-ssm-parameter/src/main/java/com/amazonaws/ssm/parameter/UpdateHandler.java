@@ -4,6 +4,8 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.util.CollectionUtils;
 import com.google.common.collect.Sets;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
+import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.ParameterType;
@@ -12,6 +14,7 @@ import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.exceptions.TerminalException;
@@ -50,6 +53,14 @@ public class UpdateHandler extends BaseHandlerStd {
         }
 
         return ProgressEvent.progress(model, callbackContext)
+                // First validate the resource actually exists per the contract requirements
+                // https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
+                .then(progress ->
+                        proxy.initiate("aws-ssm-parameter::validate-resource-exists", proxyClient, model, callbackContext)
+                                .translateToServiceRequest(Translator::getParametersRequest)
+                                .makeServiceCall(this::validateResourceExists)
+                                .progress())
+
                 .then(progress ->
                         proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
                                 .translateToServiceRequest(Translator::updatePutParameterRequest)
@@ -59,6 +70,17 @@ public class UpdateHandler extends BaseHandlerStd {
                                 .progress())
                 .then(progress -> handleTagging(proxy, proxyClient, progress, model, request.getDesiredResourceTags(), request.getPreviousResourceTags()))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+    }
+
+    private GetParametersResponse validateResourceExists(GetParametersRequest getParametersRequest, ProxyClient<SsmClient> proxyClient) {
+        GetParametersResponse getParametersResponse;
+
+        getParametersResponse = proxyClient.injectCredentialsAndInvokeV2(getParametersRequest,proxyClient.client()::getParameters);
+        if (getParametersResponse.invalidParameters().size() != 0) {
+            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, getParametersRequest.names().get(0));
+        }
+
+        return getParametersResponse;
     }
 
     private PutParameterResponse updateResource(final PutParameterRequest putParameterRequest,
