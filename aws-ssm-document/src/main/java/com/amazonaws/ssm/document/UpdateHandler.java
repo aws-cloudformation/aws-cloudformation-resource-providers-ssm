@@ -10,10 +10,12 @@ import software.amazon.awssdk.services.ssm.model.DuplicateDocumentContentExcepti
 import software.amazon.awssdk.services.ssm.model.DuplicateDocumentVersionNameException;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
+import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -98,6 +100,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             setInProgressContext(context);
 
             return getInProgressEvent(model, context, UPDATING_MESSAGE);
+        } catch (final InvalidDocumentSchemaVersionException e) {
+            logger.log("Document schema does not support update - " + e.getMessage());
+            throw new CfnNotUpdatableException(ResourceModel.TYPE_NAME, model.getName(), e);
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }

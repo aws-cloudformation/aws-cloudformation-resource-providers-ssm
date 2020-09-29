@@ -11,11 +11,13 @@ import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.DuplicateDocumentContentException;
 import software.amazon.awssdk.services.ssm.model.DuplicateDocumentVersionNameException;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
 import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -193,6 +195,17 @@ public class UpdateHandlerTest {
             = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
+    }
+
+    @Test
+    public void testHandleRequest_DocumentUpdateApiThrowsInvalidDocumentSchemaVersionNameException_VerifyResponse() {
+        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentSchemaVersionException.class);
+
+        Assertions.assertThrows(
+            CfnNotUpdatableException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+
         Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
     }
 
