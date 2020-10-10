@@ -34,6 +34,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -117,27 +118,16 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void testHandleRequest_DocumentUpdateApiReturnsUpdatingStatus_VerifyResponse() {
+    public void testHandleRequest_DocumentUpdateTagsSuccess_VerifyResponse() {
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-                .build();
+        final CallbackContext expectedCallbackContext = CallbackContext.builder().build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(expectedModel)
-                .status(OperationStatus.IN_PROGRESS)
-                .message(SAMPLE_STATUS_INFO)
+                .status(OperationStatus.SUCCESS)
                 .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .callbackDelaySeconds(0)
                 .build();
-
-        final UpdateDocumentResponse updateDocumentResponse = UpdateDocumentResponse.builder()
-                .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).statusInformation(SAMPLE_STATUS_INFO).build())
-                .build();
-
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenReturn(updateDocumentResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
@@ -147,206 +137,8 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void testHandleRequest_DocumentUpdateApiThrowsDuplicateDocumentContentException_VerifyResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-            .eventStarted(true)
-            .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-            .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(expectedModel)
-            .status(OperationStatus.IN_PROGRESS)
-            .message(UPDATING_MESSAGE)
-            .callbackContext(expectedCallbackContext)
-            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-            .build();
-
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenThrow(DuplicateDocumentContentException.class);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-            = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
-    }
-
-    @Test
-    public void testHandleRequest_DocumentUpdateApiThrowsDuplicateDocumentVersionNameException_VerifyResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-            .eventStarted(true)
-            .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-            .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(expectedModel)
-            .status(OperationStatus.IN_PROGRESS)
-            .message(UPDATING_MESSAGE)
-            .callbackContext(expectedCallbackContext)
-            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-            .build();
-
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenThrow(DuplicateDocumentVersionNameException.class);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-            = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
-    }
-
-    @Test
-    public void testHandleRequest_DocumentUpdateApiThrowsInvalidDocumentSchemaVersionNameException_VerifyResponse() {
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenThrow(InvalidDocumentSchemaVersionException.class);
-
-        Assertions.assertThrows(
-            CfnNotUpdatableException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-
-        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
-    }
-
-    @Test
-    public void handleRequest_StabilizationRetrieverReturnsUpdatingStatus_VerifyResponse() {
-        final CallbackContext inProgressCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-                .build();
-
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
-                .status(RESOURCE_MODEL_UPDATING_STATE)
-                .statusInformation(SAMPLE_STATUS_INFO)
-                .build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
-                .build();
-        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
-                .callbackContext(expectedCallbackContext)
-                .resourceInformation(expectedResourceInformation)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.IN_PROGRESS)
-                .message(SAMPLE_STATUS_INFO)
-                .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
-                .thenReturn(getProgressResponse);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-    }
-
-    @Test
-    public void handleRequest_StabilizationRetrieverReturnsActiveState_VerifyResponse() {
-        final CallbackContext inProgressCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-                .build();
-
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
-                .status(RESOURCE_MODEL_ACTIVE_STATE)
-                .statusInformation(SAMPLE_STATUS_INFO)
-                .build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
-                .build();
-        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
-                .callbackContext(expectedCallbackContext)
-                .resourceInformation(expectedResourceInformation)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.SUCCESS)
-                .message(SAMPLE_STATUS_INFO)
-                .callbackContext(expectedCallbackContext)
-                .build();
-
-        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
-                .thenReturn(getProgressResponse);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-    }
-
-    @Test
-    public void handleRequest_StabilizationRetrieverReturnsFailedState_VerifyResponse() {
-        final CallbackContext inProgressCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-                .build();
-
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
-        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
-                .status(RESOURCE_MODEL_FAILED_STATE)
-                .statusInformation(SAMPLE_STATUS_INFO)
-                .build();
-        final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
-                .build();
-        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
-                .callbackContext(expectedCallbackContext)
-                .resourceInformation(expectedResourceInformation)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(expectedModel)
-                .status(OperationStatus.FAILED)
-                .message(SAMPLE_STATUS_INFO)
-                .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
-                .thenReturn(getProgressResponse);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
-
-        Assertions.assertEquals(expectedResponse, response);
-    }
-
-    @Test
-    public void handleRequest_StabilizationRetrieverThrowsSsmException_VerifyExpectedException() {
-        final CallbackContext inProgressCallbackContext = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
-                .build();
-
-        when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
-                .thenThrow(SsmException.class);
-        when(exceptionTranslator.getCfnException(any(SsmException.class), eq(SAMPLE_DOCUMENT_NAME), eq(OPERATION_NAME))).thenThrow(ResourceNotFoundException.class);
-
-        Assertions.assertThrows(ResourceNotFoundException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger));
-    }
-
-    @Test
-    public void handleRequest_DocumentUpdate_DocumentModelTranslatorThrowsInvalidContentException_VerifyExpectedException() {
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenThrow(InvalidDocumentContentException.class);
-
-        Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
-    }
-
-    @Test
-    public void handleRequest_DocumentUpdate_SsmClientThrowsSsmException_VerifyExpectedException() {
-        when(documentModelTranslator.generateUpdateDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_UPDATE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_UPDATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+    public void testHandleRequest_DocumentUpdateTagsThrowsException_VerifyResponse() {
+        doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
 
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 

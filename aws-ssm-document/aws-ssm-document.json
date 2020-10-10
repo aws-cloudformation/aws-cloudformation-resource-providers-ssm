@@ -152,8 +152,14 @@
         "Content"
     ],
     "createOnlyProperties": [
+        "/properties/Content",
+        "/properties/Attachments",
         "/properties/Name",
-        "/properties/DocumentType"
+        "/properties/VersionName",
+        "/properties/DocumentType",
+        "/properties/DocumentFormat",
+        "/properties/TargetType",
+        "/properties/Requires"
     ],
     "primaryIdentifier": [
         "/properties/Name"

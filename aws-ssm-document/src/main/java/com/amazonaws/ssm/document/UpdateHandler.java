@@ -72,95 +72,19 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
 
-        if (context.getEventStarted() != null) {
-            return updateProgress(model, context, proxy, logger);
-        }
-
-        final UpdateDocumentRequest updateDocumentRequest;
-        try {
-            updateDocumentRequest = documentModelTranslator.generateUpdateDocumentRequest(model);
-        } catch (final InvalidDocumentContentException e) {
-            throw new CfnInvalidRequestException(e.getMessage(), e);
-        }
-
+        // Only Tags are handled in Update Handler. Other properties of the Document resource are CreateOnly.
         try {
             logger.log("update tags request for document name: " + model.getName());
             tagUpdater.updateTags(model.getName(), request.getDesiredResourceTags(), ssmClient, proxy);
 
-            logger.log("sending update request for document name: " + model.getName());
-            final UpdateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(updateDocumentRequest, ssmClient::updateDocument);
-
-            setInProgressContext(context);
-            logger.log("update InProgress response: " + response);
-
-            return getInProgressEvent(model, context, response.documentDescription().statusInformation());
-        } catch (final DuplicateDocumentContentException | DuplicateDocumentVersionNameException e) {
-            logger.log("no changes to document were made for update in cloudformation" +
-                " stack, sending for stabilization" + model.getName());
-            setInProgressContext(context);
-
-            return getInProgressEvent(model, context, UPDATING_MESSAGE);
-        } catch (final InvalidDocumentSchemaVersionException e) {
-            logger.log("Document schema does not support update - " + e.getMessage());
-            throw new CfnNotUpdatableException(ResourceModel.TYPE_NAME, model.getName(), e);
+            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(model)
+                .status(OperationStatus.SUCCESS)
+                .callbackContext(context)
+                .callbackDelaySeconds(0)
+                .build();
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
         }
-    }
-
-    private ProgressEvent<ResourceModel, CallbackContext> updateProgress(@NonNull final ResourceModel model,
-                                                                         @NonNull final CallbackContext context,
-                                                                         @NonNull final AmazonWebServicesClientProxy proxy,
-                                                                         @NonNull final Logger logger) {
-       final GetProgressResponse progressResponse;
-
-       try {
-           progressResponse = stabilizationProgressRetriever.getEventProgress(model, context, ssmClient, proxy, logger);
-       } catch (final SsmException e) {
-           throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
-       }
-
-       final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
-
-       final OperationStatus operationStatus = getOperationStatus(resourceInformation.getStatus());
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(resourceInformation.getResourceModel())
-                .status(operationStatus)
-                .message(resourceInformation.getStatusInformation())
-                .callbackContext(progressResponse.getCallbackContext())
-                .callbackDelaySeconds(setCallbackDelay(operationStatus))
-                .build();
-    }
-
-    private ProgressEvent<ResourceModel, CallbackContext> getInProgressEvent(final ResourceModel model,
-                                                                             final CallbackContext context,
-                                                                             final String message) {
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(model)
-            .status(OperationStatus.IN_PROGRESS)
-            .message(message)
-            .callbackContext(context)
-            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-            .build();
-    }
-
-    private void setInProgressContext(CallbackContext context) {
-        context.setEventStarted(true);
-        context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES);
-    }
-
-    private OperationStatus getOperationStatus(@NonNull final ResourceStatus status) {
-        switch (status) {
-            case ACTIVE:
-                return OperationStatus.SUCCESS;
-            case UPDATING:
-                return OperationStatus.IN_PROGRESS;
-            default:
-                return OperationStatus.FAILED;
-        }
-    }
-
-    private int setCallbackDelay(final OperationStatus operationStatus) {
-        return operationStatus == OperationStatus.SUCCESS ? 0 : CALLBACK_DELAY_SECONDS;
     }
 }
