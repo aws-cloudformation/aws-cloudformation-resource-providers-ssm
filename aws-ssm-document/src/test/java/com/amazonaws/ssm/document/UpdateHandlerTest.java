@@ -85,7 +85,6 @@ public class UpdateHandlerTest {
     private static final ResourceStatus RESOURCE_MODEL_FAILED_STATE = ResourceStatus.FAILED;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
     private static final String OPERATION_NAME = "AWS::SSM::UpdateDocument";
-    private static final CallbackContext EMPTY_CALLBACK_CONTEXT = CallbackContext.builder().build();
 
     @Mock
     private AmazonWebServicesClientProxy proxy;

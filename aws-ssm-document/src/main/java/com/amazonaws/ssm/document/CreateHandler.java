@@ -60,12 +60,13 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
+        final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
 
         safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), logger);
 
-        if (callbackContext != null && callbackContext.getCreateDocumentStarted() != null) {
-            return updateProgress(model, callbackContext, ssmClient, proxy, logger);
+        if (context.getCreateDocumentStarted() != null) {
+            return updateProgress(model, context, ssmClient, proxy, logger);
         }
 
         final CreateDocumentRequest createDocumentRequest;
@@ -81,10 +82,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         try {
             final CreateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(createDocumentRequest, ssmClient::createDocument);
-            final CallbackContext context = CallbackContext.builder()
-                .createDocumentStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
-                .build();
+            context.setCreateDocumentStarted(true);
+            context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

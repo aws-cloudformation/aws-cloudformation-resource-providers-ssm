@@ -53,22 +53,21 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
+        final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
 
         safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), logger);
 
-        if (callbackContext != null && callbackContext.getEventStarted() != null) {
-            return updateProgress(model, callbackContext, proxy, logger);
+        if (context.getEventStarted() != null) {
+            return updateProgress(model, context, proxy, logger);
         }
 
         final DeleteDocumentRequest deleteDocumentRequest = documentModelTranslator.generateDeleteDocumentRequest(model);
 
         try {
             proxy.injectCredentialsAndInvokeV2(deleteDocumentRequest, ssmClient::deleteDocument);
-            final CallbackContext context = CallbackContext.builder()
-                .eventStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES)
-                .build();
+            context.setEventStarted(true);
+            context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_DELETE_POLL_RETRIES);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(model)

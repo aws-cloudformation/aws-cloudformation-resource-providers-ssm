@@ -56,7 +56,6 @@ public class ReadHandlerTest {
             .build();
     private static final ResourceStatus SAMPLE_RESOURCE_STATE = ResourceStatus.ACTIVE;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
-    private static final CallbackContext EMPTY_CALLBACK_CONTEXT = CallbackContext.builder().build();
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
