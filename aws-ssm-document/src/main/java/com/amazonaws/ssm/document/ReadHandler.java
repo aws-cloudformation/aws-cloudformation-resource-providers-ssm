@@ -56,7 +56,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         final ResourceModel model = request.getDesiredResourceState();
 
-        safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), logger);
+        safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), request.getSystemTags(), logger);
 
         final GetDocumentRequest getDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
 

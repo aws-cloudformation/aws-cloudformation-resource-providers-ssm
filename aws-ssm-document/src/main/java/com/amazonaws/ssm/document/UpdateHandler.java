@@ -75,7 +75,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
 
-        safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), logger);
+        safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), request.getSystemTags(), logger);
 
         // Only Tags are handled in Update Handler. Other properties of the Document resource are CreateOnly.
         try {

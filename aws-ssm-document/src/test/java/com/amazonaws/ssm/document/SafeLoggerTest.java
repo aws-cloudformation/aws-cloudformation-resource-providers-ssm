@@ -20,6 +20,7 @@ public class SafeLoggerTest {
         "schemaVersion", "1.2",
         "description", "Join instances to an AWS Directory Service domain."
     );
+    private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-id", "testStack");
     private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder()
         .name(SAMPLE_DOCUMENT_NAME)
         .content(SAMPLE_DOCUMENT_CONTENT)
@@ -44,10 +45,12 @@ public class SafeLoggerTest {
 
     @Test
     public void verifyTest() {
-        unitUnderTest.safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, SAMPLE_CALLBACK_CONTEXT, SAMPLE_ACCOUNT_ID, logger);
+        unitUnderTest.safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, SAMPLE_CALLBACK_CONTEXT, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
 
         Mockito.verify(logger).log("customerAccountId: 123456");
         Mockito.verify(logger).log("DocumentInfo: documentName=sampleDocument, documentType=Command, documentFormat=JSON");
         Mockito.verify(logger).log("callbackContext: " + SAMPLE_CALLBACK_CONTEXT);
+        Mockito.verify(logger).log("stackId: " + "testStack");
+
     }
 }
