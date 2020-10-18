@@ -44,13 +44,20 @@ public class SafeLoggerTest {
     }
 
     @Test
-    public void verifyTest() {
+    public void testsafeLogDocumentInformation_verifyLog() {
         unitUnderTest.safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, SAMPLE_CALLBACK_CONTEXT, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
 
-        Mockito.verify(logger).log("customerAccountId: 123456");
-        Mockito.verify(logger).log("DocumentInfo: documentName=sampleDocument, documentType=Command, documentFormat=JSON");
-        Mockito.verify(logger).log("callbackContext: " + SAMPLE_CALLBACK_CONTEXT);
-        Mockito.verify(logger).log("stackId: " + "testStack");
+        Mockito.verify(logger).log("CustomerAccountId: 123456, " +
+            "DocumentInfo: {documentName=sampleDocument, documentType=Command, documentFormat=JSON}, " +
+            "CallbackContext: " + SAMPLE_CALLBACK_CONTEXT + ", StackId: testStack");
+    }
 
+    @Test
+    public void testsafeLogDocumentInformationg_systemTagsIsNull_verifyLog() {
+        unitUnderTest.safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, SAMPLE_CALLBACK_CONTEXT, SAMPLE_ACCOUNT_ID, null, logger);
+
+        Mockito.verify(logger).log("CustomerAccountId: 123456, " +
+            "DocumentInfo: {documentName=sampleDocument, documentType=Command, documentFormat=JSON}, " +
+            "CallbackContext: " + SAMPLE_CALLBACK_CONTEXT + ", StackId: null");
     }
 }

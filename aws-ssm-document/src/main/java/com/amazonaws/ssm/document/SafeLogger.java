@@ -9,8 +9,9 @@ import software.amazon.cloudformation.proxy.Logger;
 @NoArgsConstructor
 public class SafeLogger {
 
-    private static final String DOCUMENT_SAFE_LOG_FORMAT = "DocumentInfo: documentName=%s, documentType=%s, documentFormat=%s";
+    private static final String DOCUMENT_INFO_SAFE_LOG_FORMAT = "{documentName=%s, documentType=%s, documentFormat=%s}";
     private static final String STACK_ID_KEY = "aws:cloudformation:stack-id";
+    private static final String REQUEST_SAFE_LOG_FORMAT = "CustomerAccountId: %s, DocumentInfo: %s, CallbackContext: %s, StackId: %s";
 
     private static SafeLogger INSTANCE;
 
@@ -27,17 +28,14 @@ public class SafeLogger {
                                            @NonNull final String customerAccountId,
                                            @Nullable final Map<String, String> systemTags,
                                            @NonNull final Logger logger) {
-        logger.log("customerAccountId: " + customerAccountId);
-
-        final String documentDetails = String.format(DOCUMENT_SAFE_LOG_FORMAT, resourceModel.getName(),
+        final String documentDetails = String.format(DOCUMENT_INFO_SAFE_LOG_FORMAT, resourceModel.getName(),
             resourceModel.getDocumentType(), resourceModel.getDocumentFormat());
 
-        logger.log(documentDetails);
-
-        logger.log("callbackContext: " + callbackContext);
-
         final String stackId = systemTags != null ? systemTags.get(STACK_ID_KEY) : null;
-        logger.log("stackId: " + stackId);
+
+        final String loggingInfo = String.format(REQUEST_SAFE_LOG_FORMAT, customerAccountId, documentDetails, callbackContext, stackId);
+
+        logger.log(loggingInfo);
     }
 
 }
