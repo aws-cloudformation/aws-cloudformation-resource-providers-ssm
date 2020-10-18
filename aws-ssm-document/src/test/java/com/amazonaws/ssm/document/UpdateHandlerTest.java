@@ -35,12 +35,14 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
+    private static final String SAMPLE_ACCOUNT_ID = "123456";
     private static final String SAMPLE_DOCUMENT_CONTENT_STRING = "sampleDocumentContent";
     private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
             "schemaVersion", "1.2",
@@ -71,6 +73,7 @@ public class UpdateHandlerTest {
             .desiredResourceTags(SAMPLE_DESIRED_RESOURCE_TAGS)
             .clientRequestToken(SAMPLE_REQUEST_TOKEN)
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
+            .awsAccountId(SAMPLE_ACCOUNT_ID)
             .build();
     private static final String UPDATING_MESSAGE = "Updating";
 
@@ -82,6 +85,7 @@ public class UpdateHandlerTest {
     private static final ResourceStatus RESOURCE_MODEL_FAILED_STATE = ResourceStatus.FAILED;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
     private static final String OPERATION_NAME = "AWS::SSM::UpdateDocument";
+    private static final CallbackContext EMPTY_CALLBACK_CONTEXT = CallbackContext.builder().build();
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -105,6 +109,9 @@ public class UpdateHandlerTest {
     private SsmClient ssmClient;
 
     @Mock
+    private SafeLogger safeLogger;
+
+    @Mock
     private SsmException ssmException;
 
     @Mock
@@ -114,7 +121,7 @@ public class UpdateHandlerTest {
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new UpdateHandler(documentModelTranslator, progressUpdater, tagUpdater, exceptionTranslator, ssmClient);
+        unitUnderTest = new UpdateHandler(documentModelTranslator, progressUpdater, tagUpdater, exceptionTranslator, ssmClient, safeLogger);
     }
 
     @Test
@@ -134,6 +141,7 @@ public class UpdateHandlerTest {
 
         Assertions.assertEquals(expectedResponse, response);
         Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, logger);
     }
 
     @Test
@@ -143,5 +151,6 @@ public class UpdateHandlerTest {
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, logger);
     }
 }

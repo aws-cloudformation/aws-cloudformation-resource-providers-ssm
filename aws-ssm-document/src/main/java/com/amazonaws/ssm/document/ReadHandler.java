@@ -38,10 +38,13 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
     @NonNull
     private final DocumentExceptionTranslator exceptionTranslator;
 
+    @NonNull
+    private final SafeLogger safeLogger;
+
     @VisibleForTesting
     public ReadHandler() {
         this(DocumentModelTranslator.getInstance(), DocumentResponseModelTranslator.getInstance(), ClientBuilder.getClient(),
-            TagReader.getInstance(), DocumentExceptionTranslator.getInstance());
+            TagReader.getInstance(), DocumentExceptionTranslator.getInstance(), SafeLogger.getInstance());
     }
 
     @Override
@@ -52,6 +55,8 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         final Logger logger) {
 
         final ResourceModel model = request.getDesiredResourceState();
+
+        safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), logger);
 
         final GetDocumentRequest getDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
 

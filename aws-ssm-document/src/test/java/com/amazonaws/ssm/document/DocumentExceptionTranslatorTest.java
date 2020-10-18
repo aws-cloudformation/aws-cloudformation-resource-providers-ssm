@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.document;
 
+import java.io.IOException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNetworkFailureException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
@@ -34,6 +36,9 @@ public class DocumentExceptionTranslatorTest {
 
     @Mock
     private SsmException ssmException;
+
+    @Mock
+    private IOException ioException;
 
     @Test
     public void testGetCfnException_verifyExceptionsReturned() {
@@ -72,6 +77,13 @@ public class DocumentExceptionTranslatorTest {
         Mockito.when(ssmException.statusCode()).thenReturn(500);
 
         Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+    }
+
+    @Test
+    public void testGetCfnException_IOExceptionCause_verifyExceptionsReturned() {
+        Mockito.when(ssmException.getCause()).thenReturn(ioException);
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnNetworkFailureException);
     }
 
     @Test
