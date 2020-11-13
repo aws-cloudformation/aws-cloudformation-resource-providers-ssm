@@ -27,19 +27,24 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
 
     private static final String OPERATION_NAME = "AWS::SSM::GetDocument";
+    private static final String SAMPLE_ACCOUNT_ID = "123456";
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
             "schemaVersion", "1.2",
             "description", "Join instances to an AWS Directory Service domain."
     );    private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).build();
+    private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
+            .awsAccountId(SAMPLE_ACCOUNT_ID)
+            .systemTags(SAMPLE_SYSTEM_TAGS)
             .build();
     private static final Map<String, String> SAMPLE_TAG_MAP = ImmutableMap.of(
         "tagKey1", "tagValue1",
@@ -73,6 +78,9 @@ public class ReadHandlerTest {
     private TagReader tagReader;
 
     @Mock
+    private SafeLogger safeLogger;
+
+    @Mock
     private DocumentExceptionTranslator exceptionTranslator;
 
     @Mock
@@ -86,7 +94,7 @@ public class ReadHandlerTest {
     @BeforeEach
     public void setup() {
         unitUnderTest = new ReadHandler(documentModelTranslator, documentResponseModelTranslator,
-            ssmClient, tagReader, exceptionTranslator);
+            ssmClient, tagReader, exceptionTranslator, safeLogger);
     }
 
     @Test
@@ -111,6 +119,7 @@ public class ReadHandlerTest {
             = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -120,5 +129,6 @@ public class ReadHandlerTest {
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 }

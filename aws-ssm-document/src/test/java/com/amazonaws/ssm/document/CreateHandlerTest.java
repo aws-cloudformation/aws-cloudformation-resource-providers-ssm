@@ -37,12 +37,14 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
+    private static final String SAMPLE_ACCOUNT_ID = "123456";
     private static final String SAMPLE_DOCUMENT_CONTENT_STRING = "sampleDocumentContent";
     private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
             "schemaVersion", "1.2",
@@ -69,6 +71,7 @@ public class CreateHandlerTest {
             .desiredResourceTags(SAMPLE_RESOURCE_TAGS)
             .clientRequestToken(SAMPLE_REQUEST_TOKEN)
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
+            .awsAccountId(SAMPLE_ACCOUNT_ID)
             .build();
     private static final GetDocumentRequest SAMPLE_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
@@ -101,6 +104,9 @@ public class CreateHandlerTest {
     private SsmClient ssmClient;
 
     @Mock
+    private SafeLogger safeLogger;
+
+    @Mock
     private SsmException ssmException;
 
     @Mock
@@ -110,7 +116,7 @@ public class CreateHandlerTest {
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new CreateHandler(documentModelTranslator, progressUpdater, exceptionTranslator, ssmClient);
+        unitUnderTest = new CreateHandler(documentModelTranslator, progressUpdater, exceptionTranslator, ssmClient, safeLogger);
     }
 
     @Test
@@ -138,6 +144,7 @@ public class CreateHandlerTest {
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
         Assertions.assertEquals(expectedResponse, response);
     }
 
@@ -146,6 +153,7 @@ public class CreateHandlerTest {
         when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenThrow(InvalidDocumentContentException.class);
 
         Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID,SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -155,6 +163,7 @@ public class CreateHandlerTest {
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -169,6 +178,7 @@ public class CreateHandlerTest {
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -207,6 +217,7 @@ public class CreateHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -245,6 +256,7 @@ public class CreateHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -283,5 +295,6 @@ public class CreateHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 }

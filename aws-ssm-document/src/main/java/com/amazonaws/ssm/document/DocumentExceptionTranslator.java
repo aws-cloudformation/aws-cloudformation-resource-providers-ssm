@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.ssm.model.AutomationDefinitionVersionNotF
 import software.amazon.awssdk.services.ssm.model.DocumentAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.DocumentLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.DocumentVersionLimitExceededException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
@@ -14,10 +15,14 @@ import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNetworkFailureException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 
 import lombok.NonNull;
+import java.io.IOException;
 
 class DocumentExceptionTranslator {
 
@@ -52,6 +57,12 @@ class DocumentExceptionTranslator {
 
             return new CfnNotFoundException(ResourceModel.TYPE_NAME, documentName);
 
+        } else if (e.isThrottlingException()) {
+            return new CfnThrottlingException(operationName, e);
+        } else if (e instanceof InternalServerErrorException) {
+            return new CfnServiceInternalErrorException(operationName, e);
+        } else if (e.getCause() instanceof IOException) {
+            return new CfnNetworkFailureException(operationName, e);
         } else if (e.statusCode() == GENERIC_USER_ERROR_STATUS_CODE) {
             return new CfnInvalidRequestException(e.getMessage(), e);
         }

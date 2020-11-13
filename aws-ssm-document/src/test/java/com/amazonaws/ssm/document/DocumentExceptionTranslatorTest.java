@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.document;
 
+import java.io.IOException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +11,7 @@ import software.amazon.awssdk.services.ssm.model.AutomationDefinitionNotFoundExc
 import software.amazon.awssdk.services.ssm.model.DocumentAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.DocumentLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.DocumentVersionLimitExceededException;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException;
@@ -18,8 +20,11 @@ import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNetworkFailureException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentExceptionTranslatorTest {
@@ -31,6 +36,9 @@ public class DocumentExceptionTranslatorTest {
 
     @Mock
     private SsmException ssmException;
+
+    @Mock
+    private IOException ioException;
 
     @Test
     public void testGetCfnException_verifyExceptionsReturned() {
@@ -52,7 +60,16 @@ public class DocumentExceptionTranslatorTest {
 
         Assertions.assertTrue(unitUnderTest.getCfnException(AutomationDefinitionNotFoundException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
 
+        Assertions.assertTrue(unitUnderTest.getCfnException(InternalServerErrorException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnServiceInternalErrorException);
+
         Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+    }
+
+    @Test
+    public void testGetCfnException_ThrottlingException_verifyExceptionsReturned() {
+        Mockito.when(ssmException.isThrottlingException()).thenReturn(true);
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnThrottlingException);
     }
 
     @Test
@@ -60,6 +77,13 @@ public class DocumentExceptionTranslatorTest {
         Mockito.when(ssmException.statusCode()).thenReturn(500);
 
         Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+    }
+
+    @Test
+    public void testGetCfnException_IOExceptionCause_verifyExceptionsReturned() {
+        Mockito.when(ssmException.getCause()).thenReturn(ioException);
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnNetworkFailureException);
     }
 
     @Test

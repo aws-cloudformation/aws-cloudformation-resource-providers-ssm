@@ -100,7 +100,8 @@
             "permissions": [
                 "ssm:PutParameter",
                 "ssm:AddTagsToResource",
-                "ssm:RemoveTagsFromResource"
+                "ssm:RemoveTagsFromResource",
+                "ssm:GetParameters"
             ],
             "timeoutInMinutes": 5
         },

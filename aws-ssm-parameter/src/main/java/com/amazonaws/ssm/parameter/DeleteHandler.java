@@ -34,7 +34,7 @@ public class DeleteHandler extends BaseHandlerStd {
         return proxy.initiate("aws-ssm-parameter::resource-delete", proxyClient, model, callbackContext)
                 .translateToServiceRequest(Translator::deleteParameterRequest)
                 .makeServiceCall(this::deleteResource)
-                .done((_request, _response, _client, _model, _callbackContext) -> ProgressEvent.defaultSuccessHandler(_model));
+                .done((deleteParameterRequest, deleteParameterResponse, _client, _model, _callbackContext) -> ProgressEvent.defaultSuccessHandler(null));
     }
 
     private DeleteParameterResponse deleteResource(final DeleteParameterRequest deleteParameterRequest,

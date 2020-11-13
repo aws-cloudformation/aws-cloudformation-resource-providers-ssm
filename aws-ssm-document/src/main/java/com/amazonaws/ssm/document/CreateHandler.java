@@ -40,10 +40,14 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
     @NonNull
     private final SsmClient ssmClient;
 
+    @NonNull
+    private final SafeLogger safeLogger;
+
     @VisibleForTesting
     public CreateHandler() {
         this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
-                DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient());
+                DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient(),
+            SafeLogger.getInstance());
     }
 
     /**
@@ -58,6 +62,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
+
+        safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(),request.getSystemTags(), logger);
 
         if (context.getCreateDocumentStarted() != null) {
             return updateProgress(model, context, ssmClient, proxy, logger);
