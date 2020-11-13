@@ -12,5 +12,6 @@
             "document"
         ],
         "protocolVersion": "2.0.0"
-    }
+    },
+    "executableEntrypoint": "com.amazonaws.ssm.document.HandlerWrapperExecutable"
 }

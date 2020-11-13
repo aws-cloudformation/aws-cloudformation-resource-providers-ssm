@@ -20,6 +20,7 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.proxy.Logger;
 
 import lombok.NonNull;
 import java.io.IOException;
@@ -27,6 +28,11 @@ import java.io.IOException;
 class DocumentExceptionTranslator {
 
     private static final int GENERIC_USER_ERROR_STATUS_CODE = 400;
+    /**
+     * Exception metric filter pattern used to publish exception metrics to cloudwatch.
+     * Warn: Modifying this pattern will break cloudwatch metric filters.
+     */
+    private static final String EXCEPTION_METRIC_FILTER_PATTERN = "[EXCEPTION] Operation: %s, ExceptionType: %s";
 
     private static DocumentExceptionTranslator INSTANCE;
 
@@ -38,7 +44,11 @@ class DocumentExceptionTranslator {
         return INSTANCE;
     }
 
-    RuntimeException getCfnException(@NonNull final SsmException e, @NonNull String documentName, @NonNull String operationName) {
+    RuntimeException getCfnException(@NonNull final SsmException e, @NonNull String documentName, @NonNull String operationName,
+                                     @NonNull final Logger logger) {
+
+        logger.log(String.format(EXCEPTION_METRIC_FILTER_PATTERN, operationName, e.getClass()));
+
         if (e instanceof DocumentLimitExceededException || e instanceof DocumentVersionLimitExceededException) {
 
             return new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.getMessage());

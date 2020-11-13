@@ -89,7 +89,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .callbackDelaySeconds(0)
                 .build();
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
     }
 }
