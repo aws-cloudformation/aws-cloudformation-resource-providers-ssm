@@ -9,7 +9,7 @@ import software.amazon.cloudformation.LambdaWrapper;
 public class SSMClientBuilder {
     private static final RetryPolicy RETRY_POLICY =
             RetryPolicy.builder()
-                    .numRetries(10)
+                    .numRetries(16)
                     .retryCondition(RetryCondition.defaultRetryCondition())
                     .build();
     /**
