@@ -150,7 +150,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 return true;
             }
             if (currentStatus != null && (currentStatus.equals(LastResourceDataSyncStatus.SUCCESSFUL)
-                    || currentStatus.equals(LastResourceDataSyncStatus.INPROGRESS))) {
+                    || currentStatus.equals(LastResourceDataSyncStatus.IN_PROGRESS))) {
                 return true;
             }
             if (currentStatus != null && currentStatus.equals(LastResourceDataSyncStatus.FAILED)) {
