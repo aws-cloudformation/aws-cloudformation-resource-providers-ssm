@@ -93,7 +93,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
     }
 
@@ -106,7 +106,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             progressResponse = stabilizationProgressRetriever.getEventProgress(model, context, ssmClient, proxy, logger);
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
 
         final ResourceInformation resourceInformation = progressResponse.getResourceInformation();

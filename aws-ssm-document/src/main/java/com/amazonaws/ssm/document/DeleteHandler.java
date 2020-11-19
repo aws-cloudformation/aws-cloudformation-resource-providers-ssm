@@ -76,7 +76,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
     }
 
@@ -92,7 +92,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             // If GetDocument call fails with InvalidDocument, it means document is not found and has been deleted successfully.
             return getDeleteSuccessEvent(model);
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
 
         final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
