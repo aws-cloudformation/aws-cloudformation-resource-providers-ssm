@@ -1,6 +1,8 @@
 package com.amazonaws.ssm.document;
 
+import com.amazonaws.ssm.document.tags.TagUtil;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -38,6 +40,9 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
     private final DocumentExceptionTranslator exceptionTranslator;
 
     @NonNull
+    private final TagUtil tagUtil;
+
+    @NonNull
     private final SsmClient ssmClient;
 
     @NonNull
@@ -46,7 +51,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
     @VisibleForTesting
     public CreateHandler() {
         this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
-                DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient(),
+                DocumentExceptionTranslator.getInstance(), TagUtil.getInstance(), ClientBuilder.getClient(),
             SafeLogger.getInstance());
     }
 
@@ -74,6 +79,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             createDocumentRequest =
                     documentModelTranslator.generateCreateDocumentRequest(model, request.getSystemTags(),
                         request.getDesiredResourceTags(), request.getClientRequestToken());
+
         } catch (final InvalidDocumentContentException e) {
             throw new CfnInvalidRequestException(e.getMessage(), e);
         }
@@ -81,20 +87,38 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         model.setName(createDocumentRequest.name());
 
         try {
-            final CreateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(createDocumentRequest, ssmClient::createDocument);
+            final CreateDocumentResponse response = createDocument(createDocumentRequest, model, proxy, logger);
+
             context.setCreateDocumentStarted(true);
             context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
-                    .status(OperationStatus.IN_PROGRESS)
-                    .message(response.documentDescription().statusInformation())
-                    .callbackContext(context)
-                    .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                    .build();
+                .resourceModel(model)
+                .status(OperationStatus.IN_PROGRESS)
+                .message(response.documentDescription().statusInformation())
+                .callbackContext(context)
+                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .build();
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
+    }
+
+    private CreateDocumentResponse createDocument(final CreateDocumentRequest createDocumentRequest,
+                                                  final ResourceModel model,
+                                                  final AmazonWebServicesClientProxy proxy,
+                                                  final Logger logger) {
+
+        try {
+            return proxy.injectCredentialsAndInvokeV2(createDocumentRequest, ssmClient::createDocument);
+        } catch (final SsmException e) {
+            if (!tagUtil.shouldSoftFailTags(null, model.getTags(), e)) {
+                throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
+            }
+        }
+
+        final CreateDocumentRequest createDocumentRequestWithoutTags = createDocumentRequest.toBuilder().tags(ImmutableList.of()).build();
+        return proxy.injectCredentialsAndInvokeV2(createDocumentRequestWithoutTags, ssmClient::createDocument);
     }
 
     private ProgressEvent<ResourceModel, CallbackContext> updateProgress(final ResourceModel model, final CallbackContext context,
