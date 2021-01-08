@@ -50,16 +50,16 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
     @VisibleForTesting
     UpdateHandler() {
         this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
-            TagUpdater.getInstance(),
-            DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient(), SafeLogger.getInstance());
+                TagUpdater.getInstance(),
+                DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient(), SafeLogger.getInstance());
     }
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final Logger logger) {
 
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
@@ -71,15 +71,15 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         try {
             logger.log("update tags request for document name: " + model.getName());
             tagUpdater.updateTags(model.getName(), request.getPreviousResourceTags(), request.getDesiredResourceTags(),
-                previousModel.getTags(), model.getTags(),
-                ssmClient, proxy);
+                    previousModel.getTags(), model.getTags(),
+                    ssmClient, proxy, logger);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(model)
-                .status(OperationStatus.SUCCESS)
-                .callbackContext(context)
-                .callbackDelaySeconds(0)
-                .build();
+                    .resourceModel(model)
+                    .status(OperationStatus.SUCCESS)
+                    .callbackContext(context)
+                    .callbackDelaySeconds(0)
+                    .build();
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }

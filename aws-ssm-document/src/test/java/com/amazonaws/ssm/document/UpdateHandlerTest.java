@@ -40,19 +40,19 @@ public class UpdateHandlerTest {
             "description", "Join instances to an AWS Directory Service domain."
     );
     private static final Map<String, Object> SAMPLE_PREVIOUS_DOCUMENT_CONTENT = ImmutableMap.of(
-        "schemaVersion", "1.1",
-        "description", "Join instances to an AWS Directory Service domain."
+            "schemaVersion", "1.1",
+            "description", "Join instances to an AWS Directory Service domain."
     );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final Map<String, String> SAMPLE_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey1", "tagValue1");
     private static final Map<String, String> SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey2", "tagValue2");
     private static final List<Tag> SAMPLE_PREVIOUS_MODEL_TAGS = ImmutableList.of(
-        Tag.builder().key("tagModelKey1").value("tagModelValue1").build(),
-        Tag.builder().key("tagModelKey2").value("tagModelValue2").build()
+            Tag.builder().key("tagModelKey1").value("tagModelValue1").build(),
+            Tag.builder().key("tagModelKey2").value("tagModelValue2").build()
     );
     private static final List<Tag> SAMPLE_MODEL_TAGS = ImmutableList.of(
-        Tag.builder().key("tagModelKey3").value("tagModelValue3").build(),
-        Tag.builder().key("tagModelKey4").value("tagModelValue4").build()
+            Tag.builder().key("tagModelKey3").value("tagModelValue3").build(),
+            Tag.builder().key("tagModelKey4").value("tagModelValue4").build()
     );
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final UpdateDocumentRequest SAMPLE_UPDATE_DOCUMENT_REQUEST = UpdateDocumentRequest.builder()
@@ -66,10 +66,10 @@ public class UpdateHandlerTest {
             .tags(SAMPLE_MODEL_TAGS)
             .build();
     private static final ResourceModel SAMPLE_PREVIOUS_RESOURCE_MODEL = ResourceModel.builder()
-        .name(SAMPLE_DOCUMENT_NAME)
-        .content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
-        .tags(SAMPLE_PREVIOUS_MODEL_TAGS)
-        .build();
+            .name(SAMPLE_DOCUMENT_NAME)
+            .content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
+            .tags(SAMPLE_PREVIOUS_MODEL_TAGS)
+            .build();
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .systemTags(SAMPLE_SYSTEM_TAGS)
             .desiredResourceTags(SAMPLE_DESIRED_RESOURCE_TAGS)
@@ -131,8 +131,8 @@ public class UpdateHandlerTest {
     public void testHandleRequest_DocumentUpdateTagsSuccess_VerifyResponse() {
 
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
-            .tags(SAMPLE_MODEL_TAGS)
-            .build();
+                .tags(SAMPLE_MODEL_TAGS)
+                .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder().build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -147,14 +147,14 @@ public class UpdateHandlerTest {
 
         Assertions.assertEquals(expectedResponse, response);
         Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS, SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS,
-            SAMPLE_MODEL_TAGS, ssmClient, proxy);
+                SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
         verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
     public void testHandleRequest_DocumentUpdateTagsThrowsException_VerifyResponse() {
         doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS,
-            SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy);
+                SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
 
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 

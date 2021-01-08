@@ -4,6 +4,7 @@ import com.amazonaws.ssm.document.tags.TagUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
+import org.mockito.Mockito;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentResponse;
@@ -44,10 +45,10 @@ public class CreateHandlerTest {
     );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final Map<String, String> SAMPLE_RESOURCE_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack",
-        "tag1", "tagValue1");
+            "tag1", "tagValue1");
     private static final List<Tag> SAMPLE_MODEL_TAGS = ImmutableList.of(
-        com.amazonaws.ssm.document.Tag.builder().key("aws:cloudformation:stack-name").value("testStack").build(),
-        com.amazonaws.ssm.document.Tag.builder().key("tag1").value("tagValue1").build()
+            com.amazonaws.ssm.document.Tag.builder().key("aws:cloudformation:stack-name").value("testStack").build(),
+            com.amazonaws.ssm.document.Tag.builder().key("tag1").value("tagValue1").build()
     );
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final CreateDocumentRequest SAMPLE_CREATE_DOCUMENT_REQUEST = CreateDocumentRequest.builder()
@@ -300,38 +301,38 @@ public class CreateHandlerTest {
     @Test
     public void handleRequest_doesSoftFailOnTagging_VerifyCreationInProgress() {
         final CreateDocumentRequest createDocumentRequestWithoutTags = SAMPLE_CREATE_DOCUMENT_REQUEST.toBuilder()
-            .tags(ImmutableList.of()).build();
+                .tags(ImmutableList.of()).build();
         final ResourceModel resourceModel = ResourceModel.builder()
-            .name(SAMPLE_DOCUMENT_NAME)
-            .content(SAMPLE_DOCUMENT_CONTENT)
-            .tags(SAMPLE_MODEL_TAGS)
-            .build();
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .tags(SAMPLE_MODEL_TAGS)
+                .build();
         final ResourceHandlerRequest<ResourceModel> resourceModelHandlerRequest = ResourceHandlerRequest.<ResourceModel>builder()
-            .systemTags(SAMPLE_SYSTEM_TAGS)
-            .desiredResourceTags(SAMPLE_RESOURCE_TAGS)
-            .clientRequestToken(SAMPLE_REQUEST_TOKEN)
-            .desiredResourceState(resourceModel)
-            .awsAccountId(SAMPLE_ACCOUNT_ID)
-            .build();
+                .systemTags(SAMPLE_SYSTEM_TAGS)
+                .desiredResourceTags(SAMPLE_RESOURCE_TAGS)
+                .clientRequestToken(SAMPLE_REQUEST_TOKEN)
+                .desiredResourceState(resourceModel)
+                .awsAccountId(SAMPLE_ACCOUNT_ID)
+                .build();
 
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
-            .tags(SAMPLE_MODEL_TAGS)
-            .build();
+                .tags(SAMPLE_MODEL_TAGS)
+                .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
-            .createDocumentStarted(true)
-            .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
-            .build();
+                .createDocumentStarted(true)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(expectedModel)
-            .status(OperationStatus.IN_PROGRESS)
-            .callbackContext(expectedCallbackContext)
-            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-            .build();
+                .resourceModel(expectedModel)
+                .status(OperationStatus.IN_PROGRESS)
+                .callbackContext(expectedCallbackContext)
+                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .build();
 
         final CreateDocumentResponse createDocumentResponse = CreateDocumentResponse.builder()
-            .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.CREATING).build())
-            .build();
+                .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.CREATING).build())
+                .build();
 
         when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
 
@@ -343,28 +344,29 @@ public class CreateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(createDocumentRequestWithoutTags), any())).thenReturn(createDocumentResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger);
+                = unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger);
 
         verify(safeLogger).safeLogDocumentInformation(resourceModel, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+        verify(logger, Mockito.times(1)).log(String.format("Soft fail adding tags during create of document %s", SAMPLE_DOCUMENT_NAME));
         Assertions.assertEquals(expectedResponse, response);
     }
 
     @Test
     public void handleRequest_NewDocumentCreation_ssmServiceThrowsException_doesNotSoftFail_VerifyExpectedException() {
         final CreateDocumentRequest createDocumentRequestWithoutTags = SAMPLE_CREATE_DOCUMENT_REQUEST.toBuilder()
-            .tags(ImmutableList.of()).build();
+                .tags(ImmutableList.of()).build();
         final ResourceModel resourceModel = ResourceModel.builder()
-            .name(SAMPLE_DOCUMENT_NAME)
-            .content(SAMPLE_DOCUMENT_CONTENT)
-            .tags(SAMPLE_MODEL_TAGS)
-            .build();
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .tags(SAMPLE_MODEL_TAGS)
+                .build();
         final ResourceHandlerRequest<ResourceModel> resourceModelHandlerRequest = ResourceHandlerRequest.<ResourceModel>builder()
-            .systemTags(SAMPLE_SYSTEM_TAGS)
-            .desiredResourceTags(SAMPLE_RESOURCE_TAGS)
-            .clientRequestToken(SAMPLE_REQUEST_TOKEN)
-            .desiredResourceState(resourceModel)
-            .awsAccountId(SAMPLE_ACCOUNT_ID)
-            .build();
+                .systemTags(SAMPLE_SYSTEM_TAGS)
+                .desiredResourceTags(SAMPLE_RESOURCE_TAGS)
+                .clientRequestToken(SAMPLE_REQUEST_TOKEN)
+                .desiredResourceState(resourceModel)
+                .awsAccountId(SAMPLE_ACCOUNT_ID)
+                .build();
 
         when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
@@ -374,5 +376,6 @@ public class CreateHandlerTest {
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger));
         verify(safeLogger).safeLogDocumentInformation(resourceModel, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+        verify(logger, Mockito.never()).log(String.format("Soft fail adding tags during create of document %s", SAMPLE_DOCUMENT_NAME));
     }
 }

@@ -52,7 +52,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
     public CreateHandler() {
         this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
                 DocumentExceptionTranslator.getInstance(), TagUtil.getInstance(), ClientBuilder.getClient(),
-            SafeLogger.getInstance());
+                SafeLogger.getInstance());
     }
 
     /**
@@ -60,10 +60,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      */
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final Logger logger) {
 
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
@@ -78,7 +78,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createDocumentRequest =
                     documentModelTranslator.generateCreateDocumentRequest(model, request.getSystemTags(),
-                        request.getDesiredResourceTags(), request.getClientRequestToken());
+                            request.getDesiredResourceTags(), request.getClientRequestToken());
 
         } catch (final InvalidDocumentContentException e) {
             throw new CfnInvalidRequestException(e.getMessage(), e);
@@ -93,12 +93,12 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES);
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(model)
-                .status(OperationStatus.IN_PROGRESS)
-                .message(response.documentDescription().statusInformation())
-                .callbackContext(context)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
+                    .resourceModel(model)
+                    .status(OperationStatus.IN_PROGRESS)
+                    .message(response.documentDescription().statusInformation())
+                    .callbackContext(context)
+                    .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                    .build();
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
@@ -115,6 +115,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             if (!tagUtil.shouldSoftFailTags(null, model.getTags(), e)) {
                 throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
             }
+            logger.log(String.format("Soft fail adding tags during create of document %s",
+                    createDocumentRequest.name()));
         }
 
         final CreateDocumentRequest createDocumentRequestWithoutTags = createDocumentRequest.toBuilder().tags(ImmutableList.of()).build();

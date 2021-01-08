@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
 
 @RequiredArgsConstructor
 public class TagUpdater {
@@ -35,49 +36,38 @@ public class TagUpdater {
         return INSTANCE;
     }
 
-    public void createTags(@NonNull final String documentName,
-                           @Nullable final Map<String, String> desiredResourceTagsFromRequest,
-                           @Nullable final List<com.amazonaws.ssm.document.Tag> resourceModelTags,
-                           @NonNull final SsmClient ssmClient,
-                           @NonNull final AmazonWebServicesClientProxy proxy) {
-        if (desiredResourceTagsFromRequest == null) return;
-
-        final List<Tag> tagsToCreate = translateTags(desiredResourceTagsFromRequest);
-
-        addTags(tagsToCreate, documentName, null, resourceModelTags, ssmClient, proxy);
-    }
-
     public void updateTags(@NonNull final String documentName,
                            @Nullable final Map<String, String> desiredResourceTagsFromPreviousRequest,
                            @Nullable final Map<String, String> desiredResourceTagsFromCurrentRequest,
                            @Nullable final List<com.amazonaws.ssm.document.Tag> previousResourceModelTags,
                            @Nullable final List<com.amazonaws.ssm.document.Tag> currentResourceModelTags,
                            @NonNull final SsmClient ssmClient,
-                           @NonNull final AmazonWebServicesClientProxy proxy) {
-
-
+                           @NonNull final AmazonWebServicesClientProxy proxy,
+                           @NonNull final Logger logger) {
         final List<Tag> existingTags = desiredResourceTagsFromPreviousRequest == null ? ImmutableList.of()
-            : translateTags(desiredResourceTagsFromPreviousRequest);
+                : translateTags(desiredResourceTagsFromPreviousRequest);
 
         final List<Tag> requestedTags = desiredResourceTagsFromCurrentRequest == null ? ImmutableList.of()
-            : translateTags(desiredResourceTagsFromCurrentRequest);
+                : translateTags(desiredResourceTagsFromCurrentRequest);
 
         final List<Tag> tagsToAdd = getTagsToAdd(requestedTags, existingTags);
         final List<Tag> tagsToRemove = getTagsToRemove(requestedTags, existingTags);
 
-        removeTags(tagsToRemove, documentName, previousResourceModelTags, currentResourceModelTags, ssmClient, proxy);
-        addTags(tagsToAdd, documentName, previousResourceModelTags, currentResourceModelTags, ssmClient, proxy);
+        removeTags(tagsToRemove, documentName, previousResourceModelTags, currentResourceModelTags, ssmClient, proxy, logger);
+        addTags(tagsToAdd, documentName, previousResourceModelTags, currentResourceModelTags, ssmClient, proxy, logger);
     }
 
     private void addTags(final List<Tag> tagsToAdd, final String documentName,
                          final List<com.amazonaws.ssm.document.Tag> previousResourceModelTags,
                          final List<com.amazonaws.ssm.document.Tag> currentResourceModelTags,
                          final SsmClient ssmClient,
-                         final AmazonWebServicesClientProxy proxy) {
+                         final AmazonWebServicesClientProxy proxy,
+                         final Logger logger) {
         try {
             tagClient.addTags(tagsToAdd, documentName, ssmClient, proxy);
         } catch (final SsmException e) {
             if (tagUtil.shouldSoftFailTags(previousResourceModelTags, currentResourceModelTags, e)) {
+                logger.log(String.format("Soft fail adding tags to %s", documentName));
                 return;
             }
 
@@ -86,14 +76,16 @@ public class TagUpdater {
     }
 
     private void removeTags(final List<Tag> tagsToRemove, final String documentName,
-                         final List<com.amazonaws.ssm.document.Tag> previousResourceModelTags,
-                         final List<com.amazonaws.ssm.document.Tag> currentResourceModelTags,
-                         final SsmClient ssmClient,
-                         final AmazonWebServicesClientProxy proxy) {
+                            final List<com.amazonaws.ssm.document.Tag> previousResourceModelTags,
+                            final List<com.amazonaws.ssm.document.Tag> currentResourceModelTags,
+                            final SsmClient ssmClient,
+                            final AmazonWebServicesClientProxy proxy,
+                            final Logger logger) {
         try {
             tagClient.removeTags(tagsToRemove, documentName, ssmClient, proxy);
         } catch (final SsmException e) {
             if (tagUtil.shouldSoftFailTags(previousResourceModelTags, currentResourceModelTags, e)) {
+                logger.log(String.format("Soft fail removing tags from %s", documentName));
                 return;
             }
 
@@ -115,10 +107,10 @@ public class TagUpdater {
 
     private List<Tag> translateTags(final Map<String, String> tags) {
         return tags.entrySet().stream().map(
-            tag -> Tag.builder()
-                .key(tag.getKey())
-                .value(tag.getValue())
-                .build())
-            .collect(Collectors.toList());
+                tag -> Tag.builder()
+                        .key(tag.getKey())
+                        .value(tag.getValue())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

@@ -17,16 +17,16 @@ import software.amazon.awssdk.services.ssm.model.SsmException;
 public class TagUtilTest {
 
     private static final List<Tag> SAMPLE_PREVIOUS_MODEL_TAGS = ImmutableList.of(
-        com.amazonaws.ssm.document.Tag.builder().key("tagModelKey1").value("tagModelValue1").build(),
-        com.amazonaws.ssm.document.Tag.builder().key("tagModelKey2").value("tagModelValue2").build()
+            com.amazonaws.ssm.document.Tag.builder().key("tagModelKey1").value("tagModelValue1").build(),
+            com.amazonaws.ssm.document.Tag.builder().key("tagModelKey2").value("tagModelValue2").build()
     );
     private static final List<com.amazonaws.ssm.document.Tag> SAMPLE_MODEL_TAGS = ImmutableList.of(
-        com.amazonaws.ssm.document.Tag.builder().key("tagModelKey3").value("tagModelValue3").build(),
-        com.amazonaws.ssm.document.Tag.builder().key("tagModelKey4").value("tagModelValue4").build()
+            com.amazonaws.ssm.document.Tag.builder().key("tagModelKey3").value("tagModelValue3").build(),
+            com.amazonaws.ssm.document.Tag.builder().key("tagModelKey4").value("tagModelValue4").build()
     );
     private static final AwsErrorDetails ACCESS_DENIED_ERROR_DETAILS = AwsErrorDetails.builder()
-        .errorCode("AccessDeniedException")
-        .build();
+            .errorCode("AccessDeniedException")
+            .build();
 
     @Mock
     private SsmException ssmException;
@@ -35,14 +35,14 @@ public class TagUtilTest {
 
     @BeforeEach
     private void setup() {
-        unitUnderTest = new TagUtil();
+        unitUnderTest = TagUtil.getInstance();
     }
 
     @Test
     public void testShouldSoftFail_NotAccessDeniedException_isFalse() {
         final AwsErrorDetails errorDetails = AwsErrorDetails.builder()
-            .errorCode("AccessDeniedException")
-            .build();
+                .errorCode("AccessDeniedException")
+                .build();
 
         Mockito.when(ssmException.awsErrorDetails()).thenReturn(errorDetails);
 
