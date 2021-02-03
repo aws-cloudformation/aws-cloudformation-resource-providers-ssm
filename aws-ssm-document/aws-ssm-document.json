@@ -109,6 +109,7 @@
                 "ApplicationConfiguration",
                 "ApplicationConfigurationSchema",
                 "Automation",
+                "Automation.ChangeTemplate",
                 "Command",
                 "DeploymentStrategy",
                 "Package",
