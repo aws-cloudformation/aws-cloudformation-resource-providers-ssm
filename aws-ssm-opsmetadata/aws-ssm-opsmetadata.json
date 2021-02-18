@@ -1,0 +1,134 @@
+{
+    "typeName": "AWS::SSM::OpsMetadata",
+    "description": "An example resource schema demonstrating some basic constructs and validation rules.",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
+    "definitions": {
+        "MetadataValueString": {
+            "$comment": "Metadata Value",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+        },
+        "Metadata": {
+            "type": "object",
+            "properties": {
+                "MetadataKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^(?!\\s*$).+"
+                },
+                "MetadataValue": {
+                    "type": "object",
+                    "$ref": "#/definitions/MetadataValueString"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "MetadataValue",
+                "MetadataKey"
+            ]
+        },
+        "Tag": {
+            "type": "object",
+            "properties": {
+                "Key": {
+                    "description": "The name of the tag.",
+                    "type": "string",
+                    "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "Value": {
+                    "description": "The value of the tag.",
+                    "type": "string",
+                    "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$",
+                    "minLength": 1,
+                    "maxLength": 256
+                }
+            },
+            "required": [
+                "Value",
+                "Key"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "properties": {
+        "ResourceId": {
+            "description": "Resource Id for which OpsMetadata is being created.",
+            "type": "string",
+            "pattern": "^(?!\\s*$).+"
+        },
+        "MetadataMap": {
+            "description": "An array of metadata key-value pairs stored in the OpsMetadata object.",
+            "type": "array",
+            "uniqueItems": true,
+            "insertionOrder": false,
+            "items": {
+                "$ref": "#/definitions/Metadata"
+            }
+        },
+        "Tags": {
+            "description": "An array of tag key-value pairs to apply to this resource.",
+            "type": "array",
+            "uniqueItems": true,
+            "insertionOrder": false,
+            "items": {
+                "$ref": "#/definitions/Tag"
+            }
+        },
+        "OpsMetadataArn": {
+            "description": "Arn of the OpsMetadata Object",
+            "type": "string",
+            "pattern": "arn:(aws[a-zA-Z-]*)?:ssm:[a-z0-9-\\.]{0,63}:[a-z0-9-\\.]{0,63}:opsmetadata\/([a-zA-Z0-9-_\\.\/]*)"
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "TestCode",
+        "Title"
+    ],
+    "readOnlyProperties": [
+        "/properties/OpsMetadataArn"
+    ],
+    "primaryIdentifier": [
+        "/properties/OpsMetadataArn"
+    ],
+    "createOnlyProperties": [
+        "/properties/ResourceId"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "ssm:CreateOpsMetadata",
+                "ssm:GetOpsMetadata"
+            ],
+            "timeoutInMinutes": 5
+        },
+        "read": {
+            "permissions": [
+                "ssm:GetOpsMetadata"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "ssm:CreateOpsMetadata",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:GetOpsMetadata"
+            ],
+            "timeoutInMinutes": 5
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeleteOpsMetadata"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "ssm:ListOpsMetadata"
+            ]
+        }
+    }
+}
