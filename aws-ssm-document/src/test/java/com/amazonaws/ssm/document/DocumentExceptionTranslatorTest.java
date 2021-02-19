@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException;
+import software.amazon.awssdk.services.ssm.model.InvalidResourceIdException;
 import software.amazon.awssdk.services.ssm.model.MaxDocumentSizeExceededException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
@@ -49,6 +50,8 @@ public class DocumentExceptionTranslatorTest {
         Mockito.when(ssmException.statusCode()).thenReturn(500);
 
         Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnNotFoundException);
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(InvalidResourceIdException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnNotFoundException);
 
         Assertions.assertTrue(unitUnderTest.getCfnException(DocumentLimitExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnServiceLimitExceededException);
 
