@@ -25,6 +25,7 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.proxy.Logger;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentExceptionTranslatorTest {
@@ -40,56 +41,59 @@ public class DocumentExceptionTranslatorTest {
     @Mock
     private IOException ioException;
 
+    @Mock
+    private Logger logger;
+
     @Test
     public void testGetCfnException_verifyExceptionsReturned() {
         Mockito.when(ssmException.statusCode()).thenReturn(500);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnNotFoundException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnNotFoundException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(DocumentLimitExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnServiceLimitExceededException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(DocumentLimitExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnServiceLimitExceededException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(DocumentVersionLimitExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnServiceLimitExceededException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(DocumentVersionLimitExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnServiceLimitExceededException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(DocumentAlreadyExistsException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnAlreadyExistsException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(DocumentAlreadyExistsException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnAlreadyExistsException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(MaxDocumentSizeExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(MaxDocumentSizeExceededException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnInvalidRequestException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentContentException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentContentException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnInvalidRequestException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentVersionException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(InvalidDocumentVersionException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnInvalidRequestException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(AutomationDefinitionNotFoundException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(AutomationDefinitionNotFoundException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnInvalidRequestException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(InternalServerErrorException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnServiceInternalErrorException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(InternalServerErrorException.builder().build(), SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnServiceInternalErrorException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnGeneralServiceException);
     }
 
     @Test
     public void testGetCfnException_ThrottlingException_verifyExceptionsReturned() {
         Mockito.when(ssmException.isThrottlingException()).thenReturn(true);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnThrottlingException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnThrottlingException);
     }
 
     @Test
     public void testGetCfnException_Non400StatusCode_verifyExceptionsReturned() {
         Mockito.when(ssmException.statusCode()).thenReturn(500);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnGeneralServiceException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnGeneralServiceException);
     }
 
     @Test
     public void testGetCfnException_IOExceptionCause_verifyExceptionsReturned() {
         Mockito.when(ssmException.getCause()).thenReturn(ioException);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnNetworkFailureException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnNetworkFailureException);
     }
 
     @Test
     public void testGetCfnException_400StatusCode_verifyExceptionsReturned() {
         Mockito.when(ssmException.statusCode()).thenReturn(400);
 
-        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME) instanceof CfnInvalidRequestException);
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnInvalidRequestException);
     }
 }

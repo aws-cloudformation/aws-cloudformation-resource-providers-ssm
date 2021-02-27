@@ -72,7 +72,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     .status(OperationStatus.SUCCESS)
                     .build();
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
     }
 }
