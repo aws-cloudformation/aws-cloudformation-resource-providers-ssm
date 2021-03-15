@@ -13,7 +13,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "Type" : "AWS::SSM::OpsMetadata",
     "Properties" : {
         "<a href="#resourceid" title="ResourceId">ResourceId</a>" : <i>String</i>,
-        "<a href="#metadatamap" title="MetadataMap">MetadataMap</a>" : <i>[ <a href="metadata.md">Metadata</a>, ... ]</i>,
+        "<a href="#metadata" title="Metadata">Metadata</a>" : <i><a href="metadata.md">Metadata</a></i>,
         "<a href="#tags" title="Tags">Tags</a>" : <i>[ <a href="tag.md">Tag</a>, ... ]</i>,
     }
 }
@@ -25,8 +25,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 Type: AWS::SSM::OpsMetadata
 Properties:
     <a href="#resourceid" title="ResourceId">ResourceId</a>: <i>String</i>
-    <a href="#metadatamap" title="MetadataMap">MetadataMap</a>: <i>
-      - <a href="metadata.md">Metadata</a></i>
+    <a href="#metadata" title="Metadata">Metadata</a>: <i><a href="metadata.md">Metadata</a></i>
     <a href="#tags" title="Tags">Tags</a>: <i>
       - <a href="tag.md">Tag</a></i>
 </pre>
@@ -37,7 +36,7 @@ Properties:
 
 Resource Id for which OpsMetadata is being created.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 
@@ -45,13 +44,13 @@ _Pattern_: <code>^(?!\s*$).+</code>
 
 _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
 
-#### MetadataMap
+#### Metadata
 
-An array of metadata key-value pairs stored in the OpsMetadata object.
+An map of metadata key-value pairs to be stored in the OpsMetadata object.
 
 _Required_: No
 
-_Type_: List of <a href="metadata.md">Metadata</a>
+_Type_: <a href="metadata.md">Metadata</a>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 

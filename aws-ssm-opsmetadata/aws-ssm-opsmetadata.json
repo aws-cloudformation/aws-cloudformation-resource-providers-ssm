@@ -9,24 +9,16 @@
             "minLength": 1,
             "maxLength": 4096
         },
-        "Metadata": {
+        "MetadataValue": {
             "type": "object",
             "properties": {
-                "MetadataKey": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 256,
-                    "pattern": "^(?!\\s*$).+"
-                },
-                "MetadataValue": {
-                    "type": "object",
+                "Value": {
                     "$ref": "#/definitions/MetadataValueString"
                 }
             },
             "additionalProperties": false,
             "required": [
-                "MetadataValue",
-                "MetadataKey"
+                "Value"
             ]
         },
         "Tag": {
@@ -60,14 +52,15 @@
             "type": "string",
             "pattern": "^(?!\\s*$).+"
         },
-        "MetadataMap": {
-            "description": "An array of metadata key-value pairs stored in the OpsMetadata object.",
-            "type": "array",
-            "uniqueItems": true,
-            "insertionOrder": false,
-            "items": {
-                "$ref": "#/definitions/Metadata"
-            }
+        "Metadata": {
+            "description": "An map of metadata key-value pairs to be stored in the OpsMetadata object.",
+            "type": "object",
+            "patternProperties": {
+                ".*{1,255}": {
+                    "$ref": "#/definitions/MetadataValue"
+                }
+            },
+            "additionalProperties": false
         },
         "Tags": {
             "description": "An array of tag key-value pairs to apply to this resource.",
@@ -86,8 +79,7 @@
     },
     "additionalProperties": false,
     "required": [
-        "TestCode",
-        "Title"
+        "ResourceId"
     ],
     "readOnlyProperties": [
         "/properties/OpsMetadataArn"
