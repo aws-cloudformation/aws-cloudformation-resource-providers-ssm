@@ -1,6 +1,6 @@
 # AWS::SSM::OpsMetadata
 
-An example resource schema demonstrating some basic constructs and validation rules.
+Resource Type definition for AWS::SSM::OpsMetadata
 
 ## Syntax
 
@@ -46,7 +46,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### Metadata
 
-An map of metadata key-value pairs to be stored in the OpsMetadata object.
+A map of metadata key-value pairs to be stored in the OpsMetadata object.
 
 _Required_: No
 

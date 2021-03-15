@@ -28,6 +28,7 @@ Resources:
                 - "ssm:DeleteOpsMetadata"
                 - "ssm:GetOpsMetadata"
                 - "ssm:ListOpsMetadata"
+                - "ssm:ListTagsForResource"
                 - "ssm:RemoveTagsFromResource"
                 Resource: "*"
 Outputs:

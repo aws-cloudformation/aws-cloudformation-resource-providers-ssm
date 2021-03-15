@@ -1,6 +1,6 @@
 # AWS::SSM::OpsMetadata Metadata
 
-An map of metadata key-value pairs to be stored in the OpsMetadata object.
+A map of metadata key-value pairs to be stored in the OpsMetadata object.
 
 ## Syntax
 
