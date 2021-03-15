@@ -21,4 +21,3 @@ Resources:
       Handler: com.amazonaws.ssm.opsmetadata.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-ssm-opsmetadata-handler-1.0-SNAPSHOT.jar
-
