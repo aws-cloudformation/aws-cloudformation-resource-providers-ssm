@@ -1,16 +1,21 @@
 package com.amazonaws.ssm.document;
 
 import com.amazonaws.ssm.document.tags.TagUpdater;
+
 import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Update AWS::SSM::Document resource.
@@ -68,6 +73,14 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), request.getSystemTags(), logger);
 
         // Only Tags are handled in Update Handler. Other properties of the Document resource are CreateOnly.
+        // Verify no CreateOnly properties are modified
+        if(isCreateOnlyModified(model, previousModel)) {
+            return ProgressEvent.failed(
+                    model,
+                    context,
+                    HandlerErrorCode.NotUpdatable, "Create-Only Property cannot be updated");
+        }
+
         try {
             logger.log("update tags request for document name: " + model.getName());
             tagUpdater.updateTags(model.getName(), request.getPreviousResourceTags(), request.getDesiredResourceTags(),
@@ -83,5 +96,22 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
+    }
+
+    private boolean isCreateOnlyModified(final ResourceModel model, final ResourceModel previousModel) {
+        final ResourceModel comparator = ResourceModel.builder()
+                //CreatOnly Properties
+                .name(model.getName())
+                .content(model.getContent())
+                .attachments(model.getAttachments())
+                .versionName(model.getVersionName())
+                .documentType(model.getDocumentType())
+                .documentFormat(model.getDocumentFormat())
+                .targetType(model.getTargetType())
+                .requires(model.getRequires())
+                //Modifiable Properties
+                .tags(previousModel.getTags())
+                .build();
+        return !comparator.equals(previousModel);
     }
 }
