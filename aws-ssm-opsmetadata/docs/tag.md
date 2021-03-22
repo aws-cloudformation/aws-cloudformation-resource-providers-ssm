@@ -53,3 +53,4 @@ _Maximum_: <code>256</code>
 _Pattern_: <code>^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+

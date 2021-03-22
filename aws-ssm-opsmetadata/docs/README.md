@@ -79,3 +79,4 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 #### OpsMetadataArn
 
 Arn of the OpsMetadata Object
+

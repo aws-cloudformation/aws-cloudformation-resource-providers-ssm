@@ -1,27 +1,69 @@
 package com.amazonaws.ssm.opsmetadata;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import com.amazonaws.ssm.opsmetadata.translator.property.MetadataTranslator;
+import com.amazonaws.ssm.opsmetadata.translator.request.RequestTranslator;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetOpsMetadataRequest;
+import software.amazon.awssdk.services.ssm.model.GetOpsMetadataResponse;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.awssdk.services.ssm.model.OpsMetadataNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public class ReadHandler extends BaseHandler<CallbackContext> {
+public class ReadHandler extends BaseHandlerStd {
+    private static final String OPERATION = "ReadParameter";
+    private final RequestTranslator requestTranslator;
+    private final MetadataTranslator metadataTranslator;
+
+    public ReadHandler() {
+        this.requestTranslator = new RequestTranslator();
+        this. metadataTranslator = new MetadataTranslator();
+    }
+
+    public ReadHandler(final RequestTranslator requestTranslator, final MetadataTranslator metadataTranslator) {
+        this.requestTranslator = requestTranslator;
+        this.metadataTranslator = metadataTranslator;
+    }
 
     @Override
-    public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+    protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final ProxyClient<SsmClient> proxyClient,
+            final Logger logger) {
 
-        final ResourceModel model = request.getDesiredResourceState();
+        return proxy.initiate("aws-ssm-opsmetadata::resource-read", proxyClient, request.getDesiredResourceState(), callbackContext)
+                .translateToServiceRequest((resourceModel) -> requestTranslator.getOpsMetadataRequest(resourceModel))
+                .makeServiceCall(this::ReadResource)
+                .done((getOpsMetadataRequest, getOpsMetadataResponse, proxyInvocation, resourceModel, context) -> {
+                    Optional<Map<String, MetadataValue>> metadataMap = metadataTranslator.serviceModelPropertyToResourceModel(
+                            getOpsMetadataResponse.metadata());
+                    return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
+                            .resourceId(getOpsMetadataResponse.resourceId())
+                            .metadata((metadataMap.isPresent())? metadataMap.get() : new HashMap<>())
+                            .opsMetadataArn(getOpsMetadataRequest.opsMetadataArn())
+                            .build());
+                });
+    }
 
-        // TODO : put your code here
-
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(model)
-            .status(OperationStatus.SUCCESS)
-            .build();
+    private GetOpsMetadataResponse ReadResource(final GetOpsMetadataRequest getOpsMetadataRequest,
+                                                final ProxyClient<SsmClient> proxyClient) {
+        try{
+            return proxyClient.injectCredentialsAndInvokeV2(getOpsMetadataRequest, proxyClient.client()::getOpsMetadata);
+        } catch (final OpsMetadataNotFoundException exception) {
+            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, getOpsMetadataRequest.opsMetadataArn());
+        } catch (final InternalServerErrorException exception) {
+            throw new CfnServiceInternalErrorException(OPERATION, exception);
+        }
     }
 }
