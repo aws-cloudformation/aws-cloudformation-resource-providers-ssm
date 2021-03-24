@@ -56,7 +56,7 @@ public class CreateHandler extends BaseHandlerStd {
         return proxy.initiate("aws-ssm-opsmetadata::resource-create", proxyClient, model, callbackContext)
                 .translateToServiceRequest((resourceModel) -> requestTranslator.createOpsMetadataRequest(resourceModel, consolidatedTagList))
                 .makeServiceCall(this::createResource)
-                .done((createOpsMetadataRequest, createOpsMetadataResponse, _client, _model, _callbackContext) -> ProgressEvent.defaultSuccessHandler(toResourceModel(createOpsMetadataResponse)));
+                .done((createOpsMetadataRequest, createOpsMetadataResponse, _client, _model, _callbackContext) -> ProgressEvent.defaultSuccessHandler(toResourceModel(createOpsMetadataRequest, createOpsMetadataResponse)));
     }
 
     private CreateOpsMetadataResponse createResource(final CreateOpsMetadataRequest createOpsMetadataRequest,
@@ -80,9 +80,11 @@ public class CreateHandler extends BaseHandlerStd {
         }
     }
 
-    private ResourceModel toResourceModel(final CreateOpsMetadataResponse createOpsMetadataResponse) {
+    private ResourceModel toResourceModel(final CreateOpsMetadataRequest createOpsMetadataRequest,
+                                          final CreateOpsMetadataResponse createOpsMetadataResponse) {
         return ResourceModel.builder()
                 .opsMetadataArn(createOpsMetadataResponse.opsMetadataArn())
+                .resourceId(createOpsMetadataRequest.resourceId())
                 .build();
     }
 }

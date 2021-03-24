@@ -47,7 +47,7 @@ public class DeleteHandler extends BaseHandlerStd {
         return proxy.initiate("aws-ssm-opsmetadata::resource-delete", proxyClient, model, callbackContext)
                 .translateToServiceRequest((resourceModel) -> requestTranslator.deleteOpsMetadataRequest(resourceModel))
                 .makeServiceCall(this::deleteResource)
-                .done((deleteOpsMetadataRequest, deleteParameterResponse, _client, _model, _callbackContext) -> ProgressEvent.defaultSuccessHandler(null));
+                .done((deleteOpsMetadataRequest, deleteOpsMetadataResponse, _client, _model, _callbackContext) -> ProgressEvent.defaultSuccessHandler(null));
     }
 
     private DeleteOpsMetadataResponse deleteResource(final DeleteOpsMetadataRequest deleteOpsMetadataRequest,

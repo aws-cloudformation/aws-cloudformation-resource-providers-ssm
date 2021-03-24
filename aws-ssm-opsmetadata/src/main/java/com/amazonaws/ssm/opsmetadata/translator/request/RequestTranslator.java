@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.CreateOpsMetadataRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteOpsMetadataRequest;
 import software.amazon.awssdk.services.ssm.model.GetOpsMetadataRequest;
+import software.amazon.awssdk.services.ssm.model.ListOpsMetadataRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.ResourceTypeForTagging;
 import software.amazon.awssdk.services.ssm.model.Tag;
@@ -29,9 +30,15 @@ public class RequestTranslator {
     }
     public CreateOpsMetadataRequest createOpsMetadataRequest(final ResourceModel model,
                                                        final Map<String, String> tags) {
-        final CreateOpsMetadataRequest.Builder createOpsMetadataRequestBuilder = CreateOpsMetadataRequest.builder()
-                .resourceId(model.getResourceId())
-                .tags(translateTagsToSdk(tags));
+        final CreateOpsMetadataRequest.Builder createOpsMetadataRequestBuilder;
+        if (translateTagsToSdk(tags).isEmpty()) {
+            createOpsMetadataRequestBuilder = CreateOpsMetadataRequest.builder()
+                    .resourceId(model.getResourceId());
+        } else {
+            createOpsMetadataRequestBuilder = CreateOpsMetadataRequest.builder()
+                    .resourceId(model.getResourceId())
+                    .tags(translateTagsToSdk(tags));
+        }
         metadataTranslator.resourceModelPropertyToServiceModel(
                 model.getMetadata()).ifPresent(createOpsMetadataRequestBuilder::metadata);
 
@@ -41,8 +48,10 @@ public class RequestTranslator {
     public UpdateOpsMetadataRequest updateOpsMetadataRequest(final ResourceModel model) {
         final UpdateOpsMetadataRequest.Builder updateOpsMetadataRequestBuilder = UpdateOpsMetadataRequest.builder()
                 .opsMetadataArn(model.getOpsMetadataArn());
-        metadataTranslator.resourceModelPropertyToServiceModel(
-                model.getMetadata()).ifPresent(updateOpsMetadataRequestBuilder::metadataToUpdate);
+        if (model.getMetadata() != null) {
+            metadataTranslator.resourceModelPropertyToServiceModel(
+                    model.getMetadata()).ifPresent(updateOpsMetadataRequestBuilder::metadataToUpdate);
+        }
 
         return updateOpsMetadataRequestBuilder.build();
     }
@@ -56,6 +65,12 @@ public class RequestTranslator {
     public DeleteOpsMetadataRequest deleteOpsMetadataRequest(final ResourceModel model) {
         return DeleteOpsMetadataRequest.builder()
                 .opsMetadataArn(model.getOpsMetadataArn())
+                .build();
+    }
+
+    public ListOpsMetadataRequest listOpsMetadataRequest(final String nextToken) {
+        return ListOpsMetadataRequest.builder()
+                .nextToken(nextToken)
                 .build();
     }
 
@@ -82,9 +97,6 @@ public class RequestTranslator {
 
     // Translate tags
     public List<Tag> translateTagsToSdk(final Map<String, String> tags) {
-        if (tags == null || tags.isEmpty()) {
-            return null;
-        }
         List<Tag> tagList = Optional.of(tags.entrySet()).orElse(Collections.emptySet())
                 .stream()
                 .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
