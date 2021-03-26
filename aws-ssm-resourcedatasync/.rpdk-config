@@ -10,6 +10,7 @@
             "amazon",
             "ssm",
             "resourcedatasync"
-        ]
+        ],
+        "protocolVersion": "2.0.0"
     }
 }

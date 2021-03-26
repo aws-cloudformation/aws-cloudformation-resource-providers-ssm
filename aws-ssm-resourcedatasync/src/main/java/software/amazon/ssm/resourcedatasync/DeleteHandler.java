@@ -75,7 +75,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             }
         }
 
-        return ProgressEvent.defaultSuccessHandler(model);
+        return ProgressEvent.defaultSuccessHandler(null);
     }
 
     /**
