@@ -1,25 +1,16 @@
 package com.amazonaws.ssm.document;
 
 import com.amazonaws.ssm.document.tags.TagUpdater;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.DocumentDescription;
-import software.amazon.awssdk.services.ssm.model.DocumentStatus;
-import software.amazon.awssdk.services.ssm.model.DuplicateDocumentContentException;
-import software.amazon.awssdk.services.ssm.model.DuplicateDocumentVersionNameException;
-import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
-import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
-import software.amazon.awssdk.services.ssm.model.UpdateDocumentResponse;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
-import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -30,11 +21,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,11 +42,20 @@ public class UpdateHandlerTest {
             "description", "Join instances to an AWS Directory Service domain."
     );
     private static final Map<String, Object> SAMPLE_PREVIOUS_DOCUMENT_CONTENT = ImmutableMap.of(
-        "schemaVersion", "1.1",
-        "description", "Join instances to an AWS Directory Service domain."
+            "schemaVersion", "1.1",
+            "description", "Join instances to an AWS Directory Service domain."
     );
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final Map<String, String> SAMPLE_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey1", "tagValue1");
+    private static final Map<String, String> SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey2", "tagValue2");
+    private static final List<Tag> SAMPLE_PREVIOUS_MODEL_TAGS = ImmutableList.of(
+            Tag.builder().key("tagModelKey1").value("tagModelValue1").build(),
+            Tag.builder().key("tagModelKey2").value("tagModelValue2").build()
+    );
+    private static final List<Tag> SAMPLE_MODEL_TAGS = ImmutableList.of(
+            Tag.builder().key("tagModelKey3").value("tagModelValue3").build(),
+            Tag.builder().key("tagModelKey4").value("tagModelValue4").build()
+    );
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final UpdateDocumentRequest SAMPLE_UPDATE_DOCUMENT_REQUEST = UpdateDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
@@ -62,17 +64,35 @@ public class UpdateHandlerTest {
 
     private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder()
             .name(SAMPLE_DOCUMENT_NAME)
+            .content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
+            .tags(SAMPLE_MODEL_TAGS)
+            .build();
+    private static final ResourceModel SAMPLE_INVALID_RESOURCE_MODEL = ResourceModel.builder()
+            .name(SAMPLE_DOCUMENT_NAME)
             .content(SAMPLE_DOCUMENT_CONTENT)
+            .tags(SAMPLE_MODEL_TAGS)
             .build();
     private static final ResourceModel SAMPLE_PREVIOUS_RESOURCE_MODEL = ResourceModel.builder()
-        .name(SAMPLE_DOCUMENT_NAME)
-        .content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
-        .build();
+            .name(SAMPLE_DOCUMENT_NAME)
+            .content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
+            .tags(SAMPLE_PREVIOUS_MODEL_TAGS)
+            .build();
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .systemTags(SAMPLE_SYSTEM_TAGS)
             .desiredResourceTags(SAMPLE_DESIRED_RESOURCE_TAGS)
+            .previousResourceTags(SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS)
             .clientRequestToken(SAMPLE_REQUEST_TOKEN)
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
+            .previousResourceState(SAMPLE_PREVIOUS_RESOURCE_MODEL)
+            .awsAccountId(SAMPLE_ACCOUNT_ID)
+            .build();
+    private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_INVALID_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
+            .systemTags(SAMPLE_SYSTEM_TAGS)
+            .desiredResourceTags(SAMPLE_DESIRED_RESOURCE_TAGS)
+            .previousResourceTags(SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS)
+            .clientRequestToken(SAMPLE_REQUEST_TOKEN)
+            .desiredResourceState(SAMPLE_INVALID_RESOURCE_MODEL)
+            .previousResourceState(SAMPLE_PREVIOUS_RESOURCE_MODEL)
             .awsAccountId(SAMPLE_ACCOUNT_ID)
             .build();
     private static final String UPDATING_MESSAGE = "Updating";
@@ -125,7 +145,10 @@ public class UpdateHandlerTest {
 
     @Test
     public void testHandleRequest_DocumentUpdateTagsSuccess_VerifyResponse() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
+                .tags(SAMPLE_MODEL_TAGS)
+                .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder().build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -139,17 +162,41 @@ public class UpdateHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
-        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
+        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS, SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS,
+                SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
         verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
     public void testHandleRequest_DocumentUpdateTagsThrowsException_VerifyResponse() {
-        doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_DESIRED_RESOURCE_TAGS, ssmClient, proxy);
+        doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS,
+                SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
 
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
         verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+    }
+
+    @Test
+    public void testHandleRequest_DocumentUpdateCreateOnlyPropertyFails_VerifyResponse() {
+        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
+                .tags(SAMPLE_MODEL_TAGS)
+                .build();
+
+        final CallbackContext expectedCallbackContext = CallbackContext.builder().build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.failed(
+                expectedModel,
+                expectedCallbackContext,
+                HandlerErrorCode.NotUpdatable, "Create-Only Property cannot be updated");
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_INVALID_REQUEST, null, logger);
+
+        Assertions.assertEquals(expectedResponse, response);
+        Mockito.verify(tagUpdater, never()).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS, SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS,
+                SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_INVALID_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 }

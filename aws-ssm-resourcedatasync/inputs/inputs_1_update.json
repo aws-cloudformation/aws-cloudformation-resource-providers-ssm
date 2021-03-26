@@ -1,18 +1,18 @@
 {
-  "SyncName":"abc",
-  "SyncType":"SyncFromSource",
-  "SyncSource":{
-    "SourceType": "AwsOrganizations",
-    "AwsOrganizationsSource": {
-      "OrganizationSourceType": "OrganizationalUnits",
-      "OrganizationalUnits": [
-        "ou-cfncanary-orgunits"
-      ]
-    },
-    "SourceRegions":[
-      "us-east-2",
-      "us-west-2"
-    ],
-    "IncludeFutureRegions" : false
-  }
+    "SyncName": "abc",
+    "SyncType": "SyncFromSource",
+    "SyncSource": {
+        "SourceType": "AwsOrganizations",
+        "AwsOrganizationsSource": {
+            "OrganizationSourceType": "OrganizationalUnits",
+            "OrganizationalUnits": [
+                "ou-cfncanary-orgunits"
+            ]
+        },
+        "SourceRegions": [
+            "us-east-2",
+            "us-west-2"
+        ],
+        "IncludeFutureRegions": false
+    }
 }

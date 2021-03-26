@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException;
+import software.amazon.awssdk.services.ssm.model.InvalidResourceIdException;
 import software.amazon.awssdk.services.ssm.model.MaxDocumentSizeExceededException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
@@ -63,7 +64,7 @@ class DocumentExceptionTranslator {
 
             return new CfnInvalidRequestException(e.getMessage(), e);
 
-        } else if (e instanceof InvalidDocumentException) {
+        } else if (e instanceof InvalidDocumentException || e instanceof InvalidResourceIdException) {
 
             return new CfnNotFoundException(ResourceModel.TYPE_NAME, documentName);
 
