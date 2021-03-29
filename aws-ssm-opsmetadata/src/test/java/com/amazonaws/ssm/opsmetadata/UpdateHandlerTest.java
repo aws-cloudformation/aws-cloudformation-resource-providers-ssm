@@ -1,16 +1,16 @@
 package com.amazonaws.ssm.opsmetadata;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.amazonaws.AmazonServiceException;
-import org.junit.jupiter.api.AfterEach;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import com.amazonaws.AmazonServiceException;
+import org.junit.jupiter.api.AfterEach;
+
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
@@ -37,8 +37,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest extends AbstractTestBase {
@@ -48,6 +49,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
     private Map<String, String> PREVIOUS_TAG_SET_NO_CHANGE;
 
     private Map<String, String> TAG_SET_WITH_CHANGE;
+
+    private GetOpsMetadataResponse getOpsMetadataResponse;
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -82,18 +85,18 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         PREVIOUS_TAG_SET_NO_CHANGE = new HashMap<>();
         TAG_SET_WITH_CHANGE = new HashMap<>();
+
+        getOpsMetadataResponse = GetOpsMetadataResponse.builder().resourceId(RESOURCE_ID).build();
     }
 
     @AfterEach
     public void post_execute() {
         verifyNoMoreInteractions(proxySsmClient.client());
     }
+
     @Test
     public void handleRequest_SimpleSuccess() {
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID).build();
         when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
-
         final UpdateOpsMetadataResponse updateOpsMetadataResponse = UpdateOpsMetadataResponse.builder()
                 .opsMetadataArn(OPS_METADATA_ARN)
                 .build();
@@ -127,12 +130,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess_WithoutTagsChange() {
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
-
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID).build();
-        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
 
         final UpdateOpsMetadataResponse updateOpsMetadataResponse = UpdateOpsMetadataResponse.builder()
                 .opsMetadataArn(OPS_METADATA_ARN)
@@ -163,13 +163,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess_WithTagsChange() {
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
         TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
-
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID).build();
-        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
 
         final UpdateOpsMetadataResponse updateOpsMetadataResponse = UpdateOpsMetadataResponse.builder()
                 .opsMetadataArn(OPS_METADATA_ARN)
@@ -205,16 +202,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_AmazonServiceException400ThrottlingException() {
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
         AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
         amazonServiceException.setStatusCode(429);
         amazonServiceException.setErrorCode("ThrottlingException");
 
         when(proxySsmClient.client().updateOpsMetadata(any(UpdateOpsMetadataRequest.class)))
                 .thenThrow(amazonServiceException);
-
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID).build();
-        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -237,15 +231,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_OpsMetadataNotFoundException() {
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID)
-                .build();
-        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class)))
-                .thenReturn(getOpsMetadataResponse);
-
-        when(proxySsmClient.client().updateOpsMetadata(any(UpdateOpsMetadataRequest.class)))
-                .thenThrow(OpsMetadataNotFoundException.builder().build());
-
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenThrow(OpsMetadataNotFoundException.class);
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
@@ -260,19 +246,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
             assertThat(ex).isInstanceOf(CfnNotFoundException.class);
         }
 
-        verify(proxySsmClient.client()).updateOpsMetadata(any(UpdateOpsMetadataRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
     public void handleRequest_AmazonServiceException500Exception() {
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID)
-                .build();
-        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class)))
-                .thenReturn(getOpsMetadataResponse);
-
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
         AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
         amazonServiceException.setStatusCode(500);
 
@@ -300,17 +280,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_AmazonServiceException400NonThrottlingException() {
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
         AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
         amazonServiceException.setStatusCode(400);
         amazonServiceException.setErrorCode("Invalid Input");
 
         when(proxySsmClient.client().updateOpsMetadata(any(UpdateOpsMetadataRequest.class)))
                 .thenThrow(amazonServiceException);
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID)
-                .build();
-        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class)))
-                .thenReturn(getOpsMetadataResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -333,12 +309,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_AmazonServiceExceptionInternalServerError() {
-        final GetOpsMetadataResponse getOpsMetadataResponse = GetOpsMetadataResponse.builder()
-                .resourceId(RESOURCE_ID)
-                .build();
-        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class)))
-                .thenReturn(getOpsMetadataResponse);
-
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
         when(proxySsmClient.client().updateOpsMetadata(any(UpdateOpsMetadataRequest.class)))
                 .thenThrow(InternalServerErrorException.builder().build());
 

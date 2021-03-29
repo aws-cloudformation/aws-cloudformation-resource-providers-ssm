@@ -1,0 +1,18 @@
+{
+    "artifact_type": "RESOURCE",
+    "typeName": "AWS::SSM::OpsMetadata",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.ssm.opsmetadata.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.ssm.opsmetadata.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "ssm",
+            "opsmetadata"
+        ],
+        "protocolVersion": "2.0.0"
+    },
+    "executableEntrypoint": "com.amazonaws.ssm.opsmetadata.HandlerWrapperExecutable"
+}

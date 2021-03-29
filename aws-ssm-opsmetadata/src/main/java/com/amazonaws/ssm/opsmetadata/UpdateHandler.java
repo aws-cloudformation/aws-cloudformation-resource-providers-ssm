@@ -57,6 +57,10 @@ public class UpdateHandler extends BaseHandlerStd {
 
         final ResourceModel model = request.getDesiredResourceState();
 
+        if (model.getOpsMetadataArn() == null) {
+            model.setOpsMetadataArn(request.getPreviousResourceState().getOpsMetadataArn());
+        }
+
         return ProgressEvent.progress(model, callbackContext)
                 // First validate the resource actually exists per the contract requirements
                 // https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
@@ -72,7 +76,11 @@ public class UpdateHandler extends BaseHandlerStd {
                                 .makeServiceCall(this::updateResource)
                                 .progress())
                 .then(progress -> handleTagging(proxy, proxyClient, progress, model, request.getDesiredResourceTags(), request.getPreviousResourceTags()))
-                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+                .then(progress -> ProgressEvent.defaultSuccessHandler(
+                        ResourceModel.builder()
+                                .opsMetadataArn(model.getOpsMetadataArn())
+                                .resourceId(model.getResourceId())
+                                .build()));
     }
 
     private GetOpsMetadataResponse validateResourceExists(GetOpsMetadataRequest getOpsMetadataRequest,

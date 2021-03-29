@@ -48,16 +48,19 @@ public class ReadHandler extends BaseHandlerStd {
                 .done((getOpsMetadataRequest, getOpsMetadataResponse, proxyInvocation, resourceModel, context) -> {
                     Optional<Map<String, MetadataValue>> metadataMap = metadataTranslator.serviceModelPropertyToResourceModel(
                             getOpsMetadataResponse.metadata());
-                    return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
-                            .resourceId(getOpsMetadataResponse.resourceId())
-                            .metadata((metadataMap.isPresent())? metadataMap.get() : new HashMap<>())
-                            .opsMetadataArn(getOpsMetadataRequest.opsMetadataArn())
-                            .build());
+                    ResourceModel.ResourceModelBuilder resourceModelBuilder = ResourceModel.builder();
+                    resourceModelBuilder.resourceId(getOpsMetadataResponse.resourceId());
+                    resourceModelBuilder.opsMetadataArn(getOpsMetadataRequest.opsMetadataArn());
+                    if (metadataMap.isPresent()) {
+                        resourceModelBuilder.metadata(metadataMap.get());
+                    }
+
+                    return ProgressEvent.defaultSuccessHandler(resourceModelBuilder.build());
                 });
     }
 
     private GetOpsMetadataResponse ReadResource(final GetOpsMetadataRequest getOpsMetadataRequest,
-                                               final ProxyClient<SsmClient> proxyClient) {
+                                                final ProxyClient<SsmClient> proxyClient) {
         try{
             return proxyClient.injectCredentialsAndInvokeV2(getOpsMetadataRequest, proxyClient.client()::getOpsMetadata);
         } catch (final OpsMetadataNotFoundException exception) {
