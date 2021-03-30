@@ -1,4 +1,0 @@
-{
-    "ResourceId": "arn:aws:resource-groups:us-east-1:957543679738:group/UluruContractTest",
-    "OpsMetadataArn": "arn:aws:ssm:us-east-1:957543679738:opsmetadata/aws/ssm/UluruContractTest/appmanager"
-}
