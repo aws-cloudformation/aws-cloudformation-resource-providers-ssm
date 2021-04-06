@@ -91,7 +91,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_Failure_ParameterNotFound() {
+    public void handleRequest_Failure_OpsMetadataNotFound() {
         when(proxySsmClient.client().deleteOpsMetadata(any(DeleteOpsMetadataRequest.class)))
                 .thenThrow(OpsMetadataNotFoundException.builder().build());
 

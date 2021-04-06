@@ -20,7 +20,7 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class ReadHandler extends BaseHandlerStd {
-    private static final String OPERATION = "ReadParameter";
+    private static final String OPERATION = "ReadOpsMetadata";
     private final RequestTranslator requestTranslator;
     private final MetadataTranslator metadataTranslator;
 
