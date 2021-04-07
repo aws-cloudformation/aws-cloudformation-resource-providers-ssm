@@ -18,7 +18,7 @@
             "ssm",
             "opsmetadata"
         ],
-	"codegen_template_path": "default",
+	    "codegen_template_path": "default",
         "protocolVersion": "2.0.0"
     },
     "executableEntrypoint": "com.amazonaws.ssm.opsmetadata.HandlerWrapperExecutable"
