@@ -30,6 +30,7 @@ Resources:
                 - "ssm:ListOpsMetadata"
                 - "ssm:ListTagsForResource"
                 - "ssm:RemoveTagsFromResource"
+                - "ssm:UpdateOpsMetadata"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
