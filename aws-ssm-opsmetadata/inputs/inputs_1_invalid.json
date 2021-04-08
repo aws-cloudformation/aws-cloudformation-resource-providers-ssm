@@ -1,0 +1,4 @@
+{
+    "ResourceId": "arn:{{ContractTestArnPartition}}:resource-groups:{{ContractTestRegion}}:{{ContractTestAccountId}}:group/Invalid_ResourceId",
+    "OpsMetadataArn": "arn:{{ContractTestArnPartition}}:ssm:{{ContractTestRegion}}:{{ContractTestAccountId}}:opsmetadata/aws/ssm/Invalid_OpsMetadataArn/appmanager"
+}

@@ -1,0 +1,4 @@
+{
+    "ResourceId": "{{ContractTestResourceGroupArn}}",
+    "OpsMetadataArn": "arn:{{ContractTestArnPartition}}:ssm:{{ContractTestRegion}}:{{ContractTestAccountId}}:opsmetadata/aws/ssm/{{ContractTestResourceGroupName}}/appmanager"
+}
