@@ -3,8 +3,8 @@ package com.amazonaws.ssm.document;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
-import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -12,7 +12,6 @@ import software.amazon.cloudformation.proxy.Logger;
 
 import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
 import com.amazonaws.ssm.document.tags.TagReader;
-import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
 /**
@@ -60,11 +59,11 @@ class StabilizationProgressRetriever {
             throw new CfnNotStabilizedException(TYPE_NAME, model.getName());
         }
 
-        final GetDocumentRequest describeDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
+        final DescribeDocumentRequest describeDocumentRequest = documentModelTranslator.generateDescribeDocumentRequest(model);
         context.decrementStabilizationRetriesRemaining();
 
-        final GetDocumentResponse response =
-                proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::getDocument);
+        final DescribeDocumentResponse response =
+                proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
 
         final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
 

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.ssm.model.AttachmentsSource;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DocumentKeyValuesFilter;
 import software.amazon.awssdk.services.ssm.model.DocumentRequires;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
@@ -86,6 +87,13 @@ class DocumentModelTranslator {
                 .name(model.getName())
                 .documentVersion(LATEST_DOCUMENT_VERSION)
                 .documentFormat(model.getDocumentFormat())
+                .build();
+    }
+
+    DescribeDocumentRequest generateDescribeDocumentRequest(@NonNull final ResourceModel model) {
+        return DescribeDocumentRequest.builder()
+                .name(model.getName())
+                .documentVersion(LATEST_DOCUMENT_VERSION)
                 .build();
     }
 
