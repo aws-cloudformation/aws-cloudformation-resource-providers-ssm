@@ -3,6 +3,8 @@ package com.amazonaws.ssm.document;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.SsmException;
@@ -12,7 +14,7 @@ import software.amazon.cloudformation.proxy.Logger;
 
 import static com.amazonaws.ssm.document.ResourceModel.TYPE_NAME;
 import com.amazonaws.ssm.document.tags.TagReader;
-import com.google.common.collect.ImmutableMap;
+
 import java.util.Map;
 
 /**
@@ -20,6 +22,8 @@ import java.util.Map;
  */
 @RequiredArgsConstructor
 class StabilizationProgressRetriever {
+
+    private static final String ACCESS_DENIED_ERROR_CODE = "AccessDeniedException";
 
     private static StabilizationProgressRetriever INSTANCE;
 
@@ -60,15 +64,47 @@ class StabilizationProgressRetriever {
             throw new CfnNotStabilizedException(TYPE_NAME, model.getName());
         }
 
-        final GetDocumentRequest describeDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
+        final DescribeDocumentRequest describeDocumentRequest = documentModelTranslator.generateDescribeDocumentRequest(model);
         context.decrementStabilizationRetriesRemaining();
 
-        final GetDocumentResponse response =
-                proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::getDocument);
+        final DescribeDocumentResponse describeResponse;
+
+        try {
+            describeResponse = proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
+        } catch(SsmException e) {
+            if (!ACCESS_DENIED_ERROR_CODE.equalsIgnoreCase(e.awsErrorDetails().errorCode())) {
+                throw e;
+            }
+
+            logger.log(String.format("Soft fail describe document during resource stabilization %s",
+                    describeDocumentRequest.name()));
+
+            return getEventProgressWithGetDocument(model, context, ssmClient, proxy);
+        }
 
         final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
 
-        final ResourceInformation resourceInformation = documentResponseModelTranslator.generateResourceInformation(response, documentTags);
+        final ResourceInformation resourceInformation =
+                documentResponseModelTranslator.generateResourceInformation(describeResponse, documentTags);
+
+        return GetProgressResponse.builder()
+                .resourceInformation(resourceInformation)
+                .callbackContext(context)
+                .build();
+    }
+
+    private GetProgressResponse getEventProgressWithGetDocument(@NonNull final ResourceModel model,
+                                                                @NonNull final CallbackContext context,
+                                                                @NonNull final SsmClient ssmClient,
+                                                                @NonNull final AmazonWebServicesClientProxy proxy) {
+        final GetDocumentRequest getDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
+
+        final GetDocumentResponse getResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
+
+        final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
+
+        final ResourceInformation resourceInformation =
+                documentResponseModelTranslator.generateResourceInformation(getResponse, documentTags);
 
         return GetProgressResponse.builder()
                 .resourceInformation(resourceInformation)

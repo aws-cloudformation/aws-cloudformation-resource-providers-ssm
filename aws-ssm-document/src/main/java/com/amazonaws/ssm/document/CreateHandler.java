@@ -139,7 +139,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         final OperationStatus operationStatus = getOperationStatus(resourceInformation.getStatus());
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(resourceInformation.getResourceModel())
+                .resourceModel(model)
                 .status(operationStatus)
                 .message(resourceInformation.getStatusInformation())
                 .callbackContext(progressResponse.getCallbackContext())
