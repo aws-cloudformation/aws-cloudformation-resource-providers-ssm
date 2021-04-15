@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ssm.opsmetadata.translator.property.MetadataTranslator;
+import com.amazonaws.ssm.opsmetadata.translator.request.RequestTranslator;
 import org.junit.jupiter.api.AfterEach;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -12,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.CreateOpsMetadataRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteOpsMetadataRequest;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.OpsMetadataNotFoundException;
@@ -47,6 +50,9 @@ public class DeleteHandlerTest extends AbstractTestBase {
     @Mock
     SsmClient ssmClient;
 
+    @Mock
+    private RequestTranslator requestTranslator;
+
     private DeleteHandler handler;
 
     private ResourceModel RESOURCE_MODEL;
@@ -71,6 +77,30 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess() {
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).deleteOpsMetadata(any(DeleteOpsMetadataRequest.class));
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess_ParameterizedConstructor() {
+        handler = new DeleteHandler(requestTranslator);
+        when(requestTranslator.deleteOpsMetadataRequest(any(ResourceModel.class))).thenReturn(DeleteOpsMetadataRequest.builder().build());
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)

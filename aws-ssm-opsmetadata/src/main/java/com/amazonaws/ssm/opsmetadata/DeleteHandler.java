@@ -30,7 +30,7 @@ public class DeleteHandler extends BaseHandlerStd {
         this.requestTranslator = new RequestTranslator();
     }
 
-    public DeleteHandler(final RequestTranslator requestTranslator, final MetadataTranslator metadataTranslator) {
+    public DeleteHandler(final RequestTranslator requestTranslator) {
         this.requestTranslator = requestTranslator;
     }
 
