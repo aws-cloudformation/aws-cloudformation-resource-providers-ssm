@@ -9,11 +9,14 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ssm.opsmetadata.translator.request.RequestTranslator;
 import org.junit.jupiter.api.AfterEach;
 
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
+import software.amazon.awssdk.services.ssm.model.CreateOpsMetadataRequest;
+import software.amazon.awssdk.services.ssm.model.CreateOpsMetadataResponse;
 import software.amazon.awssdk.services.ssm.model.GetOpsMetadataRequest;
 import software.amazon.awssdk.services.ssm.model.GetOpsMetadataResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
@@ -61,6 +64,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Mock
     SsmClient ssmClient;
 
+    @Mock
+    private RequestTranslator requestTranslator;
+
     private ResourceModel RESOURCE_MODEL;
 
     private UpdateHandler handler;
@@ -105,6 +111,40 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
         when(proxySsmClient.client().removeTagsFromResource(
                 any(RemoveTagsFromResourceRequest.class))).thenReturn(removeTagsFromResourceResponse);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(
+                proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).updateOpsMetadata(any(UpdateOpsMetadataRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess_ParameterizedConstructor() {
+        handler = new UpdateHandler(requestTranslator);
+        when(requestTranslator.getOpsMetadataRequest(any(ResourceModel.class))).thenReturn(GetOpsMetadataRequest.builder().build());
+        when(requestTranslator.updateOpsMetadataRequest(any(ResourceModel.class))).thenReturn(UpdateOpsMetadataRequest.builder().build());
+
+        when(proxySsmClient.client().getOpsMetadata(any(GetOpsMetadataRequest.class))).thenReturn(getOpsMetadataResponse);
+        final UpdateOpsMetadataResponse updateOpsMetadataResponse = UpdateOpsMetadataResponse.builder()
+                .opsMetadataArn(OPS_METADATA_ARN)
+                .build();
+        when(proxySsmClient.client().updateOpsMetadata(any(UpdateOpsMetadataRequest.class))).thenReturn(updateOpsMetadataResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")

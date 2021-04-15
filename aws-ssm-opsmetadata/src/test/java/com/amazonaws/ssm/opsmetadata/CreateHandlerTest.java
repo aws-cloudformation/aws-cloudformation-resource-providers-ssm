@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ssm.opsmetadata.translator.request.RequestTranslator;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.CreateOpsMetadataRequest;
 import software.amazon.awssdk.services.ssm.model.CreateOpsMetadataResponse;
@@ -48,6 +49,9 @@ public class CreateHandlerTest extends AbstractTestBase {
     @Mock
     SsmClient ssmClient;
 
+    @Mock
+    private RequestTranslator requestTranslator;
+
     private CreateHandler handler;
 
     private ResourceModel RESOURCE_MODEL;
@@ -78,6 +82,36 @@ public class CreateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess() {
+
+        final CreateOpsMetadataResponse createOpsMetadataResponse = CreateOpsMetadataResponse.builder()
+                .opsMetadataArn(OPSMETADATA_ARN)
+                .build();
+        when(proxySsmClient.client().createOpsMetadata(any(CreateOpsMetadataRequest.class))).thenReturn(createOpsMetadataResponse);
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(
+                proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).createOpsMetadata(any(CreateOpsMetadataRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess_ParameterizedConstructor() {
+        handler = new CreateHandler(requestTranslator);
+        when(requestTranslator.createOpsMetadataRequest(any(), any())).thenReturn(CreateOpsMetadataRequest.builder().build());
 
         final CreateOpsMetadataResponse createOpsMetadataResponse = CreateOpsMetadataResponse.builder()
                 .opsMetadataArn(OPSMETADATA_ARN)

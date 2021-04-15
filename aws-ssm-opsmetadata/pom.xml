@@ -185,6 +185,9 @@
                         <exclude>**/BaseHandler*</exclude>
                         <exclude>**/HandlerWrapper*</exclude>
                         <exclude>**/ResourceModel*</exclude>
+                        <exclude>**/SSMClientBuilder*</exclude>
+                        <exclude>**/Configuration*</exclude>
+                        <exclude>**/Constants*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -213,7 +216,7 @@
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.7</minimum>
+                                            <minimum>0.8</minimum>
                                         </limit>
                                         <limit>
                                             <counter>INSTRUCTION</counter>

@@ -61,6 +61,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
     @Mock
     private RequestTranslator requestTranslator;
+
     @Mock
     private MetadataTranslator metadataTranslator;
 
