@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.ssm.opsmetadata.translator.property.MetadataTranslator;
@@ -121,9 +120,9 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertEquals(OPSMETADATA_ARN, response.getResourceModel().getOpsMetadataArn());
-        assertEquals(RESOURCE_ID, response.getResourceModel().getResourceId());
-        assertEquals(resourceModelMetadata, response.getResourceModel().getMetadata());
+        assertThat(OPSMETADATA_ARN).isEqualTo(response.getResourceModel().getOpsMetadataArn());
+        assertThat(RESOURCE_ID).isEqualTo(response.getResourceModel().getResourceId());
+        assertThat(resourceModelMetadata).isEqualTo(response.getResourceModel().getMetadata());
 
         verify(proxySsmClient.client()).getOpsMetadata(any(GetOpsMetadataRequest.class));
     }
@@ -156,9 +155,9 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertEquals(OPSMETADATA_ARN, response.getResourceModel().getOpsMetadataArn());
-        assertEquals(RESOURCE_ID, response.getResourceModel().getResourceId());
-        assertEquals(null, response.getResourceModel().getMetadata());
+        assertThat(OPSMETADATA_ARN).isEqualTo(response.getResourceModel().getOpsMetadataArn());
+        assertThat(RESOURCE_ID).isEqualTo(response.getResourceModel().getResourceId());
+        assertThat(response.getResourceModel().getMetadata()).isNull();
 
         verify(proxySsmClient.client()).getOpsMetadata(any(GetOpsMetadataRequest.class));
     }

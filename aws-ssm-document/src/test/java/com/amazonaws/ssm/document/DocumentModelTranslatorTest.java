@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
@@ -364,6 +365,21 @@ public class DocumentModelTranslatorTest {
             .build();
 
         final GetDocumentRequest request = unitUnderTest.generateGetDocumentRequest(model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    //DescribeDocumentRequest tests
+    @Test
+    public void testGenerateDescribeDocumentRequest_verifyResult() {
+        final ResourceModel model = createResourceModel();
+
+        final DescribeDocumentRequest expectedRequest = DescribeDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .documentVersion(LATEST_DOCUMENT_VERSION)
+                .build();
+
+        final DescribeDocumentRequest request = unitUnderTest.generateDescribeDocumentRequest(model);
 
         Assertions.assertEquals(expectedRequest, request);
     }
