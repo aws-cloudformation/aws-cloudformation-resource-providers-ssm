@@ -90,6 +90,9 @@ public class AssociationDescriptionTranslator {
         simpleTypeValidator.getValidatedString(association.syncComplianceAsString())
             .ifPresent(model::setSyncCompliance);
 
+        simpleTypeValidator.getValidatedStringList(association.calendarNames())
+            .ifPresent(model::setCalendarNames);
+
         return model;
     }
 }
