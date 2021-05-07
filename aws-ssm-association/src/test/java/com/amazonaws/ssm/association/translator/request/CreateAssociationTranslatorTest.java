@@ -11,10 +11,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.model.CreateAssociationRequest;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_NAME;
 import static com.amazonaws.ssm.association.TestsInputs.AUTOMATION_TARGET_PARAMETER_NAME;
+import static com.amazonaws.ssm.association.TestsInputs.CALENDAR_NAMES;
 import static com.amazonaws.ssm.association.TestsInputs.COMPLIANCE_SEVERITY;
 import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_NAME;
 import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_VERSION;
@@ -77,6 +79,7 @@ class CreateAssociationTranslatorTest {
                 .instanceId(INSTANCE_ID)
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
+                .calendarNames(CALENDAR_NAMES)
                 .build();
 
         final CreateAssociationRequest createAssociationRequest =
@@ -98,6 +101,7 @@ class CreateAssociationTranslatorTest {
                 .instanceId(INSTANCE_ID)
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
+                .calendarNames(CALENDAR_NAMES)
                 .build();
 
         assertThat(createAssociationRequest).isEqualTo(expectedRequest);
@@ -122,6 +126,7 @@ class CreateAssociationTranslatorTest {
                 .maxErrors(MAX_ERRORS)
                 .outputLocation(null)
                 .instanceId("")
+                .calendarNames(Collections.emptyList())
                 .build();
 
         final CreateAssociationRequest createAssociationRequest =

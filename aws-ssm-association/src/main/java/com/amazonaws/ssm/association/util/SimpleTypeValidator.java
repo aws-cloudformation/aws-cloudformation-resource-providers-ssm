@@ -1,8 +1,10 @@
 package com.amazonaws.ssm.association.util;
 
 import com.amazonaws.util.StringUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +25,22 @@ public class SimpleTypeValidator {
             return Optional.empty();
         } else {
             return Optional.of(parameter);
+        }
+    }
+
+    /**
+     * Validates an input List of string and returns non-empty Optional with the same parameter
+     * if the validation is passed; otherwise, Optional.empty() is returned.
+     *
+     * @param parameter List of string parameter to validate.
+     * @return Optional with the same value as the input parameter after validation;
+     * returns Optional.empty() if the parameter is empty/null.
+     */
+    public Optional<List<String>> getValidatedStringList(final List<String> parameter) {
+        if (CollectionUtils.isNotEmpty(parameter)) {
+            return Optional.of(parameter);
+        } else {
+            return Optional.empty();
         }
     }
 
