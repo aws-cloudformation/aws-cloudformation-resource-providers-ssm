@@ -193,6 +193,16 @@
         },
         "ApplyOnlyAtCronInterval": {
             "type": "boolean"
+        },
+        "CalendarNames": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "examples": [
+                ["calendar1", "calendar2"],
+                ["calendar3"]
+            ]
         }
     },
     "required": [

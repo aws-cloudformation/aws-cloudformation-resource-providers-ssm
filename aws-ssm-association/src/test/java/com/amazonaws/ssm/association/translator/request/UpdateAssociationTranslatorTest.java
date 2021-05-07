@@ -16,6 +16,7 @@ import java.util.Optional;
 import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_ID;
 import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_NAME;
 import static com.amazonaws.ssm.association.TestsInputs.AUTOMATION_TARGET_PARAMETER_NAME;
+import static com.amazonaws.ssm.association.TestsInputs.CALENDAR_NAMES;
 import static com.amazonaws.ssm.association.TestsInputs.COMPLIANCE_SEVERITY;
 import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_NAME;
 import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_VERSION;
@@ -77,6 +78,7 @@ class UpdateAssociationTranslatorTest {
                 .automationTargetParameterName(AUTOMATION_TARGET_PARAMETER_NAME)
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
+                .calendarNames(CALENDAR_NAMES)
                 .build();
 
         final UpdateAssociationRequest createAssociationRequest =
@@ -98,6 +100,7 @@ class UpdateAssociationTranslatorTest {
                 .automationTargetParameterName(AUTOMATION_TARGET_PARAMETER_NAME)
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
+                .calendarNames(CALENDAR_NAMES)
                 .build();
 
         assertThat(createAssociationRequest).isEqualTo(expectedRequest);

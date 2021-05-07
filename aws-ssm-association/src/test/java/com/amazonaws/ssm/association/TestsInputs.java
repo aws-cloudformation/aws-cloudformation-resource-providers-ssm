@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -69,4 +70,8 @@ public class TestsInputs {
     public static final int WAIT_FOR_SUCCESS_TIMEOUT_IN_SECONDS = 45;
 
     public static final String LOGGED_RESOURCE_HANDLER_REQUEST = "StringifiedResourceHandlerRequest";
+    public static final List<String> CALENDAR_NAMES = Arrays.asList(
+        "calendar1",
+        "calendar2"
+    );
 }
