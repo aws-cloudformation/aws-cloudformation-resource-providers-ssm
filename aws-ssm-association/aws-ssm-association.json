@@ -24,7 +24,8 @@
             "required": [
                 "Key",
                 "Values"
-            ]
+            ],
+            "additionalProperties": false
         },
         "ParameterValues": {
             "type": "array",
@@ -67,7 +68,8 @@
                 "S3Location": {
                     "$ref": "#/definitions/S3OutputLocation"
                 }
-            }
+            },
+            "additionalProperties": false
         }
     },
     "properties": {
