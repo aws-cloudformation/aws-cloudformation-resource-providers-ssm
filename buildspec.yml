@@ -16,7 +16,7 @@ phases:
       # end-to-end test child repo for aws-ssm-association(s)
       - cd "$CODEBUILD_SRC_DIR"
       - cd aws-ssm-association
-      - mvn clean verify --no-transfer-progress
+      - mvn clean verify --no-transfer-progress -X
       # end-to-end test child repo for aws-ssm-parameter(s)
       - cd "$CODEBUILD_SRC_DIR"
       - cd aws-ssm-parameter
