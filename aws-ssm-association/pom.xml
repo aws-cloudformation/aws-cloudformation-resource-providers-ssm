@@ -23,7 +23,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>ssm</artifactId>
-            <version>2.13.34</version>
+            <version>2.16.59</version>
         </dependency>
 
         <!-- https://github.com/awslabs/aws-cloudformation-rpdk-java-plugin/ -->
@@ -67,6 +67,18 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>2.26.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
