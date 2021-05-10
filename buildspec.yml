@@ -2,8 +2,8 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: openjdk8
-      python: 3.7
+      java: openjdk11
+      python: 3.9
     commands:
       - pip install --upgrade 'six==1.15.0'
       - pip install pre-commit
