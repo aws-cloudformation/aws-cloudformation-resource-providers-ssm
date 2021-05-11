@@ -7,6 +7,7 @@ phases:
     commands:
       - pip install --upgrade 'six==1.15.0'
       - pip install pre-commit
+      - pip install pyyaml --upgrade
   build:
     commands:
       # pre-build check for commit hooks
