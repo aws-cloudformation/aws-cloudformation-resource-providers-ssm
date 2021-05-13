@@ -39,6 +39,7 @@ public class CreateHandlerTest {
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_ACCOUNT_ID = "123456";
     private static final String SAMPLE_DOCUMENT_CONTENT_STRING = "sampleDocumentContent";
+    private static final String SAMPLE_LOGICAL_RESOURCE_ID = "documentResourceId";
     private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
             "schemaVersion", "1.2",
             "description", "Join instances to an AWS Directory Service domain."
@@ -69,6 +70,7 @@ public class CreateHandlerTest {
             .clientRequestToken(SAMPLE_REQUEST_TOKEN)
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
             .awsAccountId(SAMPLE_ACCOUNT_ID)
+            .logicalResourceIdentifier(SAMPLE_LOGICAL_RESOURCE_ID)
             .build();
     private static final GetDocumentRequest SAMPLE_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
@@ -138,7 +140,7 @@ public class CreateHandlerTest {
                 .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.CREATING).build())
                 .build();
 
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenReturn(createDocumentResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -150,7 +152,7 @@ public class CreateHandlerTest {
 
     @Test
     public void handleRequest_NewDocumentCreation_documentTranslatorThrowsInvalidContent_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenThrow(InvalidDocumentContentException.class);
+        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenThrow(InvalidDocumentContentException.class);
 
         Assertions.assertThrows(CfnInvalidRequestException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
         verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID,SAMPLE_SYSTEM_TAGS, logger);
@@ -158,7 +160,7 @@ public class CreateHandlerTest {
 
     @Test
     public void handleRequest_NewDocumentCreation_ssmServiceThrowsException_VerifyExpectedException() {
-        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
@@ -313,6 +315,7 @@ public class CreateHandlerTest {
                 .clientRequestToken(SAMPLE_REQUEST_TOKEN)
                 .desiredResourceState(resourceModel)
                 .awsAccountId(SAMPLE_ACCOUNT_ID)
+                .logicalResourceIdentifier(SAMPLE_LOGICAL_RESOURCE_ID)
                 .build();
 
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT)
@@ -334,7 +337,7 @@ public class CreateHandlerTest {
                 .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.CREATING).build())
                 .build();
 
-        when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
 
         // throw access denied error
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
@@ -366,9 +369,10 @@ public class CreateHandlerTest {
                 .clientRequestToken(SAMPLE_REQUEST_TOKEN)
                 .desiredResourceState(resourceModel)
                 .awsAccountId(SAMPLE_ACCOUNT_ID)
+                .logicalResourceIdentifier(SAMPLE_LOGICAL_RESOURCE_ID)
                 .build();
 
-        when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
         // soft fail
         when(tagUtil.shouldSoftFailTags(null, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
