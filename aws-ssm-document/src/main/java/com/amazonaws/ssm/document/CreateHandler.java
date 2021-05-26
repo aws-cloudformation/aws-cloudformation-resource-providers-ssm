@@ -1,6 +1,8 @@
 package com.amazonaws.ssm.document;
 
+import com.amazonaws.ssm.document.tags.TagUtil;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -38,12 +40,19 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
     private final DocumentExceptionTranslator exceptionTranslator;
 
     @NonNull
+    private final TagUtil tagUtil;
+
+    @NonNull
     private final SsmClient ssmClient;
+
+    @NonNull
+    private final SafeLogger safeLogger;
 
     @VisibleForTesting
     public CreateHandler() {
         this(DocumentModelTranslator.getInstance(), StabilizationProgressRetriever.getInstance(),
-                DocumentExceptionTranslator.getInstance(), ClientBuilder.getClient());
+                DocumentExceptionTranslator.getInstance(), TagUtil.getInstance(), ClientBuilder.getClient(),
+                SafeLogger.getInstance());
     }
 
     /**
@@ -51,13 +60,15 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      */
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final Logger logger) {
 
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
+
+        safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(),request.getSystemTags(), logger);
 
         if (context.getCreateDocumentStarted() != null) {
             return updateProgress(model, context, ssmClient, proxy, logger);
@@ -66,8 +77,9 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         final CreateDocumentRequest createDocumentRequest;
         try {
             createDocumentRequest =
-                    documentModelTranslator.generateCreateDocumentRequest(model, request.getSystemTags(),
-                        request.getDesiredResourceTags(), request.getClientRequestToken());
+                    documentModelTranslator.generateCreateDocumentRequest(model, request.getLogicalResourceIdentifier(),
+                            request.getSystemTags(), request.getDesiredResourceTags(), request.getClientRequestToken());
+
         } catch (final InvalidDocumentContentException e) {
             throw new CfnInvalidRequestException(e.getMessage(), e);
         }
@@ -75,7 +87,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         model.setName(createDocumentRequest.name());
 
         try {
-            final CreateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(createDocumentRequest, ssmClient::createDocument);
+            final CreateDocumentResponse response = createDocument(createDocumentRequest, model, proxy, logger);
+
             context.setCreateDocumentStarted(true);
             context.setStabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES);
 
@@ -87,8 +100,27 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
+    }
+
+    private CreateDocumentResponse createDocument(final CreateDocumentRequest createDocumentRequest,
+                                                  final ResourceModel model,
+                                                  final AmazonWebServicesClientProxy proxy,
+                                                  final Logger logger) {
+
+        try {
+            return proxy.injectCredentialsAndInvokeV2(createDocumentRequest, ssmClient::createDocument);
+        } catch (final SsmException e) {
+            if (!tagUtil.shouldSoftFailTags(null, model.getTags(), e)) {
+                throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
+            }
+            logger.log(String.format("Soft fail adding tags during create of document %s",
+                    createDocumentRequest.name()));
+        }
+
+        final CreateDocumentRequest createDocumentRequestWithoutTags = createDocumentRequest.toBuilder().tags(ImmutableList.of()).build();
+        return proxy.injectCredentialsAndInvokeV2(createDocumentRequestWithoutTags, ssmClient::createDocument);
     }
 
     private ProgressEvent<ResourceModel, CallbackContext> updateProgress(final ResourceModel model, final CallbackContext context,
@@ -100,14 +132,14 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             progressResponse = stabilizationProgressRetriever.getEventProgress(model, context, ssmClient, proxy, logger);
         } catch (final SsmException e) {
-            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME);
+            throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
 
         final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
 
         final OperationStatus operationStatus = getOperationStatus(resourceInformation.getStatus());
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(resourceInformation.getResourceModel())
+                .resourceModel(model)
                 .status(operationStatus)
                 .message(resourceInformation.getStatusInformation())
                 .callbackContext(progressResponse.getCallbackContext())

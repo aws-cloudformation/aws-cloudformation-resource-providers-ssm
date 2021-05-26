@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentResponse;
+import software.amazon.awssdk.services.ssm.model.DocumentDescription;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 
@@ -33,6 +35,12 @@ public class DocumentResponseModelTranslatorTest {
                     .name("name1").size(1L).hash("hash1").hashType("hashType1").url("url1").build(),
             software.amazon.awssdk.services.ssm.model.AttachmentContent.builder()
                     .name("name2").size(2L).hash("hash2").hashType("hashType2").url("url2").build()
+    );
+    private static final List<software.amazon.awssdk.services.ssm.model.AttachmentInformation> SAMPLE_DESCRIBE_RESPONSE_ATTACHMENTS = ImmutableList.of(
+            software.amazon.awssdk.services.ssm.model.AttachmentInformation.builder()
+                    .name("name1").build(),
+            software.amazon.awssdk.services.ssm.model.AttachmentInformation.builder()
+                    .name("name2").build()
     );
     private static final List<DocumentRequires> SAMPLE_RESOURCE_MODEL_REQUIRES = ImmutableList.of(
             DocumentRequires.builder().name("sampleRequires1").version("1").build(),
@@ -77,6 +85,24 @@ public class DocumentResponseModelTranslatorTest {
 
         final ResourceInformation resourceInformation =
                 unitUnderTest.generateResourceInformation(getDocumentResponse, SAMPLE_TAG_MAP);
+
+        Assertions.assertEquals(expectedResourceInformation, resourceInformation);
+    }
+
+    @Test
+    public void testGenerateResourceInformation_DescribeDocumentInput_verifyResult() {
+        final ResourceModel expectedModel = createResourceModelWithAllAttributes();
+        expectedModel.setContent(null);
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder()
+                .resourceModel(expectedModel)
+                .status(RESOURCE_MODEL_ACTIVE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
+
+        final DescribeDocumentResponse describeDocumentResponse = createDescribeDocumentResponseWithAllAttributes();
+
+        final ResourceInformation resourceInformation =
+                unitUnderTest.generateResourceInformation(describeDocumentResponse, SAMPLE_TAG_MAP);
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
@@ -191,6 +217,22 @@ public class DocumentResponseModelTranslatorTest {
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)
                 .attachmentsContent(SAMPLE_GET_RESPONSE_ATTACHMENTS)
                 .requires(SAMPLE_GET_RESPONSE_REQUIRES)
+                .build();
+    }
+
+    private DescribeDocumentResponse createDescribeDocumentResponseWithAllAttributes() {
+        return DescribeDocumentResponse.builder()
+                .document(DocumentDescription.builder()
+                        .name(SAMPLE_DOCUMENT_NAME)
+                        .versionName(SAMPLE_VERSION_NAME)
+                        .documentVersion(SAMPLE_DOCUMENT_VERSION)
+                        .status(SAMPLE_GET_RESPONSE_ACTIVE_STATE)
+                        .statusInformation(SAMPLE_STATUS_INFO)
+                        .documentType(SAMPLE_DOCUMENT_TYPE)
+                        .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                        .attachmentsInformation(SAMPLE_DESCRIBE_RESPONSE_ATTACHMENTS)
+                        .requires(SAMPLE_GET_RESPONSE_REQUIRES)
+                        .build())
                 .build();
     }
 }

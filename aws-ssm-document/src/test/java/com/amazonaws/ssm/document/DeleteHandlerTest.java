@@ -26,12 +26,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class DeleteHandlerTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
+    private static final String SAMPLE_ACCOUNT_ID = "123456";
     private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
             "schemaVersion", "1.2",
             "description", "Join instances to an AWS Directory Service domain."
@@ -51,6 +53,7 @@ public class DeleteHandlerTest {
             .systemTags(SAMPLE_SYSTEM_TAGS)
             .clientRequestToken(SAMPLE_REQUEST_TOKEN)
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
+            .awsAccountId(SAMPLE_ACCOUNT_ID)
             .build();
     private static final GetDocumentRequest SAMPLE_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
@@ -83,6 +86,9 @@ public class DeleteHandlerTest {
     private SsmClient ssmClient;
 
     @Mock
+    private SafeLogger safeLogger;
+
+    @Mock
     private SsmException ssmException;
 
     @Mock
@@ -92,7 +98,7 @@ public class DeleteHandlerTest {
 
     @BeforeEach
     public void setup() {
-        unitUnderTest = new DeleteHandler(documentModelTranslator, progressUpdater, exceptionTranslator, ssmClient);
+        unitUnderTest = new DeleteHandler(documentModelTranslator, progressUpdater, exceptionTranslator, ssmClient, safeLogger);
     }
 
     @Test
@@ -117,15 +123,17 @@ public class DeleteHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
     public void testHandleRequest_DeleteDocumentApiFails_verifyResponse() {
         when(documentModelTranslator.generateDeleteDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DELETE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DELETE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
-        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -164,6 +172,7 @@ public class DeleteHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -202,6 +211,7 @@ public class DeleteHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -222,6 +232,7 @@ public class DeleteHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger);
 
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
@@ -233,9 +244,10 @@ public class DeleteHandlerTest {
 
         when(progressUpdater.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger))
                 .thenThrow(ssmException);
-        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME)).thenReturn(cfnException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class,
                 () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, inProgressCallbackContext, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 }

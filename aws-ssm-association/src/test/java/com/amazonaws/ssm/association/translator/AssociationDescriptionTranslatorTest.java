@@ -19,6 +19,7 @@ import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_ID;
 import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_NAME;
 import static com.amazonaws.ssm.association.TestsInputs.ASSOCIATION_VERSION;
 import static com.amazonaws.ssm.association.TestsInputs.AUTOMATION_TARGET_PARAMETER_NAME;
+import static com.amazonaws.ssm.association.TestsInputs.CALENDAR_NAMES;
 import static com.amazonaws.ssm.association.TestsInputs.COMPLIANCE_SEVERITY;
 import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_NAME;
 import static com.amazonaws.ssm.association.TestsInputs.DOCUMENT_VERSION;
@@ -89,6 +90,7 @@ class AssociationDescriptionTranslatorTest {
                 .lastSuccessfulExecutionDate(LAST_SUCCESSFUL_EXECUTION_DATE)
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
+                .calendarNames(CALENDAR_NAMES)
                 .build();
 
         final ResourceModel resultModel =
@@ -111,6 +113,7 @@ class AssociationDescriptionTranslatorTest {
                 .instanceId(INSTANCE_ID)
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
+                .calendarNames(CALENDAR_NAMES)
                 .build();
 
         assertThat(resultModel).isEqualTo(expectedModel);

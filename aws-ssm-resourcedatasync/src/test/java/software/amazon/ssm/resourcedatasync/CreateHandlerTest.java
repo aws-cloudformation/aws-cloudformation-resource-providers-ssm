@@ -111,54 +111,6 @@ public class CreateHandlerTest extends TestBase {
     }
 
     /**
-     * Test create RDS flow from OperationStatus:started to OperationStatus: inProgress
-     * with createResourceDataSyncStabilized = true after one retry.
-     */
-    @Test
-    public void handleRequest_creationStarted_inProgress_notYetStabilized() {
-        final ResourceModel model = createBasicRDSModel();
-
-        final ResourceDataSyncItem resourceDataSyncItem = ResourceDataSyncItem.builder()
-                .syncName(model.getSyncName())
-                .lastStatus(LastResourceDataSyncStatus.IN_PROGRESS)
-                .build();
-
-        final ListResourceDataSyncResponse listResourceDataSyncResponse = ListResourceDataSyncResponse.builder()
-                .resourceDataSyncItems(resourceDataSyncItem)
-                .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(model)
-                .build();
-
-        when(proxy.injectCredentialsAndInvokeV2(any(ListResourceDataSyncRequest.class), any())).thenReturn(listResourceDataSyncResponse);
-
-        final CallbackContext inputContext = CallbackContext.builder()
-                .createResourceDataSyncStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_RESOURCE_DATA_SYNC_CREATE_POLL_RETRIES)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, inputContext, logger);
-
-        final CallbackContext outputContext = CallbackContext.builder()
-                .createResourceDataSyncStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_RESOURCE_DATA_SYNC_CREATE_POLL_RETRIES - 1)
-                .createResourceDataSyncStabilized(false)
-                .build();
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
-        assertThat(response.getCallbackContext()).isEqualToComparingFieldByField(outputContext);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(CREATE_CALLBACK_DELAY_SECONDS);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-
-    }
-
-    /**
      * Test create RDS flow created -> not stabilized -> retry-1 -> RDS createSuccess -> stabilized
      */
     @Test

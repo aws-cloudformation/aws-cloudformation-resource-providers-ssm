@@ -120,10 +120,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      * Stabilization is the process of waiting for a resource to be in a particular (typically "success") state.
      * In particular, we check if resource data sync is created successfully by calling listResourceDataSync API.
      *
-     * @param model ResourceModel
-     * @param proxy AmazonWebServicesClientProxy
+     * @param model   ResourceModel
+     * @param proxy   AmazonWebServicesClientProxy
      * @param context CallbackContext
-     * @param logger Logger
+     * @param logger  Logger
      * @return boolean
      */
     private boolean isRDSStabilized(final ResourceModel model, final AmazonWebServicesClientProxy proxy, final CallbackContext context, final Logger logger) {
@@ -149,7 +149,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 // syncFromSource operation does not have currentStatus attribute
                 return true;
             }
-            if (currentStatus != null && currentStatus.equals(LastResourceDataSyncStatus.SUCCESSFUL)) {
+            if (currentStatus != null && (currentStatus.equals(LastResourceDataSyncStatus.SUCCESSFUL)
+                    || currentStatus.equals(LastResourceDataSyncStatus.IN_PROGRESS))) {
                 return true;
             }
             if (currentStatus != null && currentStatus.equals(LastResourceDataSyncStatus.FAILED)) {

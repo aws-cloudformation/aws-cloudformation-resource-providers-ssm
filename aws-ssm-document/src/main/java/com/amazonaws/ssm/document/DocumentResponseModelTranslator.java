@@ -1,10 +1,10 @@
 package com.amazonaws.ssm.document;
 
 import lombok.NonNull;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,6 +42,26 @@ class DocumentResponseModelTranslator {
                 .build();
     }
 
+    ResourceInformation generateResourceInformation(@NonNull final DescribeDocumentResponse response,
+                                                    @NonNull final Map<String, String> documentTagMap) {
+        final ResourceModel model = ResourceModel.builder()
+                .name(response.document().name())
+                .versionName(response.document().versionName())
+                .documentFormat(response.document().documentFormatAsString())
+                .documentType(response.document().documentTypeAsString())
+                .tags(translateToResourceModelTags(documentTagMap))
+                .requires(translateRequires(response))
+                .build();
+
+        final ResourceStatus state = translateStatus(response.document().status());
+
+        return ResourceInformation.builder()
+                .resourceModel(model)
+                .status(state)
+                .statusInformation(response.document().statusInformation())
+                .build();
+    }
+
     private ResourceStatus translateStatus(final DocumentStatus status) {
         switch (status) {
             case ACTIVE:
@@ -74,6 +94,21 @@ class DocumentResponseModelTranslator {
         }
 
         final List<software.amazon.awssdk.services.ssm.model.DocumentRequires> documentRequiresList = response.requires();
+
+        return documentRequiresList.stream().map(
+                documentRequires -> DocumentRequires.builder()
+                        .name(documentRequires.name())
+                        .version(documentRequires.version())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private List<DocumentRequires> translateRequires(final DescribeDocumentResponse response) {
+        if (!response.document().hasRequires()) {
+            return null;
+        }
+
+        final List<software.amazon.awssdk.services.ssm.model.DocumentRequires> documentRequiresList = response.document().requires();
 
         return documentRequiresList.stream().map(
                 documentRequires -> DocumentRequires.builder()
