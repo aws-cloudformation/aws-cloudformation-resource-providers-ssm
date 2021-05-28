@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.ssm.model.AssociationDoesNotExistExceptio
 import software.amazon.awssdk.services.ssm.model.DeleteAssociationRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteAssociationResponse;
 import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
@@ -183,18 +184,21 @@ class DeleteHandlerTest {
             .desiredResourceState(model)
             .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response =
+        when(
+            exceptionTranslator.translateFromServiceException(
+                serviceException,
+                expectedDeleteAssociationRequest,
+                model))
+            .thenReturn(new CfnNotFoundException(
+                ResourceModel.TYPE_NAME,
+                model.getAssociationId(),
+                serviceException));
+
+        Assertions.assertThrows(CfnNotFoundException.class, () -> {
             handler.handleRequest(proxy, request, null, logger);
-
-        // delete handler returns null model if delete is successful
-        final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
-            ProgressEvent.defaultSuccessHandler(null);
-
-        assertThat(response).isEqualTo(expectedProgressEvent);
-        verify(proxy)
-            .injectCredentialsAndInvokeV2(
-                eq(expectedDeleteAssociationRequest),
-                ArgumentMatchers.<Function<DeleteAssociationRequest, DeleteAssociationResponse>>any());
+        });
+        verify(exceptionTranslator)
+            .translateFromServiceException(serviceException, expectedDeleteAssociationRequest, model);
     }
 
     @Test

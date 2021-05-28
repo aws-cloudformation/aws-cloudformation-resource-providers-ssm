@@ -130,7 +130,7 @@ class ReadHandlerTest {
         final ProgressEvent<ResourceModel, CallbackContext> expectedProgressEvent =
             ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .status(OperationStatus.FAILED)
-                .errorCode(HandlerErrorCode.InvalidRequest)
+                .errorCode(HandlerErrorCode.NotFound)
                 .message("AssociationId must be present to read the existing association.")
                 .build();
 
