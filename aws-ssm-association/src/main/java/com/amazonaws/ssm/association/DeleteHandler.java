@@ -78,9 +78,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         try {
             proxy.injectCredentialsAndInvokeV2(deleteAssociationRequest, SSM_CLIENT::deleteAssociation);
             progressEvent.setStatus(OperationStatus.SUCCESS);
-        } catch (AssociationDoesNotExistException e) {
-            progressEvent.setStatus(OperationStatus.SUCCESS);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             final BaseHandlerException cfnException = exceptionTranslator.
                 translateFromServiceException(e, deleteAssociationRequest, model);
 
