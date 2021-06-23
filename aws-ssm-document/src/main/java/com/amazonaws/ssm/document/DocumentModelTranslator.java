@@ -2,7 +2,10 @@ package com.amazonaws.ssm.document;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -10,6 +13,7 @@ import software.amazon.awssdk.services.ssm.model.AttachmentsSource;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DocumentFormat;
 import software.amazon.awssdk.services.ssm.model.DocumentKeyValuesFilter;
 import software.amazon.awssdk.services.ssm.model.DocumentRequires;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
@@ -37,8 +41,10 @@ class DocumentModelTranslator {
     private static final int DOCUMENT_NAME_MAX_LENGTH = 128;
     private static final String DOCUMENT_NAME_DELIMITER = "-";
     private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ImmutableMap<String, ObjectMapper> mappers = ImmutableMap.<String, ObjectMapper>builder()
+            .put(DocumentFormat.JSON.toString(), new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT))
+            .put(DocumentFormat.YAML.toString(), new ObjectMapper(new YAMLFactory()))
+            .build();
 
     private static DocumentModelTranslator INSTANCE;
 
@@ -66,7 +72,7 @@ class DocumentModelTranslator {
             documentName = model.getName();
         }
 
-        final String documentContent = processDocumentContent(model.getContent());
+        final String documentContent = processDocumentContent(model.getContent(), model.getDocumentFormat());
 
         return CreateDocumentRequest.builder()
                 .name(documentName)
@@ -98,7 +104,7 @@ class DocumentModelTranslator {
     }
 
     UpdateDocumentRequest generateUpdateDocumentRequest(@NonNull final ResourceModel model) {
-        final String documentContent = processDocumentContent(model.getContent());
+        final String documentContent = processDocumentContent(model.getContent(), model.getDocumentFormat());
 
         return UpdateDocumentRequest.builder()
                 .name(model.getName())
@@ -164,10 +170,22 @@ class DocumentModelTranslator {
         return Optional.of(stackName);
     }
 
-    private String processDocumentContent(final Object content) {
+    private String processDocumentContent(final Object content, final String documentFormat) {
         if (content instanceof Map) {
+            final ObjectMapper mapper;
+
+            // DocumentFormat is not required, default DocumentFormat is JSON.
+            if (documentFormat == null) {
+                mapper = mappers.get(DocumentFormat.JSON.toString());
+            } else {
+                mapper = mappers.get(documentFormat);
+            }
+
+            if (mapper == null) {
+                throw new InvalidDocumentContentException("Document format not supported " + documentFormat);
+            }
             try {
-                return OBJECT_MAPPER.writeValueAsString(content);
+                return mapper.writeValueAsString(content);
             } catch (final JsonProcessingException e) {
                 throw new InvalidDocumentContentException("Document Content is not valid", e);
             }
