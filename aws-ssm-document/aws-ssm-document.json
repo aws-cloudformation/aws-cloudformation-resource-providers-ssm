@@ -110,10 +110,13 @@
                 "ApplicationConfigurationSchema",
                 "Automation",
                 "Automation.ChangeTemplate",
+                "CloudFormation",
                 "Command",
                 "DeploymentStrategy",
                 "Package",
                 "Policy",
+                "ProblemAnalysis",
+                "ProblemAnalysisTemplate",
                 "Session"
             ]
         },
