@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DocumentFormat;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
@@ -27,12 +28,23 @@ public class DocumentModelTranslatorTest {
             "schemaVersion", "1.2",
             "description", "Join instances to an AWS Directory Service domain."
     );
-    private static final String SAMPLE_DOCUMENT_JSON_CONTENT_STRING = "{\"schemaVersion\":\"1.2\",\"description\":\"Join instances to an AWS Directory Service domain.\"}";
+    private static final String SAMPLE_DOCUMENT_JSON_CONTENT_STRING = "{\n" +
+        "  \"schemaVersion\" : \"1.2\",\n" +
+        "  \"description\" : \"Join instances to an AWS Directory Service domain.\"\n" +
+        "}";
+
+    private static final String SAMPLE_DOCUMENT_YAML_CONTENT_STRING = "---\n" +
+            "schemaVersion: \"1.2\"\n" +
+            "description: \"Join instances to an AWS Directory Service domain.\"\n" +
+            "";
+
+    private static final String EMPTY_DOCUMENT_CONTENT_STRING = "";
 
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final String SAMPLE_VERSION_NAME = "versionName";
-    private static final String SAMPLE_DOCUMENT_FORMAT = "format";
+    private static final String SAMPLE_DOCUMENT_FORMAT = "JSON";
+    private static final String DOCUMENT_FORMAT_YAML = "YAML";
     private static final String SAMPLE_DOCUMENT_TYPE = "type";
     private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
     private static final String SAMPLE_TARGET_TYPE = "targetType";
@@ -256,6 +268,54 @@ public class DocumentModelTranslatorTest {
     }
 
     @Test
+    public void testGenerateCreateDocumentRequest_DocumentFormatYamlIsProvided_verifyResult() {
+        final ResourceModel resourceModel = createResourceModel();
+        resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
+        resourceModel.setDocumentFormat(DocumentFormat.YAML.toString());
+
+        final CreateDocumentRequest expectedRequest = CreateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_YAML_CONTENT_STRING)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(DOCUMENT_FORMAT_YAML)
+                .documentType(SAMPLE_DOCUMENT_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .tags(SAMPLE_CREATE_REQUEST_TAGS)
+                .requires(SAMPLE_CREATE_REQUEST_REQUIRES)
+                .build();
+
+        final CreateDocumentRequest request =
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, null, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    @Test
+    public void testGenerateCreateDocumentRequest_EmptyContentIsProvided_verifyResult() {
+        final ResourceModel resourceModel = createResourceModel();
+        resourceModel.setContent(EMPTY_DOCUMENT_CONTENT_STRING);
+
+        final CreateDocumentRequest expectedRequest = CreateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(EMPTY_DOCUMENT_CONTENT_STRING)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                .documentType(SAMPLE_DOCUMENT_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .tags(SAMPLE_CREATE_REQUEST_TAGS)
+                .requires(SAMPLE_CREATE_REQUEST_REQUIRES)
+                .build();
+
+        final CreateDocumentRequest request =
+                unitUnderTest.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, null, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_REQUEST_TOKEN);
+
+        System.out.println(request.toString());
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    @Test
     public void testGenerateCreateDocumentRequest_DocumentRequiresListIsNull_verifyResult() {
         final ResourceModel resourceModel = createResourceModel();
         resourceModel.setRequires(null);
@@ -326,6 +386,49 @@ public class DocumentModelTranslatorTest {
         final UpdateDocumentRequest expectedRequest = UpdateDocumentRequest.builder()
                 .name(SAMPLE_DOCUMENT_NAME)
                 .content(SAMPLE_DOCUMENT_JSON_CONTENT_STRING)
+                .documentVersion(LATEST_DOCUMENT_VERSION)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(SAMPLE_DOCUMENT_FORMAT)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .build();
+
+        final UpdateDocumentRequest request =
+                unitUnderTest.generateUpdateDocumentRequest(resourceModel);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    @Test
+    public void testGenerateUpdateDocumentRequest_DocumentFormatYamlIsProvided_verifyResult() {
+        final ResourceModel resourceModel = createResourceModel();
+        resourceModel.setContent(SAMPLE_DOCUMENT_JSON_CONTENT);
+        resourceModel.setDocumentFormat(DocumentFormat.YAML.toString());
+
+        final UpdateDocumentRequest expectedRequest = UpdateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_YAML_CONTENT_STRING)
+                .documentVersion(LATEST_DOCUMENT_VERSION)
+                .versionName(SAMPLE_VERSION_NAME)
+                .documentFormat(DOCUMENT_FORMAT_YAML)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .attachments(SAMPLE_CREATE_REQUEST_ATTACHMENTS)
+                .build();
+
+        final UpdateDocumentRequest request =
+                unitUnderTest.generateUpdateDocumentRequest(resourceModel);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    @Test
+    public void testGenerateUpdateDocumentRequest_EmptyContentIsProvided_verifyResult() {
+        final ResourceModel resourceModel = createResourceModel();
+        resourceModel.setContent(EMPTY_DOCUMENT_CONTENT_STRING);
+
+        final UpdateDocumentRequest expectedRequest = UpdateDocumentRequest.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(EMPTY_DOCUMENT_CONTENT_STRING)
                 .documentVersion(LATEST_DOCUMENT_VERSION)
                 .versionName(SAMPLE_VERSION_NAME)
                 .documentFormat(SAMPLE_DOCUMENT_FORMAT)

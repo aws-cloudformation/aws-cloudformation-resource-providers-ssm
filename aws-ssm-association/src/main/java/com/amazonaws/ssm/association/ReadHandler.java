@@ -69,7 +69,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         final String associationId = requestModel.getAssociationId();
 
         if (StringUtils.isNullOrEmpty(associationId)) {
-            progressEvent.setErrorCode(HandlerErrorCode.InvalidRequest);
+            progressEvent.setErrorCode(HandlerErrorCode.NotFound);
             progressEvent.setMessage("AssociationId must be present to read the existing association.");
             return progressEvent;
         }
