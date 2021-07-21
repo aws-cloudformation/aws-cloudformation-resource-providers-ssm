@@ -1,6 +1,7 @@
 {
     "typeName": "AWS::SSM::ResourceDataSync",
     "description": "Resource Type definition for AWS::SSM::ResourceDataSync",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-ssm.git",
     "additionalProperties": false,
     "properties": {
         "S3Destination": {
