@@ -23,6 +23,8 @@ import static software.amazon.ssm.resourcedatasync.ResourceModel.TYPE_NAME;
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
+    private final String SYNC_TYPE_SYNC_FROM_SOURCE = "SyncFromSource";
+
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -34,6 +36,17 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
 
         final UpdateResourceDataSyncRequest updateResourceDataSyncRequest = Translator.updateResourceDataSyncRequest(model);
+
+        if (!SYNC_TYPE_SYNC_FROM_SOURCE.equals(updateResourceDataSyncRequest.syncType())) {
+            // only SyncFromSource supports update operation
+            context.setUpdateResourceDataSyncStarted(true);
+
+            return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                    .resourceModel(model)
+                    .status(OperationStatus.SUCCESS)
+                    .build();
+        }
+
         updateResourceDataSync(updateResourceDataSyncRequest, proxy);
 
         context.setUpdateResourceDataSyncStarted(true);
