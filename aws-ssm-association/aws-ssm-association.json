@@ -8,9 +8,7 @@
             "properties": {
                 "Key": {
                     "type": "string",
-                    "minLength": 1,
-                    "maxLength": 128,
-                    "pattern": "^[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*$|resource-groups:Name"
+                    "pattern": "^[\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]{1,128}$|resource-groups:Name"
                 },
                 "Values": {
                     "type": "array",
@@ -21,6 +19,7 @@
                     "maxItems": 50
                 }
             },
+            "additionalProperties": false,
             "required": [
                 "Key",
                 "Values"
@@ -67,7 +66,8 @@
                 "S3Location": {
                     "$ref": "#/definitions/S3OutputLocation"
                 }
-            }
+            },
+            "additionalProperties": false
         }
     },
     "properties": {
@@ -149,24 +149,22 @@
         },
         "MaxErrors": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 7,
-            "pattern": "^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$",
+            "pattern": "^([1-9][0-9]{0,6}|[0]|[1-9][0-9]%|[0-9]%|100%)$",
             "examples": [
                 "1%",
                 "10%",
-                "50%"
+                "50%",
+                "1"
             ]
         },
         "MaxConcurrency": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 7,
-            "pattern": "^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$",
+            "pattern": "^([1-9][0-9]{0,6}|[1-9][0-9]%|[1-9]%|100%)$",
             "examples": [
                 "1%",
                 "10%",
-                "50%"
+                "50%",
+                "1"
             ]
         },
         "ComplianceSeverity": {
@@ -193,6 +191,21 @@
         },
         "ApplyOnlyAtCronInterval": {
             "type": "boolean"
+        },
+        "CalendarNames": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "examples": [
+                [
+                    "calendar1",
+                    "calendar2"
+                ],
+                [
+                    "calendar3"
+                ]
+            ]
         }
     },
     "required": [
@@ -222,15 +235,6 @@
             "permissions": [
                 "iam:PassRole",
                 "ssm:UpdateAssociation"
-            ]
-        },
-        "list": {
-            "permissions": [
-                "ssm:ListAssociations",
-                "ssm:DescribeAssociation",
-                "resource-groups:GetGroupQuery",
-                "resource-groups:ListGroups",
-                "resource-groups:ListGroupResources"
             ]
         },
         "read": {

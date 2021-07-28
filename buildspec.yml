@@ -7,6 +7,7 @@ phases:
     commands:
       - pip install --upgrade 'six==1.15.0'
       - pip install pre-commit
+      - pip install pyyaml --upgrade
   build:
     commands:
       # pre-build check for commit hooks
@@ -33,10 +34,14 @@ phases:
       - cd "$CODEBUILD_SRC_DIR"
       - cd aws-ssm-maintenancewindowtarget
       - mvn clean verify --no-transfer-progress
+      # end-to-end test child repo for aws-ssm-opsmetadata(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-ssm-opsmetadata
+      - mvn clean verify --no-transfer-progress
     finally:
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-association/rpdk.log"
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-parameter/rpdk.log"
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-maintenancewindow/rpdk.log"
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-maintenancewindowtask/rpdk.log"
       - cat "$CODEBUILD_SRC_DIR/aws-ssm-maintenancewindowtarget/rpdk.log"
-
+      - cat "$CODEBUILD_SRC_DIR/aws-ssm-opsmetadata/rpdk.log"

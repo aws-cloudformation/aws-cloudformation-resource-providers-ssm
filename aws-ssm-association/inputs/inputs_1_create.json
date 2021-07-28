@@ -1,0 +1,21 @@
+{
+    "Name": "AWS-RunShellScript",
+    "Targets": [
+        {
+            "Key": "InstanceIds",
+            "Values": [
+                "i-0a768b7ad2b02d064"
+            ]
+        }
+    ],
+    "Parameters": {
+        "commands": [
+            "ls"
+        ],
+        "workingDirectory": [
+            "/"
+        ]
+    },
+    "MaxConcurrency": "50%",
+    "MaxErrors": "5%"
+}

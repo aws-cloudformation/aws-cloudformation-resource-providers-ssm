@@ -105,7 +105,7 @@
         },
         "update": {
             "permissions": [
-                "ssm:CreateOpsMetadata",
+                "ssm:UpdateOpsMetadata",
                 "ssm:AddTagsToResource",
                 "ssm:RemoveTagsFromResource",
                 "ssm:ListTagsForResource",

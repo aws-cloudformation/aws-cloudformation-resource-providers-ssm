@@ -31,7 +31,6 @@ Resources:
                 - "ssm:CreateAssociation"
                 - "ssm:DeleteAssociation"
                 - "ssm:DescribeAssociation"
-                - "ssm:ListAssociations"
                 - "ssm:UpdateAssociation"
                 Resource: "*"
 Outputs:

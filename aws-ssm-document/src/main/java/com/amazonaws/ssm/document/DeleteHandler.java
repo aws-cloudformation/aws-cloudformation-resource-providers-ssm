@@ -98,7 +98,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         final ResourceInformation resourceInformation = progressResponse.getResourceInformation();
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(resourceInformation.getResourceModel())
+                .resourceModel(model)
                 .status(getOperationStatus(resourceInformation.getStatus()))
                 .message(resourceInformation.getStatusInformation())
                 .callbackContext(progressResponse.getCallbackContext())

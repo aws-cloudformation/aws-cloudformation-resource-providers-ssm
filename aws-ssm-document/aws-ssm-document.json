@@ -110,10 +110,14 @@
                 "ApplicationConfigurationSchema",
                 "Automation",
                 "Automation.ChangeTemplate",
+                "ChangeCalendar",
+                "CloudFormation",
                 "Command",
                 "DeploymentStrategy",
                 "Package",
                 "Policy",
+                "ProblemAnalysis",
+                "ProblemAnalysisTemplate",
                 "Session"
             ]
         },
@@ -122,7 +126,8 @@
             "type": "string",
             "enum": [
                 "YAML",
-                "JSON"
+                "JSON",
+                "TEXT"
             ],
             "default": "JSON"
         },

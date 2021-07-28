@@ -88,6 +88,9 @@ public class CreateAssociationTranslator implements RequestTranslator<CreateAsso
         simpleTypeValidator.getValidatedString(model.getSyncCompliance())
             .ifPresent(createAssociationRequestBuilder::syncCompliance);
 
+        simpleTypeValidator.getValidatedStringList(model.getCalendarNames())
+            .ifPresent(createAssociationRequestBuilder::calendarNames);
+
         return createAssociationRequestBuilder.build();
     }
 }
