@@ -117,7 +117,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             logger.log(String.format("INFO Updated tags for patch baseline %s %n", baselineId));
 
             // Set to default patch baseline
-           // if (BooleanUtils.isTrue(model.getDefaultBaseline()) && !BooleanUtils.isTrue(previousModel.getDefaultBaseline())){
             if(model.getDefaultBaseline()!=null && BooleanUtils.isTrue(model.getDefaultBaseline()) ){
 
                 RegisterDefaultPatchBaselineRequest registerDefaultPatchBaselineRequest = RegisterDefaultPatchBaselineRequest.builder()
@@ -126,6 +125,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 RegisterDefaultPatchBaselineResponse registerDefaultPatchBaselineResponse =
                         proxy.injectCredentialsAndInvokeV2(registerDefaultPatchBaselineRequest, ssmClient::registerDefaultPatchBaseline);
 
+                logger.log(String.format("INFO Registered patch baseline %s to default patch baseline successfully %n", baselineId));
+
                 if(registerDefaultPatchBaselineResponse== null){
 
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -133,17 +134,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                             .status(OperationStatus.SUCCESS)
                             .build();
 
-                }else{
-                    logger.log(String.format("INFO Registered patch baseline %s to default patch baseline successfully %n", baselineId));
                 }
             }
-           /* if(model.getDefaultBaseline().booleanValue()) {
-                return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                        .resourceModel(previousModel).callbackContext(null).message(null).callbackDelaySeconds(0).nextToken(null)
-                        .status(OperationStatus.FAILED)
-                        .errorCode(HandlerErrorCode.NotFound)
-                        .build();
-            }*/
 
             //If we made it here, we're done
             logger.log(String.format("INFO Successfully updated patch baseline %s %n", baselineId));

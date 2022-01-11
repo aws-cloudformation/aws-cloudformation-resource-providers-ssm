@@ -13,9 +13,6 @@ out/
 .settings
 .project
 *.whl
-/canary-bundle-test/
-/docs-files
-*overrides.json
 # auto-generated files
 target/
 *_internal.json
@@ -24,7 +21,6 @@ target/
 rpdk.log
 /.apt_generated/
 /.apt_generated_tests/
-settings.internal.json
 
 
 

@@ -1,6 +1,6 @@
 {
     "typeName": "AWS::SSM::PatchBaseline",
-    "description": "AMAZON_LINUX",
+    "description": "The patchbasline creation for aws different types of OS Pipelines",
     "additionalProperties": false,
     "properties": {
         "Id": {

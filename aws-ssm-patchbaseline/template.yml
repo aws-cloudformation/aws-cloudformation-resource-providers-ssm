@@ -19,13 +19,6 @@ Resources:
        Variables:
           PARAM1: VALUE
 
-  #TestEntrypoint:
-   # Type: AWS::Serverless::Function
-   # Properties:
-    #  Handler: software.amazon.ssm.patchbaseline.HandlerWrapper::testEntrypoint
-     # Runtime: java8
-      #CodeUri: ./target/aws-ssm-patchbaseline-handler-1.0-SNAPSHOT.jar
-
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
