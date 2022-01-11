@@ -12,9 +12,12 @@ out.java
 out/
 .settings
 .project
+*.whl
 
 # auto-generated files
 target/
 
 # our logs
 rpdk.log
+/.apt_generated/
+/.apt_generated_tests/

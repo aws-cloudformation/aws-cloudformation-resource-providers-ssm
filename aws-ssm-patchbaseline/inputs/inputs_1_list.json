@@ -1,0 +1,11 @@
+{
+    "BaselineIdentities": [
+
+        {
+            "BaselineName": "Amazon-Linux-Baseline",
+            "DefaultBaseline": false,
+            "BaselineDescription": "Default Patch Baseline Provided by AWS.",
+            "OperatingSystem": "AMAZON_LINUX"
+        }
+    ]
+}

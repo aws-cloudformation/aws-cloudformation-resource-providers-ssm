@@ -1,0 +1,7 @@
+{
+  "FasPolicyPath": {
+    "aws": "/policies/AuthRuntime/authNPolicy/cloudformation/ssm-patch.2020-08-14-18-09-54",
+    "aws-cn": "/policies/AuthRuntime/authNPolicy/cloudformation/ssm-patch.2020-08-14-18-33-32-BJS",
+    "aws-us-gov": "/policies/AuthRuntime/authNPolicy/cloudformation/ssm-patch.2020-08-14-18-13-36-PDT"
+  }
+}
