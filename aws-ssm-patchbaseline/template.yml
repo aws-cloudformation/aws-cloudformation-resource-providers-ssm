@@ -4,19 +4,41 @@ Description: AWS SAM template for the AWS::SSM::PatchBaseline resource type
 
 Globals:
   Function:
-    Timeout: 60  # docker start-up times can be long for SAM CLI
+    Timeout: 30  # docker start-up times can be long for SAM CLI
+    MemorySize: 256
 
 Resources:
   TypeFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: software.amazon.ssm.patchbaseline.HandlerWrapper::handleRequest
-      Runtime: java8
       CodeUri: ./target/aws-ssm-patchbaseline-handler-1.0-SNAPSHOT.jar
+      Runtime: java8
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+       Variables:
+          PARAM1: VALUE
 
-  TestEntrypoint:
-    Type: AWS::Serverless::Function
+  #TestEntrypoint:
+   # Type: AWS::Serverless::Function
+   # Properties:
+    #  Handler: software.amazon.ssm.patchbaseline.HandlerWrapper::testEntrypoint
+     # Runtime: java8
+      #CodeUri: ./target/aws-ssm-patchbaseline-handler-1.0-SNAPSHOT.jar
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Handler: software.amazon.ssm.patchbaseline.HandlerWrapper::testEntrypoint
-      Runtime: java8
       CodeUri: ./target/aws-ssm-patchbaseline-handler-1.0-SNAPSHOT.jar
+      Handler: software.amazon.ssm.patchbaseline.App::handleRequest
+      Runtime: java8
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /hello
+            Method: get

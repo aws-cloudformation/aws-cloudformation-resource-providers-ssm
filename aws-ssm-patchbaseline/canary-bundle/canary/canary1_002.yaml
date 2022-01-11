@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack for testing PatchBaseline resource, updated.
+Resources:
+  TestPatchBaseline:
+    Type: AWS::SSM::PatchBaseline
+    Properties:
+      Name: CanaryTestPatchBaseline
+      Description: Baseline containing updates approved for AMAZON_LINUX instances, updated
+      OperatingSystem: AMAZON_LINUX
+      PatchGroups:
+        - CanaryTestPatchGroup
+      ApprovalRules:
+        PatchRules:
+          - PatchFilterGroup:
+              PatchFilters:
+                - Values:
+                    - Bugfix
+                  Key: CLASSIFICATION
+            ApproveAfterDays: 5
+            ComplianceLevel: MEDIUM
+            EnableNonSecurity: false
+      Tags:
+        - Value: UpdatedCanaryTestKey
+          Key: UpdatedCanaryTestValue

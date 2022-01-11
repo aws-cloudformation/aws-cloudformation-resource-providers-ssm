@@ -1,0 +1,78 @@
+buildscript {
+    dependencies {
+        classpath brazilGradle.tool('BrazilGradleQualityDefaults')
+    }
+}
+
+plugins {
+    id "java"
+    id 'brazil-quality-defaults'
+
+    // To build a shadow jar of this resource provider
+    id 'com.github.johnrengelman.shadow'
+}
+
+description "CloudFormation Resource Provider - AWS::SSM::PatchBaseline"
+
+// Include RPDK generated source by `cfn-cli generate`
+sourceSets.main.java.srcDirs += ['target/generated-sources/rpdk']
+
+// Inlcude schema into jar
+sourceSets.main.resources {
+    srcDir '.'
+    include 'aws-ssm-patchbaseline.json'
+}
+
+dependencies {
+    compile brazilGradle.build()
+
+    testCompile brazilGradle.testbuild()
+}
+
+def cfn_command = "${brazilGradle.path('[AWSCloudFormationRPDKJavaPluginTool]run.runtimefarm')}/bin/cfn"
+
+// Generate RPDK wrapper source before compile
+task rpdkGenerateSource(type: Exec) {
+    workingDir "."
+    executable = cfn_command
+    args = ["generate"]
+}
+
+compileJava.dependsOn(rpdkGenerateSource)
+
+// Build a shadow jar for resource provider
+shadowJar {
+    // cfn-cli requires the artifact under target and suffixed with SNAPSHOT.jar
+    classifier = null
+    destinationDir = file("./target")
+}
+
+// Use `cfn-cli` to build a RPDK package include resource provider shadow jar, schema etc.
+task cfnPackage(type: Exec) {
+    dependsOn shadowJar
+    workingDir "."
+    executable = cfn_command
+    args = ["submit", "--dry-run"]
+}
+
+task rpdkPackage(type: Zip) {
+    dependsOn cfnPackage
+    from zipTree("aws-ssm-patchbaseline.zip")
+    // Inject internal files
+    from ("${rootDir}/aws-ssm-patchbaseline") {
+        include "settings.internal.json"
+    }
+    from ("${rootDir}/aws-ssm-patchbaseline") {
+        include "canary-bundle/**/*"
+    }
+    destinationDir = file("./build/rpdk")
+    archiveName("aws-ssm-patchbaseline.zip")
+}
+
+assemble.dependsOn(rpdkPackage)
+
+// Delete target folder for clean
+clean.doLast {
+    file("./target").deleteDir()
+    file("aws-ssm-patchbaseline.zip").delete()
+}

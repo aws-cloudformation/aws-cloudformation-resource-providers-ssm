@@ -1,6 +1,6 @@
 {
     "typeName": "AWS::SSM::PatchBaseline",
-    "description": "Resource Type definition for AWS::SSM::PatchBaseline",
+    "description": "AMAZON_LINUX",
     "additionalProperties": false,
     "properties": {
         "Id": {
@@ -280,13 +280,18 @@
         "Name"
     ],
     "createOnlyProperties": [
-        "/properties/OperatingSystem"
+        "/properties/OperatingSystem",
+        "/properties/DefaultBaseline",
+        "/properties/Tags"
     ],
     "primaryIdentifier": [
         "/properties/Id"
     ],
     "readOnlyProperties": [
         "/properties/Id"
+    ],
+    "writeOnlyProperties": [
+        "/properties/OperatingSystem"
     ],
     "handlers": {
         "create": {
@@ -298,13 +303,6 @@
                 "ssm:ListTagsForResource",
                 "ssm:GetDefaultPatchBaseline",
                 "ssm:RegisterDefaultPatchBaseline"
-            ]
-        },
-        "delete": {
-            "permissions": [
-                "ssm:DeletePatchBaseline",
-                "ssm:GetPatchBaseline",
-                "ssm:DeregisterPatchBaselineForPatchGroup"
             ]
         },
         "list": {
@@ -332,6 +330,14 @@
                 "ssm:GetDefaultPatchBaseline",
                 "ssm:RegisterDefaultPatchBaseline"
             ]
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeletePatchBaseline",
+                "ssm:GetPatchBaseline",
+                "ssm:DeregisterPatchBaselineForPatchGroup"
+            ]
         }
     }
 }
+
