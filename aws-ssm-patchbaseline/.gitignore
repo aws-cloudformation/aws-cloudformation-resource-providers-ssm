@@ -13,8 +13,8 @@ out/
 .settings
 .project
 *.whl
-/canary-bundle/
-/docs
+/canary-bundle-test/
+/docs-files
 *overrides.json
 # auto-generated files
 target/
