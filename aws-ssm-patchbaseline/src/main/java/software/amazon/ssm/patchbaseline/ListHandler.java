@@ -123,16 +123,13 @@ public class ListHandler extends BaseHandler<CallbackContext> {
 
         for (String baselineId : baselineIdList) {
 
-            System.out.println("*****Baseline deatils*******");
-            System.out.println(baselineId);
-
             if(baselineId.contains("/"))
             {
                   String baselineArr[]=  baselineId.split("/");
                 baselineId = (baselineArr.length >=1) ? baselineArr[1] : "";
 
             }
-            System.out.println("*****xxxxe*******");
+
             ResourceModel model = ResourceModel.builder()
                     .id(baselineId)
                     .build();
@@ -142,16 +139,10 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                     .build();
             ProgressEvent<ResourceModel, CallbackContext> response
                     = readHandler.handleRequest(proxy, requestFromId, null, logger);
-            System.out.println("*****Response deatils*******");
-            System.out.println(response.toString());
-            System.out.println("*****xxxxe*******");
 
             ResourceModel resourceModel = response.getResourceModel();
 
             if(resourceModel != null){
-                System.out.println("*****Resource Model*******");
-                System.out.println(resourceModel.toString());
-                System.out.println("*****xxxxe*******");
                 models.add(resourceModel);
             }
 

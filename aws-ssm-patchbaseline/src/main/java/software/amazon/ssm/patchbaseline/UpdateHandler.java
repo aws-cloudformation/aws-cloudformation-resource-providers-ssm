@@ -55,12 +55,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         }
         String baselineId = model.getId();
 
-        System.out.println("******Model*******");
-        System.out.println(baselineId);
-        System.out.println(model.toString());
-        System.out.println("*********************************************");
-
-
         logger.log(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
 
         try {
@@ -68,10 +62,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             UpdatePatchBaselineRequest updatePatchBaselineRequest = UpdatePatchBaselineRequestTranslator.updatePatchBaseline(model);
             final UpdatePatchBaselineResponse updatePatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(updatePatchBaselineRequest, ssmClient::updatePatchBaseline);
-
-            System.out.println("******Updated patch basline response*******");
-            System.out.println(updatePatchBaselineResponse);
-            System.out.println("*********************************************");
 
             logger.log(String.format("INFO Updated patch baseline %s successfully %n", baselineId));
 
@@ -82,12 +72,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             GetPatchBaselineResponse getPatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
 
-            System.out.println("******Updated patch basline response*******");
-            System.out.println(getPatchBaselineResponse);
-            System.out.println("*********************************************");
-
-
-            List<String> originalGroups = new ArrayList<>(getPatchBaselineResponse.patchGroups());
+           List<String> originalGroups = new ArrayList<>(getPatchBaselineResponse.patchGroups());
 
             //Get the new/desired patch groups
             List<String> newGroups = CollectionUtils.isNullOrEmpty(model.getPatchGroups()) ? new ArrayList<>() : model.getPatchGroups();
@@ -142,9 +127,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                         proxy.injectCredentialsAndInvokeV2(registerDefaultPatchBaselineRequest, ssmClient::registerDefaultPatchBaseline);
 
                 if(registerDefaultPatchBaselineResponse== null){
-                    System.out.println("*****default patch basline response*******");
-                    System.out.println(registerDefaultPatchBaselineResponse);
-                    System.out.println("*********************************************");
+
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)
                             .status(OperationStatus.SUCCESS)
