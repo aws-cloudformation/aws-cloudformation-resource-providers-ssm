@@ -15,12 +15,10 @@ out/
 *.whl
 # auto-generated files
 target/
-*_internal.json
 
 # our logs
 rpdk.log
-/.apt_generated/
-/.apt_generated_tests/
+
 
 
 

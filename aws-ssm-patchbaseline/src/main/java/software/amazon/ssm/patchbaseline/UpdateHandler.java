@@ -48,7 +48,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
         if(model == null){
             ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(previousModel)
+                    .resourceModel(previousModel).message("Returning the previous state model")
                     .status(OperationStatus.SUCCESS)
                     .build();
 
