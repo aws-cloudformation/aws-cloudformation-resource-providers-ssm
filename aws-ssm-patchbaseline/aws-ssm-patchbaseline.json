@@ -1,6 +1,6 @@
 {
     "typeName": "AWS::SSM::PatchBaseline",
-    "description": "The patchbasline creation for aws different types of OS Pipelines",
+    "description": "The SSM package is containing the approved patchs to deploy or update the instances ",
     "additionalProperties": false,
     "properties": {
         "Id": {
@@ -280,18 +280,13 @@
         "Name"
     ],
     "createOnlyProperties": [
-        "/properties/OperatingSystem",
-        "/properties/DefaultBaseline",
-        "/properties/Tags"
+        "/properties/OperatingSystem"
     ],
     "primaryIdentifier": [
         "/properties/Id"
     ],
     "readOnlyProperties": [
         "/properties/Id"
-    ],
-    "writeOnlyProperties": [
-        "/properties/OperatingSystem"
     ],
     "handlers": {
         "create": {
