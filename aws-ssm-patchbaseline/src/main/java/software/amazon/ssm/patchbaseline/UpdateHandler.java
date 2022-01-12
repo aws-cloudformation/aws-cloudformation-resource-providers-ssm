@@ -11,11 +11,7 @@ import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGr
 import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineResponse;
 import software.amazon.awssdk.utils.CollectionUtils;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.*;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.ssm.patchbaseline.translator.request.UpdatePatchBaselineRequestTranslator;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
@@ -49,6 +45,14 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final ResourceModel model = request.getDesiredResourceState();
         // if failed, return previous resource state
         final ResourceModel previousModel = request.getPreviousResourceState();
+
+        if(model == null){
+            ProgressEvent.<ResourceModel, CallbackContext>builder()
+                    .resourceModel(previousModel)
+                    .status(OperationStatus.SUCCESS)
+                    .build();
+
+        }
         String baselineId = model.getId();
 
         logger.log(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
@@ -67,7 +71,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .build();
             GetPatchBaselineResponse getPatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
-            List<String> originalGroups = new ArrayList<>(getPatchBaselineResponse.patchGroups());
+
+           List<String> originalGroups = new ArrayList<>(getPatchBaselineResponse.patchGroups());
 
             //Get the new/desired patch groups
             List<String> newGroups = CollectionUtils.isNullOrEmpty(model.getPatchGroups()) ? new ArrayList<>() : model.getPatchGroups();
@@ -112,7 +117,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             logger.log(String.format("INFO Updated tags for patch baseline %s %n", baselineId));
 
             // Set to default patch baseline
-            if (BooleanUtils.isTrue(model.getDefaultBaseline()) && !BooleanUtils.isTrue(previousModel.getDefaultBaseline())){
+            if(model.getDefaultBaseline()!=null && BooleanUtils.isTrue(model.getDefaultBaseline()) ){
+
                 RegisterDefaultPatchBaselineRequest registerDefaultPatchBaselineRequest = RegisterDefaultPatchBaselineRequest.builder()
                         .baselineId(baselineId)
                         .build();
@@ -120,6 +126,15 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                         proxy.injectCredentialsAndInvokeV2(registerDefaultPatchBaselineRequest, ssmClient::registerDefaultPatchBaseline);
 
                 logger.log(String.format("INFO Registered patch baseline %s to default patch baseline successfully %n", baselineId));
+
+                if(registerDefaultPatchBaselineResponse== null){
+
+                    return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                            .resourceModel(model)
+                            .status(OperationStatus.SUCCESS)
+                            .build();
+
+                }
             }
 
             //If we made it here, we're done
@@ -131,6 +146,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .build();
 
         } catch (Exception e) {
+            e.printStackTrace();
             return Resource.handleException(e, previousModel, baselineId, logger);
         }
     }

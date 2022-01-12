@@ -1,10 +1,6 @@
 package software.amazon.ssm.patchbaseline;
 
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.proxy.*;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
@@ -45,12 +41,15 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         logger.log(String.format("INFO Activity %s request with clientRequestToken: %s %n", TYPE_NAME, request.getClientRequestToken()));
 
         try {
+
             GetPatchBaselineRequest getPatchBaselineRequest = GetPatchBaselineRequest.builder()
                                                                         .baselineId(baselineId)
                                                                         .build();
 
             GetPatchBaselineResponse getPatchBaselineResponse =
                     proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
+
+
             List<Tag> tags = tagHelper.listTagsForResource(PATCH_BASELINE_RESOURCE_NAME, baselineId, ssmClient, proxy);
 
             ResourceModel resourcemodel = ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse, tags);
@@ -62,6 +61,18 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     proxy.injectCredentialsAndInvokeV2(getDefaultPatchBaselineRequest, ssmClient::getDefaultPatchBaseline);
             if (getDefaultPatchBaselineResponse.baselineId() == baselineId)
                 resourcemodel.setDefaultBaseline(true);
+
+          /*  if(getDefaultPatchBaselineResponse.sdkHttpResponse().statusCode() !=200){
+                return ProgressEvent.<ResourceModel, CallbackContext>builder().resourceModel(null).callbackContext(null).message(null).callbackDelaySeconds(0).nextToken(null)
+                        .status(OperationStatus.FAILED)
+                        .errorCode(HandlerErrorCode.InvalidRequest)
+                        .build();
+
+            }*/
+
+            System.out.print("*****Resource Model*******");
+            System.out.print(resourcemodel.toString());
+            System.out.print("*****xxxxe*******");
 
             //Send a success response to CloudFormation with the JSON
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
