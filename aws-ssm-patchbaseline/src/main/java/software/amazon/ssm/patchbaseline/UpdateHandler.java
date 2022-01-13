@@ -11,7 +11,11 @@ import software.amazon.awssdk.services.ssm.model.RegisterPatchBaselineForPatchGr
 import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineRequest;
 import software.amazon.awssdk.services.ssm.model.RegisterDefaultPatchBaselineResponse;
 import software.amazon.awssdk.utils.CollectionUtils;
-import software.amazon.cloudformation.proxy.*;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.ssm.patchbaseline.translator.request.UpdatePatchBaselineRequestTranslator;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
@@ -127,14 +131,14 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
                 logger.log(String.format("INFO Registered patch baseline %s to default patch baseline successfully %n", baselineId));
 
-                if(registerDefaultPatchBaselineResponse== null){
+                /*if(registerDefaultPatchBaselineResponse== null){
 
                     return ProgressEvent.<ResourceModel, CallbackContext>builder()
                             .resourceModel(model)
                             .status(OperationStatus.SUCCESS)
                             .build();
 
-                }
+                }*/
             }
 
             //If we made it here, we're done
@@ -146,7 +150,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .build();
 
         } catch (Exception e) {
-            e.printStackTrace();
             return Resource.handleException(e, previousModel, baselineId, logger);
         }
     }

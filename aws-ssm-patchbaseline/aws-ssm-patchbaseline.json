@@ -1,6 +1,6 @@
 {
     "typeName": "AWS::SSM::PatchBaseline",
-    "description": "The SSM package is containing the approved patchs to deploy or update the instances ",
+    "description": "Resource Type definition for AWS::SSM::PatchBaseline",
     "additionalProperties": false,
     "properties": {
         "Id": {

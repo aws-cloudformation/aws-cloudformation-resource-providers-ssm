@@ -127,9 +127,6 @@
                             <sources>
                                 <source>${project.basedir}/target/generated-sources/rpdk</source>
                             </sources>
-                           <excludes>
-                                <exclude>**/software/amazon/ssm/patchbaseline/HandlerWrapper.java</exclude>
-                            </excludes>
                         </configuration>
                     </execution>
                 </executions>
@@ -140,9 +137,6 @@
                 <version>2.3</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
-                    <!--<artifactSet>
-                        <excludes>${project.basedir}/target/generated-sources/rpdk/software/amazon/ssm/patchbaseline/HandlerWrapper.java</excludes>
-                    </artifactSet>-->
                 </configuration>
                 <executions>
                     <execution>
