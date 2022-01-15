@@ -122,14 +122,6 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                 .stream().map(baseline -> baseline.baselineId()).collect(Collectors.toList());
 
         for (String baselineId : baselineIdList) {
-
-            if(baselineId.contains("/"))
-            {
-                  String baselineArr[]=  baselineId.split("/");
-                baselineId = (baselineArr.length >=1) ? baselineArr[1] : "";
-
-            }
-
             ResourceModel model = ResourceModel.builder()
                     .id(baselineId)
                     .build();
@@ -141,11 +133,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                     = readHandler.handleRequest(proxy, requestFromId, null, logger);
 
             ResourceModel resourceModel = response.getResourceModel();
-
-            if(resourceModel != null){
-                models.add(resourceModel);
-            }
-
+            models.add(resourceModel);
         }
 
         return models;
