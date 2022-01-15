@@ -5,72 +5,45 @@
     "properties": {
         "Type": {
             "type": "string",
-            "description": "The type of the parameter.",
-            "enum": [
-                "String",
-                "StringList",
-                "SecureString"
-            ]
-        },
-        "Value": {
-            "type": "string",
-            "description": "The value associated with the parameter.",
-            "minLength": 1,
-            "maxLength": 32768
+            "description": "The type of parameter."
         },
         "Description": {
             "type": "string",
-            "description": "The information about the parameter.",
-            "minLength": 0,
-            "maxLength": 1024
+            "description": "Information about the parameter."
         },
         "Policies": {
             "type": "string",
-            "description": "The policies attached to the parameter."
+            "description": "Information about the policies assigned to a parameter."
         },
         "AllowedPattern": {
             "type": "string",
-            "description": "The regular expression used to validate the parameter value.",
-            "minLength": 0,
-            "maxLength": 1024
+            "description": "A regular expression used to validate the parameter value."
         },
         "Tier": {
             "type": "string",
-            "description": "The corresponding tier of the parameter.",
-            "enum": [
-                "Standard",
-                "Advanced",
-                "Intelligent-Tiering"
-            ]
+            "description": "The parameter tier."
         },
-        "Tags": {
-            "type": "object",
-            "description": "A key-value pair to associate with a resource.",
-            "patternProperties": {
-                "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$": {
-                    "type": "string"
-                }
-            },
-            "additionalProperties": false
+        "Value": {
+            "type": "string",
+            "description": "The parameter value."
         },
         "DataType": {
             "type": "string",
-            "description": "The corresponding DataType of the parameter.",
-            "enum": [
-                "text",
-                "aws:ec2:image"
-            ]
+            "description": "The data type of the parameter, such as text or aws:ec2:image. The default is text."
+        },
+        "Tags": {
+            "type": "object",
+            "description": "Optional metadata that you assign to a resource in the form of an arbitrary set of tags (key-value pairs)"
         },
         "Name": {
             "type": "string",
-            "description": "The name of the parameter.",
-            "minLength": 1,
-            "maxLength": 2048
+            "description": "The name of the parameter."
         }
     },
+    "taggable": false,
     "required": [
-        "Value",
-        "Type"
+        "Type",
+        "Value"
     ],
     "createOnlyProperties": [
         "/properties/Name"
@@ -78,32 +51,26 @@
     "primaryIdentifier": [
         "/properties/Name"
     ],
-    "readOnlyProperties": [
-        "/properties/Name",
-        "/properties/Type",
-        "/properties/Value"
-    ],
     "handlers": {
         "create": {
             "permissions": [
-                "ssm:PutParameter",
-                "ssm:GetParameters"
-            ],
-            "timeoutInMinutes": 5
+                "ssm:GetParameters",
+                "ssm:PutParameter"
+            ]
         },
         "read": {
             "permissions": [
-                "ssm:GetParameters"
+                "ssm:GetParameters",
+                "ssm:ListTagsForResource"
             ]
         },
         "update": {
             "permissions": [
                 "ssm:PutParameter",
+                "ssm:GetParameters",
                 "ssm:AddTagsToResource",
-                "ssm:RemoveTagsFromResource",
-                "ssm:GetParameters"
-            ],
-            "timeoutInMinutes": 5
+                "ssm:RemoveTagsFromResource"
+            ]
         },
         "delete": {
             "permissions": [
