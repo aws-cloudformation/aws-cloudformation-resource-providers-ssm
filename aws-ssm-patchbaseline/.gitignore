@@ -12,7 +12,6 @@ out.java
 out/
 .settings
 .project
-*.whl
 # auto-generated files
 target/
 
