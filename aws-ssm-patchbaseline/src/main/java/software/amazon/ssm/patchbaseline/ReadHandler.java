@@ -12,6 +12,9 @@ import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.ssm.patchbaseline.translator.resourcemodel.ReadResourceModelTranslator;
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
+
 
 import java.util.List;
 
