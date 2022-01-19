@@ -5,19 +5,20 @@ Description: AWS SAM template for the AWS::SSM::PatchBaseline resource type
 Globals:
   Function:
     Timeout: 60  # docker start-up times can be long for SAM CLI
+    MemorySize: 256
 
 Resources:
   TypeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: software.amazon.ssm.patchbaseline.HandlerWrapper::handleRequest
+      Handler: software.amazon.ssm.patchbaseline.HandlerWrapperImpl::handleRequest
       Runtime: java8
       CodeUri: ./target/aws-ssm-patchbaseline-handler-1.0-SNAPSHOT.jar
 
   TestEntrypoint:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: software.amazon.ssm.patchbaseline.HandlerWrapper::testEntrypoint
+      Handler: software.amazon.ssm.patchbaseline.HandlerWrapperImpl::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-ssm-patchbaseline-handler-1.0-SNAPSHOT.jar
 
