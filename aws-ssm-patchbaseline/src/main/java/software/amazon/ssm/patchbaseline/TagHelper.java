@@ -67,9 +67,9 @@ public class TagHelper {
                     .stream()
                     .collect(Collectors.mapping(entry ->
                                     Tag.builder()
-                                       .key(entry.getKey())
-                                       .value(entry.getValue())
-                                       .build(),
+                                            .key(entry.getKey())
+                                            .value(entry.getValue())
+                                            .build(),
                             Collectors.toList()));
         }
         return tagList;
@@ -119,9 +119,9 @@ public class TagHelper {
         List<Tag> newTags = validateAndMergeTagsForCreate(request, request.getDesiredResourceState().getTags());
 
         ListTagsForResourceRequest listTagsForResourceRequest = ListTagsForResourceRequest.builder()
-                                                                        .resourceType(ssmResourceType)
-                                                                        .resourceId(baselineId)
-                                                                        .build();
+                .resourceType(ssmResourceType)
+                .resourceId(baselineId)
+                .build();
 
         ListTagsForResourceResponse listTagsForResourceResponse =
                 proxy.injectCredentialsAndInvokeV2(listTagsForResourceRequest, ssmClient::listTagsForResource);
@@ -143,20 +143,20 @@ public class TagHelper {
 
         if (!ssmKeysToRemove.isEmpty()) {
             RemoveTagsFromResourceRequest removeTagsRequest = RemoveTagsFromResourceRequest.builder()
-                                                                        .resourceType(ssmResourceType)
-                                                                        .resourceId(baselineId)
-                                                                        .tagKeys(ssmKeysToRemove)
-                                                                        .build();
+                    .resourceType(ssmResourceType)
+                    .resourceId(baselineId)
+                    .tagKeys(ssmKeysToRemove)
+                    .build();
             RemoveTagsFromResourceResponse removeTagsFromResourceResponse =
                     proxy.injectCredentialsAndInvokeV2(removeTagsRequest, ssmClient::removeTagsFromResource);
         }
 
         if (!ssmTagsToAdd.isEmpty()) {
             AddTagsToResourceRequest addTagsRequest = AddTagsToResourceRequest.builder()
-                                                            .resourceType(ssmResourceType)
-                                                            .resourceId(baselineId)
-                                                            .tags(ssmTagsToAdd)
-                                                            .build();
+                    .resourceType(ssmResourceType)
+                    .resourceId(baselineId)
+                    .tags(ssmTagsToAdd)
+                    .build();
             AddTagsToResourceResponse addTagsToResourceResponse =
                     proxy.injectCredentialsAndInvokeV2(addTagsRequest, ssmClient::addTagsToResource);
         }

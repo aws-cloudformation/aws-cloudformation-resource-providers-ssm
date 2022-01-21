@@ -1,7 +1,4 @@
 package software.amazon.ssm.patchbaseline;
-
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -15,6 +12,8 @@ import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.ssm.patchbaseline.translator.resourcemodel.ReadResourceModelTranslator;
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.Logger;
 
 import java.util.List;
 
@@ -62,7 +61,6 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     proxy.injectCredentialsAndInvokeV2(getDefaultPatchBaselineRequest, ssmClient::getDefaultPatchBaseline);
             if (getDefaultPatchBaselineResponse.baselineId() == baselineId)
                 resourcemodel.setDefaultBaseline(true);
-
             //Send a success response to CloudFormation with the JSON
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(resourcemodel)

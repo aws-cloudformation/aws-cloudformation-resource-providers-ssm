@@ -300,13 +300,6 @@
                 "ssm:RegisterDefaultPatchBaseline"
             ]
         },
-        "delete": {
-            "permissions": [
-                "ssm:DeletePatchBaseline",
-                "ssm:GetPatchBaseline",
-                "ssm:DeregisterPatchBaselineForPatchGroup"
-            ]
-        },
         "list": {
             "permissions": [
                 "ssm:DescribePatchBaselines",
@@ -332,6 +325,14 @@
                 "ssm:GetDefaultPatchBaseline",
                 "ssm:RegisterDefaultPatchBaseline"
             ]
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeletePatchBaseline",
+                "ssm:GetPatchBaseline",
+                "ssm:DeregisterPatchBaselineForPatchGroup"
+            ]
         }
     }
 }
+

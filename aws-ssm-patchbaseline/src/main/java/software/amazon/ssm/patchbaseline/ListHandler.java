@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
+import java.io.File;
 
 public class ListHandler extends BaseHandler<CallbackContext> {
 
@@ -122,6 +123,10 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                 .stream().map(baseline -> baseline.baselineId()).collect(Collectors.toList());
 
         for (String baselineId : baselineIdList) {
+            if(baselineId.contains(File.separator)){
+                baselineId = baselineId.substring(baselineId.indexOf(File.separator)+1 , baselineId.length());
+            }
+
             ResourceModel model = ResourceModel.builder()
                     .id(baselineId)
                     .build();
@@ -133,6 +138,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                     = readHandler.handleRequest(proxy, requestFromId, null, logger);
 
             ResourceModel resourceModel = response.getResourceModel();
+            if(resourceModel !=null)
             models.add(resourceModel);
         }
 
