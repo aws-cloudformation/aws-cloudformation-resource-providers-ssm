@@ -12,6 +12,16 @@ import software.amazon.awssdk.services.ssm.model.DescribePatchBaselinesResponse;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 import software.amazon.awssdk.services.ssm.model.SsmException;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.GetDefaultPatchBaselineRequest;
+import software.amazon.awssdk.services.ssm.model.GetDefaultPatchBaselineResponse;
+import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.ssm.patchbaseline.translator.resourcemodel.ReadResourceModelTranslator;
+import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
+
+
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +33,16 @@ public class ListHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient ssmClient = SsmClientBuilder.getClient();
     private static final Integer MAX_RESULTS = 50;
+    protected static final String PATCH_BASELINE_RESOURCE_NAME = "PatchBaseline";
+
 
     private ReadHandler readHandler;
+    private final TagHelper tagHelper;
+
 
     public ListHandler() {
         readHandler = new ReadHandler();
+        this.tagHelper = new TagHelper();
     }
 
     @VisibleForTesting
@@ -45,6 +60,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         final List<ResourceModel> models = new ArrayList<>();
 
         DescribePatchBaselinesResponse describePatchBaselinesResponse = describePatchBaselinesResponse(proxy);
+        System.out.println(describePatchBaselinesResponse);
 
         if (describePatchBaselinesResponse.hasBaselineIdentities()) {
             models.addAll(getResourceModelFromResponse(describePatchBaselinesResponse, request, proxy, logger));
@@ -52,6 +68,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
 
         while (describePatchBaselinesResponse.nextToken() != null) {
             describePatchBaselinesResponse = describePatchBaselinesResponse(describePatchBaselinesResponse.nextToken(), proxy);
+
             if (describePatchBaselinesResponse.hasBaselineIdentities()) {
                 models.addAll(getResourceModelFromResponse(describePatchBaselinesResponse, request, proxy, logger));
             }
@@ -118,28 +135,27 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                                                              final Logger logger) {
 
         final List<ResourceModel> models = new ArrayList<>();
+        List<Tag> tags = new ArrayList<Tag>();
+
         final List<String> baselineIdList = describePatchBaselinesResponse
                 .baselineIdentities()
                 .stream().map(baseline -> baseline.baselineId()).collect(Collectors.toList());
 
+        System.out.println(baselineIdList);
+
         for (String baselineId : baselineIdList) {
-            if(baselineId.contains(File.separator)){
-                baselineId = baselineId.substring(baselineId.indexOf(File.separator)+1 , baselineId.length());
-            }
 
-            ResourceModel model = ResourceModel.builder()
-                    .id(baselineId)
+            GetPatchBaselineRequest getPatchBaselineRequest = GetPatchBaselineRequest.builder()
+                    .baselineId(baselineId)
                     .build();
-            ResourceHandlerRequest<ResourceModel> requestFromId = ResourceHandlerRequest.<ResourceModel>builder()
-                    .desiredResourceState(model)
-                    .clientRequestToken(request.getClientRequestToken())
-                    .build();
-            ProgressEvent<ResourceModel, CallbackContext> response
-                    = readHandler.handleRequest(proxy, requestFromId, null, logger);
 
-            ResourceModel resourceModel = response.getResourceModel();
-            if(resourceModel !=null)
-            models.add(resourceModel);
+            GetPatchBaselineResponse getPatchBaselineResponse =
+                    proxy.injectCredentialsAndInvokeV2(getPatchBaselineRequest, ssmClient::getPatchBaseline);
+
+            ResourceModel resourcemodel = ReadResourceModelTranslator.translateToResourceModel(getPatchBaselineResponse, tags);
+            if(resourcemodel !=null)
+                models.add(resourcemodel);
+
         }
 
         return models;
