@@ -1,12 +1,9 @@
 package com.amazonaws.ssm.parameter;
 
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
-import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
-import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -14,7 +11,6 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public class ReadHandler extends BaseHandlerStd {
-	private static final String OPERATION = "ReadParameter";
 
 	@Override
 	protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -23,28 +19,84 @@ public class ReadHandler extends BaseHandlerStd {
 		final CallbackContext callbackContext,
 		final ProxyClient<SsmClient> proxyClient,
 		final Logger logger) {
-		return proxy.initiate("aws-ssm-parameter::resource-read", proxyClient, request.getDesiredResourceState(), callbackContext)
-			.translateToServiceRequest(Translator::getParametersRequest)
-			.makeServiceCall(this::ReadResource)
-			.done((getParametersRequest, getParametersResponse, proxyInvocation, resourceModel, context) -> {
-				if (getParametersResponse.parameters().size() == 0) {
-					throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getName());
-				}
-				final Parameter parameter = getParametersResponse.parameters().stream().findFirst().get();
+		final ResourceModel model = request.getDesiredResourceState();
 
-				return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
-					.name(parameter.name())
-					.type(parameter.typeAsString())
-					.value(parameter.value()).build());
+		logger.log("Invoking Read Handler");
+		logger.log("READ ResourceModel: " + model.toString());
+
+		return ProgressEvent.progress(model, callbackContext)
+			.then(progress -> getParameters(proxy, progress, proxyClient, model, callbackContext, logger))
+			.then(progress -> describeParameters(proxy, progress, proxyClient, progress.getResourceModel(), progress.getCallbackContext(), logger))
+			.then(progress -> listTagsForResourceRequestForParameters(proxy, progress, proxyClient, progress.getResourceModel(), progress.getCallbackContext(), logger))
+			.then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
+	}
+
+	private ProgressEvent<ResourceModel, CallbackContext> getParameters(
+		final AmazonWebServicesClientProxy proxy,
+		final ProgressEvent<ResourceModel, CallbackContext> progress,
+		final ProxyClient<SsmClient> proxyClient,
+		final ResourceModel model, final CallbackContext callbackContext, final Logger logger) {
+
+		return proxy.initiate("aws-ssm-parameter::resource-read-getParameters", proxyClient, model, callbackContext)
+			.translateToServiceRequest(Translator::getParametersRequest)
+			.makeServiceCall(((getParametersRequest, ssmClientProxyClient) ->
+				ssmClientProxyClient.injectCredentialsAndInvokeV2(getParametersRequest, ssmClientProxyClient.client()::getParameters)))
+			.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, logger))
+			.done((getParametersRequest, getParametersResponse, proxyClient1, resourceModel, context) -> {
+				if (getParametersResponse.parameters().isEmpty()) {
+					throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getName());
+				}
+				final Parameter parameter = getParametersResponse.parameters().get(0);
+
+				return ProgressEvent.progress(
+					ResourceModel.builder()
+						.name(parameter.name())
+						.type(parameter.typeAsString())
+						.value(parameter.value())
+						.dataType(parameter.dataType())
+						.build(),
+					context);
 			});
 	}
 
-	private GetParametersResponse ReadResource(final GetParametersRequest getParametersRequest,
-		final ProxyClient<SsmClient> proxyClient) {
-		try {
-			return proxyClient.injectCredentialsAndInvokeV2(getParametersRequest, proxyClient.client()::getParameters);
-		} catch (final InternalServerErrorException exception) {
-			throw new CfnServiceInternalErrorException(OPERATION, exception);
-		}
+	private ProgressEvent<ResourceModel, CallbackContext> describeParameters(
+		final AmazonWebServicesClientProxy proxy,
+		final ProgressEvent<ResourceModel, CallbackContext> progress,
+		final ProxyClient<SsmClient> proxyClient,
+		final ResourceModel model, final CallbackContext callbackContext, final Logger logger) {
+
+		return proxy.initiate("aws-ssm-parameter::resource-read-describeParameters", proxyClient, model, callbackContext)
+			.translateToServiceRequest(Translator::describeParametersRequestWithFilter)
+			.makeServiceCall(((describeParametersRequest, ssmClientProxyClient) ->
+				ssmClientProxyClient.injectCredentialsAndInvokeV2(describeParametersRequest, ssmClientProxyClient.client()::describeParameters)))
+			.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, logger))
+			.done((describeParametersRequest, describeParametersResponse, proxyClient1, resourceModel, context) -> {
+				if (describeParametersResponse.parameters().isEmpty()) {
+					throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getName());
+				}
+				final ParameterMetadata parameterMetadata = describeParametersResponse.parameters().get(0);
+				resourceModel.setAllowedPattern(parameterMetadata.allowedPattern());
+				resourceModel.setDescription(parameterMetadata.description());
+				resourceModel.setPolicies(parameterMetadata.policies().toString());
+				resourceModel.setTier(parameterMetadata.tierAsString());
+				return ProgressEvent.progress(resourceModel, context);
+			});
+	}
+
+	private ProgressEvent<ResourceModel, CallbackContext> listTagsForResourceRequestForParameters(
+		final AmazonWebServicesClientProxy proxy,
+		final ProgressEvent<ResourceModel, CallbackContext> progress,
+		final ProxyClient<SsmClient> proxyClient,
+		final ResourceModel model, final CallbackContext callbackContext, final Logger logger) {
+
+		return proxy.initiate("aws-ssm-parameter::resource-read-listTagsForResourceRequestForParameters", proxyClient, model, callbackContext)
+			.translateToServiceRequest(Translator::listTagsForResourceRequest)
+			.makeServiceCall(((listTagsForResourceRequest, ssmClientProxyClient) ->
+				ssmClientProxyClient.injectCredentialsAndInvokeV2(listTagsForResourceRequest, ssmClientProxyClient.client()::listTagsForResource)))
+			.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, logger))
+			.done((listTagsForResourceRequest, listTagsForResourceResponse, proxyClient1, resourceModel, context) -> {
+				resourceModel.setTags(Translator.translateTagsFromSdk(listTagsForResourceResponse.tagList()));
+				return ProgressEvent.progress(resourceModel, context);
+			});
 	}
 }

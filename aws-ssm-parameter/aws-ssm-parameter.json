@@ -61,6 +61,7 @@
         "read": {
             "permissions": [
                 "ssm:GetParameters",
+                "ssm:DescribeParameters",
                 "ssm:ListTagsForResource"
             ]
         },

@@ -4,6 +4,9 @@ import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
+import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterStringFilter;
+import software.amazon.awssdk.services.ssm.model.ParametersFilterKey;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.ResourceTypeForTagging;
@@ -53,6 +56,17 @@ public class Translator {
 			.build();
 	}
 
+	static DescribeParametersRequest describeParametersRequestWithFilter(final ResourceModel model) {
+		return DescribeParametersRequest.builder()
+			.parameterFilters(
+				ParameterStringFilter.builder()
+					.key(ParametersFilterKey.NAME.toString())
+					.option("Equals")
+					.values(model.getName())
+					.build())
+			.build();
+	}
+
 	static DescribeParametersRequest describeParametersRequest(final String nextToken) {
 		return DescribeParametersRequest.builder()
 			.nextToken(nextToken)
@@ -82,11 +96,24 @@ public class Translator {
 			.build();
 	}
 
+	static ListTagsForResourceRequest listTagsForResourceRequest(final ResourceModel model) {
+		return ListTagsForResourceRequest.builder()
+			.resourceType(ResourceTypeForTagging.PARAMETER)
+			.resourceId(model.getName())
+			.build();
+	}
+
 	// Translate tags
 	static List<Tag> translateTagsToSdk(final Map<String, String> tags) {
 		return Optional.of(tags.entrySet()).orElse(Collections.emptySet())
 			.stream()
 			.map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
 			.collect(Collectors.toList());
+	}
+
+	static Map<String, Object> translateTagsFromSdk(final List<Tag> tags) {
+		return Optional.of(tags).orElse(Collections.emptyList())
+			.stream()
+			.collect(Collectors.toMap(tag -> tag.key(), tag -> tag.value()));
 	}
 }

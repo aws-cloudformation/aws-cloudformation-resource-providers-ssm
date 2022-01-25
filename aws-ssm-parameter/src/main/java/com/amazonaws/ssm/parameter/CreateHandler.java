@@ -52,7 +52,6 @@ public class CreateHandler extends BaseHandlerStd {
 				.backoffDelay(getBackOffDelay(model))
 				.makeServiceCall((putParameterRequest, ssmProxyClient) ->
 					ssmProxyClient.injectCredentialsAndInvokeV2(putParameterRequest, ssmProxyClient.client()::putParameter))
-				// .makeServiceCall(this::createResource)
 				.stabilize((req, response, client, model1, cbContext) -> stabilize(req, response, client, model1, cbContext, logger))
 				.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, logger))
 				.progress())
