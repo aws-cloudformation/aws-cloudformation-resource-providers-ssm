@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.SsmRequest;
@@ -13,6 +14,7 @@ import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -88,7 +90,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 		final Logger logger
 	) {
 		try {
-			logger.log(String.format("Trying to stabilize %s [%s]",ResourceModel.TYPE_NAME, putParameterRequest.name()));
+			logger.log(String.format("Trying to stabilize %s [%s]", ResourceModel.TYPE_NAME, putParameterRequest.name()));
 			GetParametersResponse response = proxyClient.injectCredentialsAndInvokeV2(Translator.getParametersRequest(resourceModel), proxyClient.client()::getParameters);
 
 			// if invalid parameters list is not empty return false as the validation for
@@ -111,6 +113,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 		if (e instanceof AwsServiceException) {
 			if (e instanceof ParameterAlreadyExistsException) {
 				ex = new CfnAlreadyExistsException(e);
+			} else if (e instanceof ParameterNotFoundException) {
+				ex = new CfnNotFoundException(e);
 			} else if (e instanceof InternalServerErrorException) {
 				ex = new CfnServiceInternalErrorException(e);
 			} else if (hasThrottled(e)) {
