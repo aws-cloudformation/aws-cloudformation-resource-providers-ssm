@@ -1,23 +1,12 @@
 package com.amazonaws.ssm.parameter;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.util.CollectionUtils;
 import com.google.common.collect.Sets;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
-import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
-import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
-import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.ParameterType;
-import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
-import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.Tag;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
-import software.amazon.cloudformation.exceptions.TerminalException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -25,15 +14,13 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class UpdateHandler extends BaseHandlerStd {
-	private static final String OPERATION = "PutParameter";
-	private static final String RETRY_MESSAGE = "Detected retryable error, retrying. Exception message: %s";
 	private Logger logger;
 
 	@Override
@@ -48,60 +35,43 @@ public class UpdateHandler extends BaseHandlerStd {
 
 		if (model.getType().equalsIgnoreCase(ParameterType.SECURE_STRING.toString())) {
 			String message = String.format("SSM Parameters of type %s cannot be updated using CloudFormation", ParameterType.SECURE_STRING);
-			return ProgressEvent.defaultFailureHandler(new TerminalException(message),
-				HandlerErrorCode.InvalidRequest);
+			return ProgressEvent.defaultFailureHandler(new CfnServiceInternalErrorException(message), HandlerErrorCode.InvalidRequest);
 		}
 
 		return ProgressEvent.progress(model, callbackContext)
 			// First validate the resource actually exists per the contract requirements
 			// https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
-			.then(progress ->
-				proxy.initiate("aws-ssm-parameter::validate-resource-exists", proxyClient, model, callbackContext)
-					.translateToServiceRequest(Translator::getParametersRequest)
-					.makeServiceCall(this::validateResourceExists)
-					.progress())
-
-			.then(progress ->
-				proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
-					.translateToServiceRequest(Translator::updatePutParameterRequest)
-					.backoffDelay(getBackOffDelay(model))
-					.makeServiceCall(this::updateResource)
-					.stabilize((req, response, client, model1, cbContext) -> stabilize(req, response, client, model1, cbContext, logger))
-					.progress())
-			.then(progress -> handleTagging(proxy, proxyClient, progress, model, request.getDesiredResourceTags(), request.getPreviousResourceTags()))
-			.then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+			.then(progress -> validateResourceExists(proxy, progress, proxyClient, progress.getResourceModel(), progress.getCallbackContext(), logger))
+			.then(progress -> updateResourceExceptTagging(proxy, progress, proxyClient, progress.getResourceModel(), progress.getCallbackContext(), logger))
+			.then(progress -> handleTagging(proxy, proxyClient, progress, progress.getResourceModel(), request.getDesiredResourceTags(), request.getPreviousResourceTags()))
+			.then(progress -> new ReadHandler().handleRequest(proxy, request, progress.getCallbackContext(), proxyClient, logger));
 	}
 
-	private GetParametersResponse validateResourceExists(GetParametersRequest getParametersRequest, ProxyClient<SsmClient> proxyClient) {
-		GetParametersResponse getParametersResponse;
-
-		getParametersResponse = proxyClient.injectCredentialsAndInvokeV2(getParametersRequest, proxyClient.client()::getParameters);
-		if (getParametersResponse.invalidParameters().size() != 0) {
-			throw new CfnNotFoundException(ResourceModel.TYPE_NAME, getParametersRequest.names().get(0));
-		}
-
-		return getParametersResponse;
-	}
-
-	private PutParameterResponse updateResource(final PutParameterRequest putParameterRequest,
-		final ProxyClient<SsmClient> proxyClient) {
-		try {
-			return proxyClient.injectCredentialsAndInvokeV2(putParameterRequest, proxyClient.client()::putParameter);
-		} catch (final ParameterAlreadyExistsException exception) {
-			throw new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, putParameterRequest.name());
-		} catch (final InternalServerErrorException exception) {
-			throw new CfnServiceInternalErrorException(OPERATION, exception);
-		} catch (final AmazonServiceException exception) {
-			final Integer errorStatus = exception.getStatusCode();
-			final String errorCode = exception.getErrorCode();
-			if (errorStatus >= Constants.ERROR_STATUS_CODE_400 && errorStatus < Constants.ERROR_STATUS_CODE_500) {
-				if (THROTTLING_ERROR_CODES.contains(errorCode)) {
-					logger.log(String.format(RETRY_MESSAGE, exception.getMessage()));
-					throw new CfnThrottlingException(OPERATION, exception);
+	private ProgressEvent<ResourceModel, CallbackContext> validateResourceExists(final AmazonWebServicesClientProxy proxy,
+		final ProgressEvent<ResourceModel, CallbackContext> progress, final ProxyClient<SsmClient> proxyClient,
+		final ResourceModel model, final CallbackContext callbackContext, final Logger logger) {
+		return proxy.initiate("aws-ssm-parameter::Update:validate-resource-exists", proxyClient, model, callbackContext)
+			.translateToServiceRequest(Translator::getParametersRequest)
+			.makeServiceCall((getParametersRequest, ssmClientProxyClient) ->
+				ssmClientProxyClient.injectCredentialsAndInvokeV2(getParametersRequest, ssmClientProxyClient.client()::getParameters))
+			.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, this.logger))
+			.done((getParametersRequest, getParametersResponse, proxyClient1, resourceModel, context) -> {
+				if (!getParametersResponse.invalidParameters().isEmpty()) {
+					throw new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceModel.getName());
 				}
-			}
-			throw new CfnGeneralServiceException(OPERATION, exception);
-		}
+				return progress;
+			});
+	}
+
+	private ProgressEvent<ResourceModel, CallbackContext> updateResourceExceptTagging(AmazonWebServicesClientProxy proxy, ProgressEvent<ResourceModel, CallbackContext> progress,
+		ProxyClient<SsmClient> proxyClient, ResourceModel resourceModel, CallbackContext callbackContext, Logger logger) {
+		return proxy.initiate("aws-ssm-parameter::Update:resource-update", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+			.translateToServiceRequest(Translator::updatePutParameterRequest)
+			.backoffDelay(getBackOffDelay(progress.getResourceModel()))
+			.makeServiceCall((putParameterRequest, ssmClientProxyClient) ->
+				ssmClientProxyClient.injectCredentialsAndInvokeV2(putParameterRequest, ssmClientProxyClient.client()::putParameter))
+			.stabilize((req, response, client, model1, cbContext) -> stabilize(req, response, client, model1, cbContext, logger))
+			.progress();
 	}
 
 	private ProgressEvent<ResourceModel, CallbackContext> handleTagging(
@@ -114,25 +84,43 @@ public class UpdateHandler extends BaseHandlerStd {
 
 		final Set<Tag> currentTags = new HashSet<>(Translator.translateTagsToSdk(desiredResourceTags));
 		final Set<Tag> existingTags = new HashSet<>(Translator.translateTagsToSdk(previousResourceTags));
-		// Remove tags with aws prefix as they should not be modified once attached
-		existingTags.removeIf(tag -> tag.key().startsWith("aws"));
+		// Remove tags with aws prefix as they should not be modified (or removed) once attached
+		existingTags.removeIf(tag -> tag.key().startsWith("aws:"));
 
 		final Set<Tag> setTagsToRemove = Sets.difference(existingTags, currentTags);
 		final Set<Tag> setTagsToAdd = Sets.difference(currentTags, existingTags);
 
-		final List<Tag> tagsToRemove = setTagsToRemove.stream().collect(Collectors.toList());
-		final List<Tag> tagsToAdd = setTagsToAdd.stream().collect(Collectors.toList());
+		final List<Tag> tagsToRemove = new ArrayList<>(setTagsToRemove);
+		final List<Tag> tagsToAdd = new ArrayList<>(setTagsToAdd);
 
-		// Deletes tags only if tagsToRemove is not empty.
-		if (!CollectionUtils.isNullOrEmpty(tagsToRemove))
-			proxy.injectCredentialsAndInvokeV2(
-				Translator.removeTagsFromResourceRequest(resourceModel.getName(), tagsToRemove), proxyClient.client()::removeTagsFromResource);
+		return ProgressEvent.progress(resourceModel, progress.getCallbackContext())
+			// First validate the resource actually exists per the contract requirements
+			.then(progress1 -> removeTags(proxy, progress1, proxyClient, logger, tagsToRemove))
+			.then(progress1 -> addTags(proxy, progress1, proxyClient, logger, tagsToAdd))
+			.then(progress1 -> ProgressEvent.progress(progress1.getResourceModel(), progress1.getCallbackContext()));
+	}
 
-		// Adds tags only if tagsToAdd is not empty.
-		if (!CollectionUtils.isNullOrEmpty(tagsToAdd))
-			proxy.injectCredentialsAndInvokeV2(
-				Translator.addTagsToResourceRequest(resourceModel.getName(), tagsToAdd), proxyClient.client()::addTagsToResource);
+	private ProgressEvent<ResourceModel, CallbackContext> removeTags(AmazonWebServicesClientProxy proxy, ProgressEvent<ResourceModel, CallbackContext> progress,
+		ProxyClient<SsmClient> proxyClient, Logger logger, List<Tag> tagsToRemove) {
+		if (CollectionUtils.isNullOrEmpty(tagsToRemove))
+			return progress;
+		return proxy.initiate("aws-ssm-parameter::Update:handle-tagging-remove", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+			.translateToServiceRequest(model -> Translator.removeTagsFromResourceRequest(model.getName(), tagsToRemove))
+			.backoffDelay(getBackOffDelay(progress.getResourceModel()))
+			.makeServiceCall((removeTagsFromResourceRequest, ssmClientProxyClient) ->
+				ssmClientProxyClient.injectCredentialsAndInvokeV2(removeTagsFromResourceRequest, ssmClientProxyClient.client()::removeTagsFromResource))
+			.progress();
+	}
 
-		return ProgressEvent.progress(progress.getResourceModel(), progress.getCallbackContext());
+	private ProgressEvent<ResourceModel, CallbackContext> addTags(AmazonWebServicesClientProxy proxy, ProgressEvent<ResourceModel, CallbackContext> progress,
+		ProxyClient<SsmClient> proxyClient, Logger logger, List<Tag> tagsToAdd) {
+		if (CollectionUtils.isNullOrEmpty(tagsToAdd))
+			return progress;
+		return proxy.initiate("aws-ssm-parameter::Update:handle-tagging-add", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+			.translateToServiceRequest(model -> Translator.addTagsToResourceRequest(model.getName(), tagsToAdd))
+			.backoffDelay(getBackOffDelay(progress.getResourceModel()))
+			.makeServiceCall((addTagsToResourceRequest, ssmClientProxyClient) ->
+				ssmClientProxyClient.injectCredentialsAndInvokeV2(addTagsToResourceRequest, ssmClientProxyClient.client()::addTagsToResource))
+			.progress();
 	}
 }
