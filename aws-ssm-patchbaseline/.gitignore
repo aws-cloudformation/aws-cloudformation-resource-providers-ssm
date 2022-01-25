@@ -1,10 +1,8 @@
 # macOS
 .DS_Store
 ._*
-
 # Maven outputs
 .classpath
-
 # IntelliJ
 *.iml
 .idea
@@ -14,10 +12,5 @@ out/
 .project
 # auto-generated files
 target/
-
 # our logs
 rpdk.log
-
-
-
-

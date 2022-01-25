@@ -35,8 +35,6 @@ public class ListHandlerTest extends TestBase {
     private ListHandler listHandler;
     @Mock
     private AmazonWebServicesClientProxy proxy;
-    @Mock
-    ReadHandler readHandler;
 
     private DescribePatchBaselinesRequest describePatchBaselinesRequest;
     private DescribePatchBaselinesResponse describePatchBaselinesResponse;
@@ -44,20 +42,14 @@ public class ListHandlerTest extends TestBase {
     @BeforeEach
     public void setup() {
         listHandler = new ListHandler();
-        readHandler = mock(ReadHandler.class);
         proxy = mock(AmazonWebServicesClientProxy.class);
         describePatchBaselinesRequest = DescribePatchBaselinesRequest.builder().maxResults(50).build();
     }
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        listHandler.setReadHandler(readHandler);
 
-        //set up mock for ReadHandler
         final ResourceModel resourceModel = buildDefaultInputRequest().getDesiredResourceState();
-        final ProgressEvent<ResourceModel, CallbackContext> readHandlerResponse =
-                ProgressEvent.defaultSuccessHandler(resourceModel);
-        when(readHandler.handleRequest(any(), any(), any(), any())).thenReturn(readHandlerResponse);
 
         //set up mock for DescribePatchBaselinesResponse
         final List<PatchBaselineIdentity> patchBaselineIdentities = Arrays.asList(PatchBaselineIdentity.builder().baselineId(BASELINE_ID).build());
@@ -84,7 +76,5 @@ public class ListHandlerTest extends TestBase {
         assertThat(response.getResourceModels()).isEqualTo(Arrays.asList(resourceModel));
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-
-        verify(readHandler).handleRequest(any(), any(), any(), any());
     }
 }

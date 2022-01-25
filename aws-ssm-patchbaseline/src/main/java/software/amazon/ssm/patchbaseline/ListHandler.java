@@ -12,17 +12,8 @@ import software.amazon.awssdk.services.ssm.model.DescribePatchBaselinesResponse;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.ssm.patchbaseline.utils.SsmClientBuilder;
 import software.amazon.awssdk.services.ssm.model.SsmException;
-import software.amazon.awssdk.services.ssm.model.GetPatchBaselineRequest;
-import software.amazon.awssdk.services.ssm.model.GetPatchBaselineResponse;
-import software.amazon.awssdk.services.ssm.model.GetDefaultPatchBaselineRequest;
-import software.amazon.awssdk.services.ssm.model.GetDefaultPatchBaselineResponse;
-import software.amazon.awssdk.services.ssm.model.Tag;
-import software.amazon.ssm.patchbaseline.translator.resourcemodel.ReadResourceModelTranslator;
+import software.amazon.ssm.patchbaseline.translator.resourcemodel.ListResourceModelTranslator;
 import static software.amazon.ssm.patchbaseline.ResourceModel.TYPE_NAME;
-
-
-
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,21 +25,6 @@ public class ListHandler extends BaseHandler<CallbackContext> {
     private static final SsmClient ssmClient = SsmClientBuilder.getClient();
     private static final Integer MAX_RESULTS = 50;
     protected static final String PATCH_BASELINE_RESOURCE_NAME = "PatchBaseline";
-
-
-    private ReadHandler readHandler;
-    private final TagHelper tagHelper;
-
-
-    public ListHandler() {
-        readHandler = new ReadHandler();
-        this.tagHelper = new TagHelper();
-    }
-
-    @VisibleForTesting
-    void setReadHandler(final ReadHandler readHandler) {
-        this.readHandler = readHandler;
-    }
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -122,7 +98,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
 
     /**
      * DescribePatchBaselinesResponse returns limited information about resource model.
-     * Use ReadHandler to read full template based on given baselineId.
+     * The resource model will return the baselineentities
      *
      * @param describePatchBaselinesResponse describePatchBaselinesResponse
      * @param request ResourceHandlerRequest
@@ -134,8 +110,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                                                              final Logger logger) {
 
         final List<ResourceModel> models = new ArrayList<>();
-        List<Tag> tags = new ArrayList<Tag>();
-        ResourceModel resourcemodel = ReadResourceModelTranslator.translateToResourceModel(describePatchBaselinesResponse, tags);
+        ResourceModel resourcemodel = ListResourceModelTranslator.translateToResourceModel(describePatchBaselinesResponse);
         if(resourcemodel !=null)
             models.add(resourcemodel);
 
