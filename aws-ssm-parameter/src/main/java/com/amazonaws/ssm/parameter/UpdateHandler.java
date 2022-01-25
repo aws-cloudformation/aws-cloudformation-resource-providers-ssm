@@ -66,7 +66,7 @@ public class UpdateHandler extends BaseHandlerStd {
 					.translateToServiceRequest(Translator::updatePutParameterRequest)
 					.backoffDelay(getBackOffDelay(model))
 					.makeServiceCall(this::updateResource)
-					.stabilize(BaseHandlerStd::stabilize)
+					.stabilize((req, response, client, model1, cbContext) -> stabilize(req, response, client, model1, cbContext, logger))
 					.progress())
 			.then(progress -> handleTagging(proxy, proxyClient, progress, model, request.getDesiredResourceTags(), request.getPreviousResourceTags()))
 			.then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));

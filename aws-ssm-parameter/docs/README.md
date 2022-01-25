@@ -12,12 +12,15 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 {
     "Type" : "AWS::SSM::Parameter",
     "Properties" : {
+        "<a href="#type" title="Type">Type</a>" : <i>String</i>,
         "<a href="#description" title="Description">Description</a>" : <i>String</i>,
         "<a href="#policies" title="Policies">Policies</a>" : <i>String</i>,
         "<a href="#allowedpattern" title="AllowedPattern">AllowedPattern</a>" : <i>String</i>,
         "<a href="#tier" title="Tier">Tier</a>" : <i>String</i>,
-        "<a href="#tags" title="Tags">Tags</a>" : <i><a href="tags.md">Tags</a></i>,
+        "<a href="#value" title="Value">Value</a>" : <i>String</i>,
         "<a href="#datatype" title="DataType">DataType</a>" : <i>String</i>,
+        "<a href="#tags" title="Tags">Tags</a>" : <i>Map</i>,
+        "<a href="#name" title="Name">Name</a>" : <i>String</i>
     }
 }
 </pre>
@@ -27,31 +30,42 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <pre>
 Type: AWS::SSM::Parameter
 Properties:
+    <a href="#type" title="Type">Type</a>: <i>String</i>
     <a href="#description" title="Description">Description</a>: <i>String</i>
     <a href="#policies" title="Policies">Policies</a>: <i>String</i>
     <a href="#allowedpattern" title="AllowedPattern">AllowedPattern</a>: <i>String</i>
     <a href="#tier" title="Tier">Tier</a>: <i>String</i>
-    <a href="#tags" title="Tags">Tags</a>: <i><a href="tags.md">Tags</a></i>
+    <a href="#value" title="Value">Value</a>: <i>String</i>
     <a href="#datatype" title="DataType">DataType</a>: <i>String</i>
+    <a href="#tags" title="Tags">Tags</a>: <i>Map</i>
+    <a href="#name" title="Name">Name</a>: <i>String</i>
 </pre>
 
 ## Properties
 
+#### Type
+
+The type of parameter.
+
+_Required_: Yes
+
+_Type_: String
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
 #### Description
 
-The information about the parameter.
+Information about the parameter.
 
 _Required_: No
 
 _Type_: String
 
-_Maximum_: <code>1024</code>
-
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 #### Policies
 
-The policies attached to the parameter.
+Information about the policies assigned to a parameter.
 
 _Required_: No
 
@@ -61,71 +75,66 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### AllowedPattern
 
-The regular expression used to validate the parameter value.
+A regular expression used to validate the parameter value.
 
 _Required_: No
 
 _Type_: String
-
-_Maximum_: <code>1024</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 #### Tier
 
-The corresponding tier of the parameter.
+The parameter tier.
 
 _Required_: No
 
 _Type_: String
 
-_Allowed Values_: <code>Standard</code> | <code>Advanced</code> | <code>Intelligent-Tiering</code>
-
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
-#### Tags
+#### Value
 
-A key-value pair to associate with a resource.
+The parameter value.
 
-_Required_: No
+_Required_: Yes
 
-_Type_: <a href="tags.md">Tags</a>
+_Type_: String
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 #### DataType
 
-The corresponding DataType of the parameter.
+The data type of the parameter, such as text or aws:ec2:image. The default is text.
 
 _Required_: No
 
 _Type_: String
 
-_Allowed Values_: <code>text</code> | <code>aws:ec2:image</code>
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### Tags
+
+Optional metadata that you assign to a resource in the form of an arbitrary set of tags (key-value pairs)
+
+_Required_: No
+
+_Type_: Map
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### Name
+
+The name of the parameter.
+
+_Required_: No
+
+_Type_: String
+
+_Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
 
 ## Return Values
 
 ### Ref
 
 When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the Name.
-
-### Fn::GetAtt
-
-The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
-
-For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::GetAtt](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html).
-
-#### Name
-
-The name of the parameter.
-
-#### Type
-
-The type of the parameter.
-
-#### Value
-
-The value associated with the parameter.
-

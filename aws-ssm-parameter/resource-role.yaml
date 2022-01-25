@@ -27,6 +27,7 @@ Resources:
                 - "ssm:DeleteParameter"
                 - "ssm:DescribeParameters"
                 - "ssm:GetParameters"
+                - "ssm:ListTagsForResource"
                 - "ssm:PutParameter"
                 - "ssm:RemoveTagsFromResource"
                 Resource: "*"
