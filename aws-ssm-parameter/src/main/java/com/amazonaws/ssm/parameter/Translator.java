@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
 import software.amazon.awssdk.services.ssm.model.ParameterStringFilter;
 import software.amazon.awssdk.services.ssm.model.ParametersFilterKey;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
@@ -101,6 +102,20 @@ public class Translator {
 			.resourceType(ResourceTypeForTagging.PARAMETER)
 			.resourceId(model.getName())
 			.build();
+	}
+
+	static List<ResourceModel> translateListOfParameters(final List<ParameterMetadata> parameterMetadataList) {
+		return parameterMetadataList.stream().map(parameterMetadata ->
+				ResourceModel.builder()
+					.name(parameterMetadata.name())
+					.allowedPattern(parameterMetadata.allowedPattern())
+					.description(parameterMetadata.description())
+					.policies(parameterMetadata.policies().toString())
+					.tier(parameterMetadata.tierAsString())
+					.dataType(parameterMetadata.dataType())
+					.type(parameterMetadata.typeAsString())
+					.build())
+			.collect(Collectors.toList());
 	}
 
 	// Translate tags
