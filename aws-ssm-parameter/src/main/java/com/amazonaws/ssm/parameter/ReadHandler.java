@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
@@ -11,6 +12,15 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public class ReadHandler extends BaseHandlerStd {
+
+	public ReadHandler() {
+		super();
+	}
+
+	@VisibleForTesting
+	protected ReadHandler(SsmClient ssmClient) {
+		super(ssmClient);
+	}
 
 	@Override
 	protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(

@@ -1,6 +1,7 @@
 package com.amazonaws.ssm.parameter;
 
 import com.amazonaws.util.CollectionUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.ParameterType;
@@ -23,6 +24,19 @@ import java.util.Set;
 public class UpdateHandler extends BaseHandlerStd {
 	private Logger logger;
 
+	private final ReadHandler readHandler;
+
+	public UpdateHandler() {
+		super();
+		readHandler = new ReadHandler();
+	}
+
+	@VisibleForTesting
+	protected UpdateHandler(SsmClient ssmClient, ReadHandler readHandler) {
+		super(ssmClient);
+		this.readHandler = readHandler;
+	}
+
 	@Override
 	protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
 		final AmazonWebServicesClientProxy proxy,
@@ -44,7 +58,7 @@ public class UpdateHandler extends BaseHandlerStd {
 			.then(progress -> validateResourceExists(proxy, progress, proxyClient, progress.getResourceModel(), progress.getCallbackContext(), logger))
 			.then(progress -> updateResourceExceptTagging(proxy, progress, proxyClient, progress.getResourceModel(), progress.getCallbackContext(), logger))
 			.then(progress -> handleTagging(proxy, proxyClient, progress, progress.getResourceModel(), request.getDesiredResourceTags(), request.getPreviousResourceTags()))
-			.then(progress -> new ReadHandler().handleRequest(proxy, request, progress.getCallbackContext(), proxyClient, logger));
+			.then(progress -> readHandler.handleRequest(proxy, request, progress.getCallbackContext(), proxyClient, logger));
 	}
 
 	private ProgressEvent<ResourceModel, CallbackContext> validateResourceExists(final AmazonWebServicesClientProxy proxy,

@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.ParameterType;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
@@ -17,6 +18,19 @@ import java.util.Optional;
 
 public class CreateHandler extends BaseHandlerStd {
 	private Logger logger;
+
+	private final ReadHandler readHandler;
+
+	public CreateHandler() {
+		super();
+		readHandler = new ReadHandler();
+	}
+
+	@VisibleForTesting
+	protected CreateHandler(SsmClient ssmClient, ReadHandler readHandler) {
+		super(ssmClient);
+		this.readHandler = readHandler;
+	}
 
 	@Override
 	protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -55,6 +69,6 @@ public class CreateHandler extends BaseHandlerStd {
 				.stabilize((req, response, client, model1, cbContext) -> stabilize(req, response, client, model1, cbContext, logger))
 				.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, logger))
 				.progress())
-			.then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+			.then(progress -> readHandler.handleRequest(proxy, request, callbackContext, proxyClient, logger));
 	}
 }

@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -9,6 +10,15 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public class DeleteHandler extends BaseHandlerStd {
 	private Logger logger;
+
+	public DeleteHandler() {
+		super();
+	}
+
+	@VisibleForTesting
+	protected DeleteHandler(SsmClient ssmClient) {
+		super(ssmClient);
+	}
 
 	@Override
 	protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(

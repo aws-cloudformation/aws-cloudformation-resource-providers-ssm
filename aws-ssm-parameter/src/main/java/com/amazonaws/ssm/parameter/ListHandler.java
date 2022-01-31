@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersResponse;
 import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
@@ -15,6 +16,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ListHandler extends BaseHandlerStd {
+
+	public ListHandler() {
+		super();
+	}
+
+	@VisibleForTesting
+	protected ListHandler(SsmClient ssmClient) {
+		super(ssmClient);
+	}
 
 	protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
 		final AmazonWebServicesClientProxy proxy,

@@ -1,6 +1,9 @@
 package com.amazonaws.ssm.parameter;
 
+import com.google.common.collect.Maps;
+
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 class Configuration extends BaseConfiguration {
@@ -15,11 +18,8 @@ class Configuration extends BaseConfiguration {
 	 * @return
 	 */
 	public Map<String, String> resourceDefinedTags(final ResourceModel resourceModel) {
-		if (resourceModel.getTags() == null) {
-			return null;
-		} else {
-			return resourceModel.getTags().entrySet().stream()
-				.collect(Collectors.toMap(tag -> tag.getKey(), tag -> tag.getValue().toString()));
-		}
+		return Optional.ofNullable(resourceModel.getTags()).orElse(Maps.newHashMap())
+			.entrySet().stream()
+			.collect(Collectors.toMap(tag -> tag.getKey(), tag -> tag.getValue().toString()));
 	}
 }

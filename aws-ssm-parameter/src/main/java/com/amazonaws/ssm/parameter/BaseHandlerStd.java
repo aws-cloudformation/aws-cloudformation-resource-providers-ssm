@@ -28,7 +28,24 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
+
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+
+	private final SsmClient ssmClient;
+
+	protected BaseHandlerStd() {
+		this(ClientBuilder.getClient());
+	}
+
+	protected BaseHandlerStd(SsmClient ssmClient) {
+		this.ssmClient = requireNonNull(ssmClient);
+	}
+
+	private SsmClient getSsmClient() {
+		return ssmClient;
+	}
+
 	protected static final Set<String> THROTTLING_ERROR_CODES = ImmutableSet.of(
 		"ThrottlingException",
 		"TooManyUpdates");
@@ -42,7 +59,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 			proxy,
 			request,
 			Optional.ofNullable(callbackContext).orElse(new CallbackContext()),
-			proxy.newProxy(SSMClientBuilder::getClient),
+			proxy.newProxy(ClientBuilder::getClient),
 			logger);
 	}
 
