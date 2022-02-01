@@ -5,7 +5,6 @@ import software.amazon.ssm.patchbaseline.utils.SimpleTypeValidator;
 import software.amazon.awssdk.services.ssm.model.PatchBaselineIdentity;
 import software.amazon.awssdk.services.ssm.model.DescribePatchBaselinesResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

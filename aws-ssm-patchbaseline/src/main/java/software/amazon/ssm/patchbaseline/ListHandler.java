@@ -18,13 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.File;
 
 public class ListHandler extends BaseHandler<CallbackContext> {
 
     private static final SsmClient ssmClient = SsmClientBuilder.getClient();
     private static final Integer MAX_RESULTS = 50;
-    protected static final String PATCH_BASELINE_RESOURCE_NAME = "PatchBaseline";
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
