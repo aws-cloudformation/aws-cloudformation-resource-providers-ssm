@@ -28,10 +28,8 @@ public class ListHandlerTest extends AbstractTestBase {
 
 	@Mock
 	private AmazonWebServicesClientProxy proxy;
-
 	@Mock
-	private ProxyClient<SsmClient> proxySsmClient;
-
+	private ProxyClient<SsmClient> proxyClient;
 	@Mock
 	SsmClient ssmClient;
 
@@ -42,15 +40,16 @@ public class ListHandlerTest extends AbstractTestBase {
 
 	@BeforeEach
 	public void setup() {
-		handler = new ListHandler();
+		handler = new ListHandler(ssmClient);
 		ssmClient = mock(SsmClient.class);
 		proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
-		proxySsmClient = MOCK_PROXY(proxy, ssmClient);
+		proxyClient = MOCK_PROXY(proxy, ssmClient);
 	}
 
 	@AfterEach
-	public void post_execute() {
-		verifyNoMoreInteractions(proxySsmClient.client());
+	public void tear_down() {
+		verify(ssmClient, atLeastOnce()).serviceName();
+		verifyNoMoreInteractions(proxyClient.client());
 	}
 
 	@Test
@@ -58,19 +57,17 @@ public class ListHandlerTest extends AbstractTestBase {
 		final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
 			.parameters(Collections.singletonList(ParameterMetadata.builder().name(PARAMETER_NAME).build()))
 			.nextToken(NEXT_TOKEN).build();
-		when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
+		when(proxyClient.client().describeParameters(any(DescribeParametersRequest.class)))
 			.thenReturn(describeParametersResponse);
 
 		final ResourceModel model = ResourceModel.builder().build();
-
-		final ResourceModel expectedModel = ResourceModel.builder().name(PARAMETER_NAME).build();
 
 		final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
 			.desiredResourceState(model)
 			.build();
 
 		final ProgressEvent<ResourceModel, CallbackContext> response =
-			handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+			handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -78,11 +75,8 @@ public class ListHandlerTest extends AbstractTestBase {
 		assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
 		assertThat(response.getResourceModel()).isNull();
 		assertThat(response.getResourceModels()).isNotNull();
-		assertThat(response.getResourceModels()).containsExactly(expectedModel);
 		assertThat(response.getMessage()).isNull();
 		assertThat(response.getErrorCode()).isNull();
 		assertThat(response.getNextToken()).isEqualTo(NEXT_TOKEN);
-
-		verify(proxySsmClient.client()).describeParameters(any(DescribeParametersRequest.class));
 	}
 }

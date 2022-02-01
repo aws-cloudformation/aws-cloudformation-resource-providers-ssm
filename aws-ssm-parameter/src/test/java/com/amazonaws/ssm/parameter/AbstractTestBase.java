@@ -9,13 +9,20 @@ import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Credentials;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.LoggerProxy;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractTestBase {
 	protected static final Credentials MOCK_CREDENTIALS;
@@ -68,6 +75,10 @@ public class AbstractTestBase {
 		PREVIOUS_TAG_SET.putAll(SYSTEM_TAGS_SET);
 	}
 
+	static Map<String, Object> toResourceModelTags(Map<String, String> stringTags) {
+		return stringTags.entrySet().stream().collect(Collectors.toMap(tag -> tag.getKey(), tag -> tag));
+	}
+
 	static ProxyClient<SsmClient> MOCK_PROXY(
 		final AmazonWebServicesClientProxy proxy,
 		final SsmClient ssmClient
@@ -107,5 +118,16 @@ public class AbstractTestBase {
 				return ssmClient;
 			}
 		};
+	}
+
+	protected void assertFailureErrorCode(final ResourceHandlerRequest<ResourceModel> request,
+		final ProgressEvent<ResourceModel, CallbackContext> response, final HandlerErrorCode errorCode) {
+
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+		assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+		assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+		assertThat(response.getResourceModels()).isNull();
+		assertThat(response.getErrorCode()).isEqualTo(errorCode);
 	}
 }
