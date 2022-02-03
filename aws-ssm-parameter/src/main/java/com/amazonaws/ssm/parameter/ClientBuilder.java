@@ -21,7 +21,7 @@ public class ClientBuilder {
 
 	private static final RetryPolicy RETRY_POLICY =
 		RetryPolicy.builder()
-			.numRetries(16)
+			.numRetries(4)
 			.retryCondition(RetryCondition.defaultRetryCondition())
 			.throttlingBackoffStrategy(BACKOFF_THROTTLING_STRATEGY)
 			.build();
