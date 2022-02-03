@@ -31,26 +31,23 @@ public class ListHandler extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
-        final List<ResourceModel> models = new ArrayList<>();
+        DescribePatchBaselinesRequest describePatchBaselinesRequest = DescribePatchBaselinesRequest.builder().nextToken(request.getNextToken()).maxResults(MAX_RESULTS).build();
 
-        DescribePatchBaselinesResponse describePatchBaselinesResponse = describePatchBaselinesResponse(proxy);
+        final DescribePatchBaselinesResponse describePatchBaselinesResponse = proxy.injectCredentialsAndInvokeV2(describePatchBaselinesRequest, ssmClient::describePatchBaselines);
 
-        if (describePatchBaselinesResponse.hasBaselineIdentities()) {
-            models.addAll(getResourceModelFromResponse(describePatchBaselinesResponse, request, proxy, logger));
-        }
+        final List<ResourceModel> models = describePatchBaselinesResponse
+                .baselineIdentities()
+                .stream().map(baseline -> ResourceModel.builder().id(baseline.baselineId()).name(baseline.baselineName()).operatingSystem(baseline.operatingSystemAsString()).description(baseline.baselineDescription()).build()).collect(Collectors.toList());
 
-        while (describePatchBaselinesResponse.nextToken() != null) {
-            describePatchBaselinesResponse = describePatchBaselinesResponse(describePatchBaselinesResponse.nextToken(), proxy);
-
-            if (describePatchBaselinesResponse.hasBaselineIdentities()) {
-                models.addAll(getResourceModelFromResponse(describePatchBaselinesResponse, request, proxy, logger));
-            }
-        }
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModels(models)
+                .nextToken(describePatchBaselinesResponse.nextToken())
                 .status(OperationStatus.SUCCESS)
                 .build();
+
+
+
     }
 
     /**
