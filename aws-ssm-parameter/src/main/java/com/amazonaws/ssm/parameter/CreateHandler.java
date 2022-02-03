@@ -3,6 +3,7 @@ package com.amazonaws.ssm.parameter;
 import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.ParameterType;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
@@ -47,7 +48,7 @@ public class CreateHandler extends BaseHandlerStd {
 
 		if (model.getType().equalsIgnoreCase(ParameterType.SECURE_STRING.toString())) {
 			String message = String.format("SSM Parameters of type %s cannot be created using CloudFormation", ParameterType.SECURE_STRING);
-			return ProgressEvent.defaultFailureHandler(new CfnServiceInternalErrorException(message), HandlerErrorCode.InvalidRequest);
+			return ProgressEvent.failed(null, null, HandlerErrorCode.InvalidRequest, message);
 		}
 
 		// Set model primary ID if absent
