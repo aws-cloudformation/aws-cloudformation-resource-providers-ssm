@@ -53,9 +53,9 @@ public class CreateHandler extends BaseHandlerStd {
 
 		// Set model primary ID if absent
 		if (model.getName() == null) {
-			model.setName(IdentifierUtils.generateResourceIdentifier(
-				"CFN-" + request.getLogicalResourceIdentifier(),
-				request.getClientRequestToken()));
+			model.setName(IdentifierUtils.generateResourceIdentifier("CFN",
+				request.getLogicalResourceIdentifier(),
+				request.getClientRequestToken(), 40));
 		}
 
 		Map<String, String> consolidatedTagsMap = Optional.ofNullable(request.getDesiredResourceTags()).orElse(Collections.emptyMap());
