@@ -55,7 +55,9 @@
         "create": {
             "permissions": [
                 "ssm:GetParameters",
-                "ssm:PutParameter"
+                "ssm:PutParameter",
+                "ssm:DescribeParameters",
+                "ssm:ListTagsForResource"
             ]
         },
         "read": {
