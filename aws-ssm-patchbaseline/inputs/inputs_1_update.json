@@ -1,0 +1,24 @@
+{
+  "Name": "Amazon-Linux-Patching",
+  "OperatingSystem": "AMAZON_LINUX",
+  "ApprovalRules": {
+    "PatchRules": [
+      {
+        "PatchFilterGroup": {
+          "PatchFilters": [
+            {
+              "Key": "PRODUCT",
+              "Values": [
+                "AmazonLinux2012.03"
+              ]
+            }
+          ]
+        },
+        "ComplianceLevel": "CRITICAL",
+        "ApproveAfterDays": 0,
+        "EnableNonSecurity": false
+      }
+    ]
+  },
+  "Description": "Patches for Windows Servers"
+}

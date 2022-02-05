@@ -1,0 +1,5 @@
+{
+    "Name": "Amazon-Linux-Baseline",
+    "Description": "My approval rules patch baseline for Amazon Linux 2017.09 instances",
+    "OperatingSystem": "AMAZON_LINUX"
+}
