@@ -77,4 +77,35 @@ public class ListHandlerTest extends TestBase {
         assertThat(response.getErrorCode()).isNull();
 
     }
+
+    @Test
+    public void handleRequest_SimpleSuccessWithNoProperty() {
+
+        //set up mock for DescribePatchBaselinesResponse
+        final List<PatchBaselineIdentity> patchBaselineIdentities = Arrays.asList(PatchBaselineIdentity.builder().baselineId(BASELINE_ID).build());
+        describePatchBaselinesResponse = DescribePatchBaselinesResponse.builder()
+                .baselineIdentities(patchBaselineIdentities)
+                .build();
+        when(proxy.injectCredentialsAndInvokeV2(eq(describePatchBaselinesRequest),
+                ArgumentMatchers.<Function<DescribePatchBaselinesRequest, DescribePatchBaselinesResponse>>any()))
+                .thenReturn(describePatchBaselinesResponse);
+
+        //Simple unit test to verify the reading-in of read requests.
+        final ResourceModel model = ResourceModel.builder().id("pb-12345678901234567").build();
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .clientRequestToken(CLIENT_REQUEST_TOKEN)
+                .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                listHandler.handleRequest(proxy, request, null, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+    }
+
 }
