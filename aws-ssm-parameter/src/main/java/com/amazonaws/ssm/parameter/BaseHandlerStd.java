@@ -142,8 +142,13 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 			}
 			return (response.parameters() != null && response.parameters().get(0).version() == putParameterResponse.version());
 		} catch (Exception e) {
-			logger.log(String.format("Failed during stabilization of SsmParameter [%s] with error: [%s]", putParameterRequest.name(), e.getMessage()));
-			throw e;
+			if (hasThrottled(e)) {
+				logger.log(String.format("Throttling during stabilization of SsmParameter [%s] with error: [%s] ... Retrying..", putParameterRequest.name(), e.getMessage()));
+				return false;
+			} else {
+				logger.log(String.format("Failed during stabilization of SsmParameter [%s] with error: [%s]", putParameterRequest.name(), e.getMessage()));
+				throw e;
+			}
 		}
 	}
 
