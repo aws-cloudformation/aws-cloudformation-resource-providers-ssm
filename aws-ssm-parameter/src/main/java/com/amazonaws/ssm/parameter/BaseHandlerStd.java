@@ -1,5 +1,6 @@
 package com.amazonaws.ssm.parameter;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -102,6 +103,10 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 				.delay(Duration.ofSeconds(5))
 				.build();
 		}
+	}
+
+	public static boolean isStabilizationNeeded(final String datatype) {
+		return (!Strings.isNullOrEmpty(datatype) && datatype.startsWith(Constants.AWS_EC2_IMAGE_DATATYPE));
 	}
 
 	/**

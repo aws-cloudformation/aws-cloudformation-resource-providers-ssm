@@ -84,7 +84,12 @@ public class UpdateHandler extends BaseHandlerStd {
 			.backoffDelay(getBackOffDelay(progress.getResourceModel()))
 			.makeServiceCall((putParameterRequest, ssmClientProxyClient) ->
 				ssmClientProxyClient.injectCredentialsAndInvokeV2(putParameterRequest, ssmClientProxyClient.client()::putParameter))
-			.stabilize((req, response, client, model1, cbContext) -> stabilize(req, response, client, model1, cbContext, logger))
+			.stabilize((req, response, client, model1, cbContext) -> {
+				if (isStabilizationNeeded(model1.getDataType()))
+					return stabilize(req, response, client, model1, cbContext, logger);
+				else
+					return true;
+			})
 			.progress();
 	}
 
