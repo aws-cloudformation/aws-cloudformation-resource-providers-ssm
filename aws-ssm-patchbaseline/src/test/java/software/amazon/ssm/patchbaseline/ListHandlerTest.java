@@ -27,6 +27,8 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import software.amazon.ssm.patchbaseline.ResourceModel;
+
 
 @ExtendWith(MockitoExtension.class)
 public class ListHandlerTest extends TestBase {
@@ -100,12 +102,16 @@ public class ListHandlerTest extends TestBase {
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 listHandler.handleRequest(proxy, request, null, logger);
 
+        ResourceModel expectedModel = ResourceModel.builder().id("pb-12345678901234567").operatingSystem(null).description(null).name(null).build();
+
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getResourceModel()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-
+        if(response.getResourceModels().size() > 0){
+            assertThat(response.getResourceModels().get(0)).isEqualTo(expectedModel);
+        }
+        assertThat(response.getResourceModels()).contains(expectedModel);
     }
-
 }
