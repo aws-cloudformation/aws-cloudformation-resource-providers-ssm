@@ -47,7 +47,7 @@ public class UpdateHandler extends BaseHandlerStd {
 		this.logger = logger;
 		final ResourceModel model = request.getDesiredResourceState();
 
-		if (model.getType().equalsIgnoreCase(ParameterType.SECURE_STRING.toString())) {
+		if (ParameterType.SECURE_STRING.toString().equalsIgnoreCase(model.getType())) {
 			String message = String.format("SSM Parameters of type %s cannot be updated using CloudFormation", ParameterType.SECURE_STRING);
 			return ProgressEvent.defaultFailureHandler(new CfnServiceInternalErrorException(message), HandlerErrorCode.InvalidRequest);
 		}

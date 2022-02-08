@@ -46,7 +46,7 @@ public class CreateHandler extends BaseHandlerStd {
 		logger.log("Invoking Create Handler");
 		logger.log("CREATE ResourceModel: " + request.getDesiredResourceState().toString());
 
-		if (model.getType().equalsIgnoreCase(ParameterType.SECURE_STRING.toString())) {
+		if (ParameterType.SECURE_STRING.toString().equalsIgnoreCase(model.getType())) {
 			String message = String.format("SSM Parameters of type %s cannot be created using CloudFormation", ParameterType.SECURE_STRING);
 			return ProgressEvent.failed(null, null, HandlerErrorCode.InvalidRequest, message);
 		}
