@@ -12,14 +12,7 @@ import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
-import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
-import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
-import software.amazon.awssdk.services.ssm.model.Parameter;
-import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
-import software.amazon.awssdk.services.ssm.model.ParameterTier;
-import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
-import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
+import software.amazon.awssdk.services.ssm.model.*;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -89,15 +82,6 @@ public class CreateHandlerTest extends AbstractTestBase {
 			.build();
 		when(proxyClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
-		final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
-			.parameters(Parameter.builder()
-				.name(NAME)
-				.type(TYPE_STRING)
-				.value(VALUE)
-				.version(VERSION).build())
-			.build();
-		when(proxyClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
 		when(readHandler.handleRequest(any(), any(), any(), any(), any())).thenReturn(
 			ProgressEvent.success(RESOURCE_MODEL, new CallbackContext()));
 
@@ -140,15 +124,6 @@ public class CreateHandlerTest extends AbstractTestBase {
 
 	@Test
 	public void handleRequest_SimpleSuccess_With_No_ParameterName_Defined_Exceeding_LogicalResourceId() {
-		final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
-			.parameters(Parameter.builder()
-				.name(NAME)
-				.type(TYPE_STRING)
-				.value(VALUE)
-				.version(VERSION).build())
-			.build();
-		when(proxyClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
 		final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
 			.version(VERSION)
 			.tier(ParameterTier.STANDARD)
@@ -183,15 +158,6 @@ public class CreateHandlerTest extends AbstractTestBase {
 
 	@Test
 	public void handleRequest_SimpleSuccess_With_No_ParameterName_Defined_Not_Exceeding_LogicalResourceId() {
-		final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
-			.parameters(Parameter.builder()
-				.name(NAME)
-				.type(TYPE_STRING)
-				.value(VALUE)
-				.version(VERSION).build())
-			.build();
-		when(proxyClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
 		final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
 			.version(VERSION)
 			.tier(ParameterTier.STANDARD)
@@ -276,7 +242,23 @@ public class CreateHandlerTest extends AbstractTestBase {
 			AwsServiceException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("ThrottlingException").build()).build(),
 			ParameterAlreadyExistsException.builder().build(),
 			AwsServiceException.builder().build(),
-			SdkException.builder().build()
+			SdkException.builder().build(),
+			ParameterPatternMismatchException.builder().build(),
+			InvalidKeyIdException.builder().build(),
+			HierarchyTypeMismatchException.builder().build(),
+			InvalidAllowedPatternException.builder().build(),
+			UnsupportedParameterTypeException.builder().build(),
+			InvalidPolicyTypeException.builder().build(),
+			InvalidPolicyAttributeException.builder().build(),
+			IncompatiblePolicyException.builder().build(),
+			InvalidFilterKeyException.builder().build(),
+			InvalidFilterOptionException.builder().build(),
+			InvalidFilterValueException.builder().build(),
+			InvalidNextTokenException.builder().build(),
+			ParameterLimitExceededException.builder().build(),
+			HierarchyLevelLimitExceededException.builder().build(),
+			ParameterMaxVersionLimitExceededException.builder().build(),
+			PoliciesLimitExceededException.builder().build(),
 		};
 
 		HandlerErrorCode[] handlerErrorCodes = {
@@ -284,6 +266,22 @@ public class CreateHandlerTest extends AbstractTestBase {
 			HandlerErrorCode.AlreadyExists,
 			HandlerErrorCode.GeneralServiceException,
 			HandlerErrorCode.InternalFailure,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.InvalidRequest,
+			HandlerErrorCode.ServiceLimitExceeded,
+			HandlerErrorCode.ServiceLimitExceeded,
+			HandlerErrorCode.ServiceLimitExceeded,
+			HandlerErrorCode.ServiceLimitExceeded,
 		};
 
 		final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
