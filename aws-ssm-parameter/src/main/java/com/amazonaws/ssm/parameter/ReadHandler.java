@@ -79,7 +79,13 @@ public class ReadHandler extends BaseHandlerStd {
 			.translateToServiceRequest(Translator::describeParametersRequestWithFilter)
 			.makeServiceCall(((describeParametersRequest, ssmClientProxyClient) ->
 				ssmClientProxyClient.injectCredentialsAndInvokeV2(describeParametersRequest, ssmClientProxyClient.client()::describeParameters)))
-			.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, logger))
+			.handleError((req, e, proxy1, model1, context1) -> {
+				// soft-fail
+				if (isAccessDenied(e)) {
+					return progress;
+				}
+				return handleError(req, e, proxy1, model1, context1, logger);
+			})
 			.done((describeParametersRequest, describeParametersResponse, proxyClient1, resourceModel, context) -> {
 				if (describeParametersResponse.parameters().isEmpty()) {
 					throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getName());
@@ -103,7 +109,13 @@ public class ReadHandler extends BaseHandlerStd {
 			.translateToServiceRequest(Translator::listTagsForResourceRequest)
 			.makeServiceCall(((listTagsForResourceRequest, ssmClientProxyClient) ->
 				ssmClientProxyClient.injectCredentialsAndInvokeV2(listTagsForResourceRequest, ssmClientProxyClient.client()::listTagsForResource)))
-			.handleError((req, e, proxy1, model1, context1) -> handleError(req, e, proxy1, model1, context1, logger))
+			.handleError((req, e, proxy1, model1, context1) -> {
+				// soft-fail
+				if (isAccessDenied(e)) {
+					return progress;
+				}
+				return handleError(req, e, proxy1, model1, context1, logger);
+			})
 			.done((listTagsForResourceRequest, listTagsForResourceResponse, proxyClient1, resourceModel, context) -> {
 				resourceModel.setTags(Translator.translateTagsFromSdk(listTagsForResourceResponse.tagList()));
 				return ProgressEvent.progress(resourceModel, context);

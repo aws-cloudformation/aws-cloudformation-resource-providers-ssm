@@ -71,6 +71,10 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 		"ThrottlingException",
 		"TooManyUpdates");
 
+	protected static final Set<String> ACCESS_DENIED_ERROR_CODES = ImmutableSet.of(
+		"AccessDenied"
+	);
+
 	@Override
 	public ProgressEvent<ResourceModel, CallbackContext> handleRequest(final AmazonWebServicesClientProxy proxy,
 		final ResourceHandlerRequest<ResourceModel> request,
@@ -206,6 +210,11 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 	private boolean hasThrottled(Exception e) {
 		String errorCode = getErrorCode(e);
 		return (THROTTLING_ERROR_CODES.contains(errorCode));
+	}
+
+	protected boolean isAccessDenied(Exception e) {
+		String errorCode = getErrorCode(e);
+		return (ACCESS_DENIED_ERROR_CODES.contains(errorCode));
 	}
 
 	protected String getErrorCode(Exception e) {
