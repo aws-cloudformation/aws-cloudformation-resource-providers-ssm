@@ -4,18 +4,38 @@ import com.google.common.collect.ImmutableSet;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
+import software.amazon.awssdk.services.ssm.model.HierarchyLevelLimitExceededException;
+import software.amazon.awssdk.services.ssm.model.HierarchyTypeMismatchException;
+import software.amazon.awssdk.services.ssm.model.IncompatiblePolicyException;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.awssdk.services.ssm.model.InvalidAllowedPatternException;
+import software.amazon.awssdk.services.ssm.model.InvalidFilterKeyException;
+import software.amazon.awssdk.services.ssm.model.InvalidFilterOptionException;
+import software.amazon.awssdk.services.ssm.model.InvalidFilterValueException;
+import software.amazon.awssdk.services.ssm.model.InvalidKeyIdException;
+import software.amazon.awssdk.services.ssm.model.InvalidNextTokenException;
+import software.amazon.awssdk.services.ssm.model.InvalidPolicyAttributeException;
+import software.amazon.awssdk.services.ssm.model.InvalidPolicyTypeException;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
+import software.amazon.awssdk.services.ssm.model.ParameterLimitExceededException;
+import software.amazon.awssdk.services.ssm.model.ParameterMaxVersionLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.ParameterPatternMismatchException;
+import software.amazon.awssdk.services.ssm.model.PoliciesLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.SsmRequest;
+import software.amazon.awssdk.services.ssm.model.TooManyTagsErrorException;
+import software.amazon.awssdk.services.ssm.model.TooManyUpdatesException;
+import software.amazon.awssdk.services.ssm.model.UnsupportedParameterTypeException;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -132,9 +152,35 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 				ex = new CfnAlreadyExistsException(e);
 			} else if (e instanceof ParameterNotFoundException) {
 				ex = new CfnNotFoundException(e);
+			} else if (e instanceof ParameterPatternMismatchException
+				|| e instanceof InvalidKeyIdException
+				|| e instanceof HierarchyTypeMismatchException
+				|| e instanceof InvalidAllowedPatternException
+				|| e instanceof UnsupportedParameterTypeException
+				|| e instanceof InvalidPolicyTypeException
+				|| e instanceof InvalidPolicyAttributeException
+				|| e instanceof IncompatiblePolicyException
+				|| e instanceof InvalidFilterKeyException
+				|| e instanceof InvalidFilterOptionException
+				|| e instanceof InvalidFilterValueException
+				|| e instanceof InvalidNextTokenException
+			)
+			{
+				ex = new CfnInvalidRequestException(e);
+			} else if (e instanceof ParameterLimitExceededException
+				|| e instanceof HierarchyLevelLimitExceededException
+				|| e instanceof ParameterMaxVersionLimitExceededException
+				|| e instanceof PoliciesLimitExceededException
+			)
+			{
+				ex = new CfnServiceLimitExceededException(e);
 			} else if (e instanceof InternalServerErrorException) {
 				ex = new CfnServiceInternalErrorException(e);
-			} else if (hasThrottled(e)) {
+			} else if (hasThrottled(e)
+				|| e instanceof TooManyUpdatesException
+				|| e instanceof TooManyTagsErrorException
+			)
+			{
 				ex = new CfnThrottlingException(e);
 			} else {
 				ex = new CfnGeneralServiceException(e);
