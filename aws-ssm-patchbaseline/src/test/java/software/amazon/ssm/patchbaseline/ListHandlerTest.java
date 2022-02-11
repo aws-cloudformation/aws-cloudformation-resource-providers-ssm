@@ -27,6 +27,8 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import software.amazon.ssm.patchbaseline.ResourceModel;
+
 
 @ExtendWith(MockitoExtension.class)
 public class ListHandlerTest extends TestBase {
@@ -44,20 +46,12 @@ public class ListHandlerTest extends TestBase {
     @BeforeEach
     public void setup() {
         listHandler = new ListHandler();
-        readHandler = mock(ReadHandler.class);
         proxy = mock(AmazonWebServicesClientProxy.class);
         describePatchBaselinesRequest = DescribePatchBaselinesRequest.builder().maxResults(50).build();
     }
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        listHandler.setReadHandler(readHandler);
-
-        //set up mock for ReadHandler
-        final ResourceModel resourceModel = buildDefaultInputRequest().getDesiredResourceState();
-        final ProgressEvent<ResourceModel, CallbackContext> readHandlerResponse =
-                ProgressEvent.defaultSuccessHandler(resourceModel);
-        when(readHandler.handleRequest(any(), any(), any(), any())).thenReturn(readHandlerResponse);
 
         //set up mock for DescribePatchBaselinesResponse
         final List<PatchBaselineIdentity> patchBaselineIdentities = Arrays.asList(PatchBaselineIdentity.builder().baselineId(BASELINE_ID).build());
@@ -68,8 +62,10 @@ public class ListHandlerTest extends TestBase {
                 ArgumentMatchers.<Function<DescribePatchBaselinesRequest, DescribePatchBaselinesResponse>>any()))
                 .thenReturn(describePatchBaselinesResponse);
 
+        final ResourceModel model = ResourceModel.builder().build();
+
         //Simple unit test to verify the reading-in of read requests.
-        final ResourceModel model = ResourceModel.builder().id(BASELINE_ID).build();
+        final ResourceModel expectedModel = ResourceModel.builder().id(BASELINE_ID).build();
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
@@ -80,11 +76,13 @@ public class ListHandlerTest extends TestBase {
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isNull();
-        assertThat(response.getResourceModels()).isEqualTo(Arrays.asList(resourceModel));
+        assertThat(response.getResourceModels()).isNotNull();
+        assertThat(response.getResourceModels()).containsExactly(expectedModel);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(readHandler).handleRequest(any(), any(), any(), any());
     }
 }
