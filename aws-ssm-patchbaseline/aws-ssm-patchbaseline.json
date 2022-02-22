@@ -27,8 +27,7 @@
                 "CENTOS",
                 "ORACLE_LINUX",
                 "DEBIAN"
-            ],
-            "insertionOrder": false
+            ]
         },
         "Description": {
             "description": "The description of the patch baseline.",
