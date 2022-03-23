@@ -1,0 +1,6 @@
+{
+    "Policy":"66666777778888899999",
+    "ResourceArn": "arn:aws:ssm:us-east-1:526204198394:opsitemgroup/default",
+    "PolicyId": "",
+    "PolicyHash": ""
+}
