@@ -1,0 +1,69 @@
+{
+    "typeName": "AWS::SSM::ResourcePolicies",
+    "description": "Resource Type definition for AWS::SSM::ResourcePolicies",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
+
+    "properties": {
+        "Id": {
+            "type": "string",
+            "description": "The provider-assigned unique ID for this managed resource."
+        },
+        "ResourceArn": {
+            "type": "string",
+            "description": "Arn of OpsItemGroup/Parameter/ManagedInstance etc."
+        },
+        "Policy": {
+            "type": [
+                "object",
+                "string"
+            ],
+            "description": "Actual policy statement in json."
+        },
+        "PolicyId": {
+            "type": "string",
+            "description": "An unique identifier within the policies of a resource. "
+        },
+        "PolicyHash": {
+            "type": "string",
+            "description": "The hash value returned when the previous policy was set. Its purpose is to prevent concurrent modifications of a policy. Do not use this parameter if no previous policy has been set."
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "ResourceArn",
+        "Policy"
+    ],
+    "readOnlyProperties": [
+        "/properties/Id"
+    ],
+    "primaryIdentifier": [
+        "/properties/Policy"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "ssm:PutResourcePolicy"
+            ]
+        },
+        "read": {
+            "permissions": [
+                "ssm:GetResourcePolicies"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "ssm:PutResourcePolicy"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "ssm:DeleteResourcePolicy"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "ssm:GetResourcePolicies"
+            ]
+        }
+    }
+}
