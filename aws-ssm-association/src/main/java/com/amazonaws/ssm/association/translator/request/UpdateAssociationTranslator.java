@@ -91,6 +91,9 @@ public class UpdateAssociationTranslator implements RequestTranslator<UpdateAsso
         simpleTypeValidator.getValidatedStringList(model.getCalendarNames())
             .ifPresent(updateAssociationRequestBuilder::calendarNames);
 
+        simpleTypeValidator.getValidatedInteger(model.getScheduleOffset())
+            .ifPresent(updateAssociationRequestBuilder::scheduleOffset);
+
         return updateAssociationRequestBuilder.build();
     }
 }

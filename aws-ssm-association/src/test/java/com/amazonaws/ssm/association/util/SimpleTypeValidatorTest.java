@@ -35,6 +35,21 @@ class SimpleTypeValidatorTest {
     }
 
     @Test
+    void getValidatedIntegerNotEmpty() {
+        final Integer inputInteger = 1;
+        final Optional<Integer> validatedInteger = simpleTypeValidator.getValidatedInteger(inputInteger);
+
+        assertThat(validatedInteger).isEqualTo(Optional.of(inputInteger));
+    }
+
+    @Test
+    void getValidatedIntegerNull() {
+        final Optional<Integer> validatedInteger = simpleTypeValidator.getValidatedInteger(null);
+
+        assertThat(validatedInteger).isEqualTo(Optional.empty());
+    }
+
+    @Test
     void getValidatedMapNotEmpty() {
         final Map<String, Integer> inputMap = Collections.singletonMap("MapKey", 32);
         final Optional<Map<String, Integer>> validatedMap = simpleTypeValidator.getValidatedMap(inputMap);

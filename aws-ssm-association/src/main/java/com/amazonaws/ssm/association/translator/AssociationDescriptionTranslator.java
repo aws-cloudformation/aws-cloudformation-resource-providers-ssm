@@ -93,6 +93,9 @@ public class AssociationDescriptionTranslator {
         simpleTypeValidator.getValidatedStringList(association.calendarNames())
             .ifPresent(model::setCalendarNames);
 
+        simpleTypeValidator.getValidatedInteger(association.scheduleOffset())
+            .ifPresent(model::setScheduleOffset);
+
         return model;
     }
 }
