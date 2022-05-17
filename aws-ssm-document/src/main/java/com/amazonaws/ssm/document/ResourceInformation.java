@@ -18,4 +18,10 @@ class ResourceInformation {
 
     @Nullable
     private final String statusInformation;
+
+    @Nullable
+    private final String latestVersion;
+
+    @Nullable
+    private final String defaultVersion;
 }

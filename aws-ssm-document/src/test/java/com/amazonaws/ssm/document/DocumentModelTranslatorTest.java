@@ -48,6 +48,7 @@ public class DocumentModelTranslatorTest {
     private static final String SAMPLE_DOCUMENT_TYPE = "type";
     private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
     private static final String SAMPLE_TARGET_TYPE = "targetType";
+    private static final Integer MAX_RESULTS = 50;
     private static final List<Tag> SAMPLE_RESOURCE_MODEL_TAGS = ImmutableList.of(
             Tag.builder().key("tagKey1").value("tagValue1").build(),
             Tag.builder().key("tagKey2").value("tagValue2").build()
