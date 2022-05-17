@@ -5,11 +5,14 @@ import software.amazon.awssdk.services.ssm.model.AutomationDefinitionVersionNotF
 import software.amazon.awssdk.services.ssm.model.DocumentAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.DocumentLimitExceededException;
 import software.amazon.awssdk.services.ssm.model.DocumentVersionLimitExceededException;
+import software.amazon.awssdk.services.ssm.model.DuplicateDocumentContentException;
+import software.amazon.awssdk.services.ssm.model.DuplicateDocumentVersionNameException;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentContentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentSchemaVersionException;
 import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException;
+import software.amazon.awssdk.services.ssm.model.InvalidNextTokenException;
 import software.amazon.awssdk.services.ssm.model.InvalidResourceIdException;
 import software.amazon.awssdk.services.ssm.model.MaxDocumentSizeExceededException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
@@ -25,6 +28,8 @@ import software.amazon.cloudformation.proxy.Logger;
 
 import lombok.NonNull;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 class DocumentExceptionTranslator {
 
@@ -45,7 +50,7 @@ class DocumentExceptionTranslator {
         return INSTANCE;
     }
 
-    RuntimeException getCfnException(@NonNull final SsmException e, @NonNull String documentName, @NonNull String operationName,
+    RuntimeException getCfnException(@NonNull final SsmException e, String documentName, @NonNull String operationName,
                                      @NonNull final Logger logger) {
 
         logger.log(String.format(EXCEPTION_METRIC_FILTER_PATTERN, operationName, e.getClass()));
@@ -60,7 +65,9 @@ class DocumentExceptionTranslator {
 
         } else if (e instanceof MaxDocumentSizeExceededException || e instanceof InvalidDocumentContentException
                 || e instanceof InvalidDocumentVersionException || e instanceof InvalidDocumentSchemaVersionException
-                || e instanceof AutomationDefinitionNotFoundException || e instanceof AutomationDefinitionVersionNotFoundException) {
+                || e instanceof AutomationDefinitionNotFoundException || e instanceof AutomationDefinitionVersionNotFoundException
+                || e instanceof DuplicateDocumentContentException || e instanceof DuplicateDocumentVersionNameException
+                || e instanceof InvalidNextTokenException) {
 
             return new CfnInvalidRequestException(e.getMessage(), e);
 
