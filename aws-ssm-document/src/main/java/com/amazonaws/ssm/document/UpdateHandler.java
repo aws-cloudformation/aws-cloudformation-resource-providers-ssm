@@ -112,7 +112,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             }
         }
 
-        if (isTrueUpdate && isUpdatableModified(model, previousModel)) { // remove
+        if (isTrueUpdate && isUpdatableModified(model, previousModel)) {
             final UpdateDocumentRequest updateDocumentRequest;
             try {
                 updateDocumentRequest = documentModelTranslator.generateUpdateDocumentRequest(model);

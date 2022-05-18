@@ -118,10 +118,10 @@ class DocumentModelTranslator {
                 .build();
     }
 
-    UpdateDocumentDefaultVersionRequest generateUpdateDocumentDefaultVersionRequest(@NonNull final String name, @NonNull final String latestVersion) {
+    UpdateDocumentDefaultVersionRequest generateUpdateDocumentDefaultVersionRequest(@NonNull final String name, @NonNull final String documentVersion) {
         return UpdateDocumentDefaultVersionRequest.builder()
                 .name(name)
-                .documentVersion(latestVersion)
+                .documentVersion(documentVersion)
                 .build();
     }
 
