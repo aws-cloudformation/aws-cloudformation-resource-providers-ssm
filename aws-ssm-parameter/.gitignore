@@ -18,3 +18,5 @@ target/
 
 # our logs
 rpdk.log
+
+sam-tests

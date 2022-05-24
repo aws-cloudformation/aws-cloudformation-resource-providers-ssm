@@ -2,208 +2,153 @@ package com.amazonaws.ssm.parameter;
 
 import com.amazonaws.AmazonServiceException;
 import org.junit.jupiter.api.AfterEach;
-import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
-import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.ProxyClient;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
+import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ProxyClient;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class DeleteHandlerTest extends AbstractTestBase {
 
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
+	@Mock
+	private AmazonWebServicesClientProxy proxy;
+	@Mock
+	private ProxyClient<SsmClient> proxyClient;
+	@Mock
+	SsmClient ssmClient;
 
-    @Mock
-    private ProxyClient<SsmClient> proxySsmClient;
+	private DeleteHandler handler;
 
-    @Mock
-    SsmClient ssmClient;
+	private ResourceModel RESOURCE_MODEL;
 
-    private DeleteHandler handler;
+	@BeforeEach
+	public void setup() {
+		handler = new DeleteHandler(ssmClient);
+		ssmClient = mock(SsmClient.class);
+		proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
+		proxyClient = MOCK_PROXY(proxy, ssmClient);
 
-    private ResourceModel RESOURCE_MODEL;
+		RESOURCE_MODEL = ResourceModel.builder()
+			.description(DESCRIPTION)
+			.name(NAME)
+			.value(VALUE)
+			.type(TYPE_STRING)
+			.tags(toResourceModelTags(TAG_SET))
+			.build();
+	}
 
-    @BeforeEach
-    public void setup() {
-        handler = new DeleteHandler();
-        ssmClient = mock(SsmClient.class);
-        proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
-        proxySsmClient = MOCK_PROXY(proxy, ssmClient);
+	@AfterEach
+	public void tear_down(org.junit.jupiter.api.TestInfo testInfo) {
+		if (!testInfo.getTags().contains("skipSdkInteraction")) {
+			verify(ssmClient, atLeastOnce()).serviceName();
+		}
+		verifyNoMoreInteractions(proxyClient.client());
+	}
 
-        RESOURCE_MODEL = ResourceModel.builder()
-                .description(DESCRIPTION)
-                .name(NAME)
-                .value(VALUE)
-                .type(TYPE_STRING)
-                .tags(TAG_SET)
-                .build();
-    }
+	@Test
+	public void handleRequest_SimpleSuccess() {
+		final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+			.clientRequestToken("token")
+			.desiredResourceTags(TAG_SET)
+			.systemTags(SYSTEM_TAGS_SET)
+			.desiredResourceState(RESOURCE_MODEL)
+			.logicalResourceIdentifier("logicalId").build();
+		final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
-    @AfterEach
-    public void post_execute() {
-        verify(ssmClient, atLeastOnce()).serviceName();
-        verifyNoMoreInteractions(proxySsmClient.client());
-    }
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+		assertThat(response.getCallbackContext()).isNull();
+		assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+		assertThat(response.getResourceModels()).isNull();
+		assertThat(response.getMessage()).isNull();
+		assertThat(response.getErrorCode()).isNull();
 
-    @Test
-    public void handleRequest_SimpleSuccess() {
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .clientRequestToken("token")
-                .desiredResourceTags(TAG_SET)
-                .systemTags(SYSTEM_TAGS_SET)
-                .desiredResourceState(RESOURCE_MODEL)
-                .logicalResourceIdentifier("logicalId").build();
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+		verify(proxyClient.client()).deleteParameter(any(DeleteParameterRequest.class));
+	}
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
 
-        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
-    }
+	@Test
+	public void handleRequest_FailWithException() {
+		//Exceptions while calling the API
+		Exception[] exceptions = {
+			ParameterNotFoundException.builder().build(),
+			// AwsServiceException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("ThrottlingException").build()).build(),
+			// AwsServiceException.builder().build(),
+			// SdkException.builder().build()
+		};
 
-    @Test
-    public void handleRequest_Failure_ParameterNotFound() {
-        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
-                .thenThrow(ParameterNotFoundException.builder().build());
+		HandlerErrorCode[] handlerErrorCodes = {
+			HandlerErrorCode.NotFound,
+			// HandlerErrorCode.Throttling,
+			// HandlerErrorCode.GeneralServiceException,
+			// HandlerErrorCode.InternalFailure,
+		};
 
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .clientRequestToken("token")
-                .desiredResourceTags(TAG_SET)
-                .systemTags(SYSTEM_TAGS_SET)
-                .desiredResourceState(RESOURCE_MODEL)
-                .logicalResourceIdentifier("logicalId").build();
+		final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+			.clientRequestToken("token")
+			.desiredResourceTags(TAG_SET)
+			.systemTags(SYSTEM_TAGS_SET)
+			.desiredResourceState(RESOURCE_MODEL)
+			.logicalResourceIdentifier("logical_id").build();
 
-        try {
-            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
-        } catch (CfnNotFoundException ex) {
-            assertThat(ex).isInstanceOf(CfnNotFoundException.class);
-        }
+		for (int i = 0; i < exceptions.length; i++) {
+			//response is empty for pre check success
+			when(proxyClient.client().deleteParameter(any(DeleteParameterRequest.class)))
+				.thenThrow(exceptions[i]);
 
-        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
-    }
+			final ProgressEvent<ResourceModel, CallbackContext> response = handler
+				.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+			assertFailureErrorCode(request, response, handlerErrorCodes[i]);
+		}
+	}
 
-    @Test
-    public void handleRequest_ThrottlingException() {
-        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
-        amazonServiceException.setStatusCode(429);
-        amazonServiceException.setErrorCode("ThrottlingException");
+	@Test
+	public void handleRequest_NonThrottlingAmazonServiceException() {
+		AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+		amazonServiceException.setStatusCode(500);
 
-        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
-                .thenThrow(amazonServiceException);
+		when(proxyClient.client().deleteParameter(any(DeleteParameterRequest.class)))
+			.thenThrow(amazonServiceException);
 
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .clientRequestToken("token")
-                .desiredResourceTags(TAG_SET)
-                .systemTags(SYSTEM_TAGS_SET)
-                .desiredResourceState(RESOURCE_MODEL)
-                .logicalResourceIdentifier("logical_id").build();
+		final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+			.clientRequestToken("token")
+			.desiredResourceTags(TAG_SET)
+			.systemTags(SYSTEM_TAGS_SET)
+			.desiredResourceState(RESOURCE_MODEL)
+			.logicalResourceIdentifier("logical_id").build();
 
-        try {
-            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
-        } catch (CfnThrottlingException ex) {
-            assertThat(ex).isInstanceOf(CfnThrottlingException.class);
-        }
+		try {
+			handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+		} catch (CfnGeneralServiceException ex) {
+			assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+		}
 
-        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
-    }
-
-    @Test
-    public void handleRequest_NonThrottlingAmazonServiceException() {
-        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
-        amazonServiceException.setStatusCode(500);
-
-        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
-                .thenThrow(amazonServiceException);
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .clientRequestToken("token")
-                .desiredResourceTags(TAG_SET)
-                .systemTags(SYSTEM_TAGS_SET)
-                .desiredResourceState(RESOURCE_MODEL)
-                .logicalResourceIdentifier("logical_id").build();
-
-        try {
-            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
-        } catch (CfnGeneralServiceException ex) {
-            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
-        }
-
-        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
-    }
-
-    @Test
-    public void handleRequest_AmazonServiceExceptionInternalServerError() {
-        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
-                .thenThrow(InternalServerErrorException.builder().build());
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .clientRequestToken("token")
-                .desiredResourceTags(TAG_SET)
-                .systemTags(SYSTEM_TAGS_SET)
-                .desiredResourceState(RESOURCE_MODEL)
-                .logicalResourceIdentifier("logical_id").build();
-
-        try {
-            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
-        } catch (CfnServiceInternalErrorException ex) {
-            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
-        }
-
-        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
-    }
-
-    @Test
-    public void handleRequest_AmazonServiceException400NonThrottlingException() {
-        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
-        amazonServiceException.setStatusCode(400);
-        amazonServiceException.setErrorCode("Invalid Input");
-
-        when(proxySsmClient.client().deleteParameter(any(DeleteParameterRequest.class)))
-                .thenThrow(amazonServiceException);
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .clientRequestToken("token")
-                .desiredResourceTags(TAG_SET)
-                .systemTags(SYSTEM_TAGS_SET)
-                .desiredResourceState(RESOURCE_MODEL)
-                .logicalResourceIdentifier("logical_id").build();
-
-        try {
-            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
-        } catch (CfnGeneralServiceException ex) {
-            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
-        }
-
-        verify(proxySsmClient.client()).deleteParameter(any(DeleteParameterRequest.class));
-    }
+		verify(proxyClient.client()).deleteParameter(any(DeleteParameterRequest.class));
+	}
 }
