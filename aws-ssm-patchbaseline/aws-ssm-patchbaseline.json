@@ -65,7 +65,8 @@
                 "maxLength": 100
             },
             "minItems": 0,
-            "maxItems": 50
+            "maxItems": 50,
+            "insertionOrder": false
         },
         "ApprovedPatches": {
             "description": "A list of explicitly approved patches for the baseline.",
@@ -77,7 +78,8 @@
                 "maxLength": 100
             },
             "minItems": 0,
-            "maxItems": 50
+            "maxItems": 50,
+            "insertionOrder": false
         },
         "RejectedPatchesAction": {
             "description": "The action for Patch Manager to take on patches included in the RejectedPackages list.",
@@ -207,7 +209,8 @@
                     "minItems": 0,
                     "maxItems": 10
                 }
-            }
+            },
+            "insertionOrder": false
         },
         "Rule": {
             "description": "Defines an approval rule for a patch baseline.",
@@ -241,7 +244,8 @@
                         "UNSPECIFIED"
                     ]
                 }
-            }
+            },
+            "insertionOrder": false
         },
         "PatchFilter": {
             "description": "Defines which patches should be included in a patch baseline.",

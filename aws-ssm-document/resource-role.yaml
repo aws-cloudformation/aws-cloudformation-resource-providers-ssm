@@ -28,10 +28,13 @@ Resources:
                 - "ssm:AddTagsToResource"
                 - "ssm:CreateDocument"
                 - "ssm:DeleteDocument"
+                - "ssm:DescribeDocument"
                 - "ssm:GetDocument"
+                - "ssm:ListDocuments"
                 - "ssm:ListTagsForResource"
                 - "ssm:RemoveTagsFromResource"
                 - "ssm:UpdateDocument"
+                - "ssm:UpdateDocumentDefaultVersion"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

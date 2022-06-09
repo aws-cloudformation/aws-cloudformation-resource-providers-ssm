@@ -74,4 +74,6 @@ public class TestsInputs {
         "calendar1",
         "calendar2"
     );
+
+    public static final Integer SCHEDULE_OFFSET = 2;
 }

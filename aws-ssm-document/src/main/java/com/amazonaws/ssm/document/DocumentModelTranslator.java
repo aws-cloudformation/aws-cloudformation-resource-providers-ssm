@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.ssm.model.Tag;
 
 import lombok.NonNull;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.UpdateDocumentDefaultVersionRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
 import javax.annotation.Nullable;
@@ -114,6 +115,13 @@ class DocumentModelTranslator {
                 .documentFormat(model.getDocumentFormat())
                 .targetType(model.getTargetType())
                 .attachments(translateAttachments(model.getAttachments()))
+                .build();
+    }
+
+    UpdateDocumentDefaultVersionRequest generateUpdateDocumentDefaultVersionRequest(@NonNull final String name, @NonNull final String documentVersion) {
+        return UpdateDocumentDefaultVersionRequest.builder()
+                .name(name)
+                .documentVersion(documentVersion)
                 .build();
     }
 
