@@ -248,6 +248,7 @@ final class Translator {
                 .syncName(resourceDataSyncItem.syncName())
                 .syncType(resourceDataSyncItem.syncType())
                 .syncSource(createSyncSource(resourceDataSyncItem.syncSource()))
+                .bucketName(resourceDataSyncItem.s3Destination().bucketName())
                 .s3Destination(createS3Destination(resourceDataSyncItem.s3Destination()))
                 .bucketRegion(resourceDataSyncItem.s3Destination() != null ? resourceDataSyncItem.s3Destination().region() : null)
                 .bucketPrefix(resourceDataSyncItem.s3Destination() != null ? resourceDataSyncItem.s3Destination().prefix() : null)
