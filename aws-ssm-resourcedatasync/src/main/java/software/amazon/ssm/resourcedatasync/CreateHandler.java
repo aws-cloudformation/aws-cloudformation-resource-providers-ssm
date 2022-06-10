@@ -70,8 +70,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         //Stabilization is the process of waiting for a resource to be in a particular (typically "success") state.
         if (!context.isCreateResourceDataSyncStabilized()) {
+            logger.log(String.format("not stabilized"));
 
             context.setCreateResourceDataSyncStabilized(isRDSStabilized(model, proxy, context, logger));
+
 
             if (!context.isCreateResourceDataSyncStabilized()) {
                 return ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -82,6 +84,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                         .build();
             }
         }
+
+
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(model)
