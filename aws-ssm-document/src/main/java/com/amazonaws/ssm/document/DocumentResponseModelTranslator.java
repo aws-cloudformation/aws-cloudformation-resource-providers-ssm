@@ -59,6 +59,8 @@ class DocumentResponseModelTranslator {
                 .resourceModel(model)
                 .status(state)
                 .statusInformation(response.document().statusInformation())
+                .latestVersion(response.document().latestVersion())
+                .defaultVersion(response.document().defaultVersion())
                 .build();
     }
 

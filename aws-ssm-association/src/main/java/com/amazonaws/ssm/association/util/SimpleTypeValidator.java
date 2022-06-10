@@ -29,6 +29,22 @@ public class SimpleTypeValidator {
     }
 
     /**
+     * Validates an input Integer and returns non-empty Optional with the same parameter
+     * if the validation is passed; otherwise, Optional.empty() is returned.
+     *
+     * @param parameter Integer parameter to validate.
+     * @return Optional with the same value as the input parameter after validation;
+     * returns Optional.empty() if the parameter is empty/null.
+     */
+    public Optional<Integer> getValidatedInteger(final Integer parameter) {
+        if (parameter == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(parameter);
+        }
+    }
+
+    /**
      * Validates an input List of string and returns non-empty Optional with the same parameter
      * if the validation is passed; otherwise, Optional.empty() is returned.
      *
