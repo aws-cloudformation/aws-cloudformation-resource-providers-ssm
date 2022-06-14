@@ -1,6 +1,7 @@
 package com.amazonaws.ssm.parameter;
 
 import com.amazonaws.AmazonServiceException;
+
 import org.apache.commons.lang3.RandomStringUtils;
 
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -52,6 +53,13 @@ public class CreateHandler extends BaseHandlerStd {
             String message = String.format("SSM Parameters of type %s cannot be created using CloudFormation", ParameterType.SECURE_STRING);
             return ProgressEvent.defaultFailureHandler(new TerminalException(message),
                     HandlerErrorCode.InvalidRequest);
+        }
+
+        // To maintain backwards compatibility, we are intentionally breaking uluru contract to return AlreadyExists exception if the
+        // resource already existed before the create request, https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
+        if(preExistenceCheck(model, proxyClient)) {
+            logger.log("Parameter already exists with the same configuration, returning success");
+            return ProgressEvent.defaultSuccessHandler(model);
         }
 
         Map<String, String> consolidatedTagList = new HashMap<>();
