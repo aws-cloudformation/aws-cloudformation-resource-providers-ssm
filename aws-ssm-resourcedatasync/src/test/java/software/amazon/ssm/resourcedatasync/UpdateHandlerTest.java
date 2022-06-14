@@ -42,6 +42,7 @@ public class UpdateHandlerTest extends TestBase {
         proxy = mock(AmazonWebServicesClientProxy.class);
         logger = mock(Logger.class);
         handler = new UpdateHandler();
+
     }
 
     @Test
