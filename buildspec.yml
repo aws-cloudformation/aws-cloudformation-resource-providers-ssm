@@ -5,9 +5,9 @@ phases:
       java: openjdk8
       python: 3.7
     commands:
-      - pip install --upgrade 'six==1.16.0'
-      - pip install pre-commit cloudformation-cli-java-plugin
-      - pip install pyyaml --upgrade 'pyyaml < 6.0'
+      - pip install --upgrade 'six~=1.15'
+      - pip install --upgrade 'pyyaml<6.0'
+      - pip install pre-commit cloudformation-cli cloudformation-cli-java-plugin
   build:
     commands:
       # pre-build check for commit hooks
