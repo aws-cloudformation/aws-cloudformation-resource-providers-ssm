@@ -1,5 +1,8 @@
 package software.amazon.ssm.resourcedatasync;
 
+import software.amazon.awssdk.services.ssm.model.ResourceDataSyncItem;
+import software.amazon.awssdk.services.ssm.model.ResourceDataSyncS3Destination;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,6 +68,14 @@ public class TestBase {
                 .build();
     }
 
+    ResourceModel createSyncToDestinationRDSModelTopLevelConfig() {
+        return ResourceModel.builder()
+                .syncName(RESOURCE_DATA_SYNC_NAME)
+                .bucketName(BUCKET_NAME)
+                .bucketRegion(BUCKET_REGION)
+                .build();
+    }
+
     ResourceModel createSyncFromSourceRDSModel(SyncSource syncSource) {
         return ResourceModel.builder()
                 .syncName(RESOURCE_DATA_SYNC_NAME)
@@ -94,5 +105,19 @@ public class TestBase {
                 .sourceRegions(SOURCE_REGIONS)
                 .includeFutureRegions(true)
                 .build();
+    }
+
+    ResourceDataSyncItem createSyncToDestinationRDSItem() {
+        return ResourceDataSyncItem.builder()
+                .syncName(RESOURCE_DATA_SYNC_NAME)
+                .syncType(SYNC_TYPE_SYNC_TO_DESTINATION)
+                .s3Destination(
+                        ResourceDataSyncS3Destination.builder()
+                                .region(BUCKET_REGION)
+                                .prefix(BUCKET_PREFIX)
+                                .bucketName(BUCKET_NAME)
+                                .syncFormat(SYNC_FORMAT)
+                                .build()
+                ).build();
     }
 }

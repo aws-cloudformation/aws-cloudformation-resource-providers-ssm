@@ -249,6 +249,7 @@ final class Translator {
                 .syncType(resourceDataSyncItem.syncType())
                 .syncSource(createSyncSource(resourceDataSyncItem.syncSource()))
                 .s3Destination(createS3Destination(resourceDataSyncItem.s3Destination()))
+                .bucketName(resourceDataSyncItem.s3Destination() != null ? resourceDataSyncItem.s3Destination().bucketName() : null)
                 .bucketRegion(resourceDataSyncItem.s3Destination() != null ? resourceDataSyncItem.s3Destination().region() : null)
                 .bucketPrefix(resourceDataSyncItem.s3Destination() != null ? resourceDataSyncItem.s3Destination().prefix() : null)
                 .kMSKeyArn(resourceDataSyncItem.s3Destination() != null ? resourceDataSyncItem.s3Destination().awskmsKeyARN() : null)
