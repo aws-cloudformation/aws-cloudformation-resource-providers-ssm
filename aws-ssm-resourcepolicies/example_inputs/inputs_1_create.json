@@ -1,0 +1,6 @@
+{
+    "Policy":"{\n\"Version\": \"2012-10-17\",\n \"Statement\": [{\n \"Sid\": \"AllowOpsCenterBetaForGammaOpsItemsForResourceTag\",\n \"Effect\":\"Allow\",\n \"Principal\": {\n \"AWS\": \"AROAW5FLVZ5XP2JIMORZW\"\n},\n\"Action\": [\n \"ssm:CreateOpsItem\",\n\"ssm:AddTagsToResource\",\n\"ssm:UpdateOpsItem\",\n\"ssm:GetOpsItem\"\n],\n\"Resource\": [\n\"arn:aws:ssm:us-east-1:716399896663:opsitem/*\",\n\"arn:aws:ssm:us-east-1:716399896663:opsitemgroup/default\"],\n\"Condition\": {\n\"StringEquals\": {\n\"aws:ResourceTag/WebFrontEnd\": \"TRUE\"\n}\n}\n}]\n}",
+    "ResourceArn": "arn:aws:ssm:us-east-1:526204198394:opsitemgroup/default",
+    "PolicyId": "",
+    "PolicyHash": ""
+}
