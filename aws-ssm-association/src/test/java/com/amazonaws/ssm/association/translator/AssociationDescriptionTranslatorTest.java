@@ -33,6 +33,7 @@ import static com.amazonaws.ssm.association.TestsInputs.MODEL_OUTPUT_LOCATION;
 import static com.amazonaws.ssm.association.TestsInputs.MODEL_TARGETS;
 import static com.amazonaws.ssm.association.TestsInputs.PARAMETERS;
 import static com.amazonaws.ssm.association.TestsInputs.SCHEDULE_EXPRESSION;
+import static com.amazonaws.ssm.association.TestsInputs.SCHEDULE_OFFSET;
 import static com.amazonaws.ssm.association.TestsInputs.SERVICE_OUTPUT_LOCATION;
 import static com.amazonaws.ssm.association.TestsInputs.SERVICE_TARGETS;
 import static com.amazonaws.ssm.association.TestsInputs.SYNC_COMPLIANCE;
@@ -91,6 +92,7 @@ class AssociationDescriptionTranslatorTest {
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
                 .calendarNames(CALENDAR_NAMES)
+                .scheduleOffset(SCHEDULE_OFFSET)
                 .build();
 
         final ResourceModel resultModel =
@@ -114,6 +116,7 @@ class AssociationDescriptionTranslatorTest {
                 .syncCompliance(SYNC_COMPLIANCE)
                 .applyOnlyAtCronInterval(true)
                 .calendarNames(CALENDAR_NAMES)
+                .scheduleOffset(SCHEDULE_OFFSET)
                 .build();
 
         assertThat(resultModel).isEqualTo(expectedModel);
