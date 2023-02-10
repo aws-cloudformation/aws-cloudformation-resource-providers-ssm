@@ -112,6 +112,7 @@ public class UpdateHandlerTest {
 
     private static final ResourceStatus RESOURCE_MODEL_ACTIVE_STATE = ResourceStatus.ACTIVE;
     private static final ResourceStatus RESOURCE_MODEL_UPDATING_STATE = ResourceStatus.UPDATING;
+    private static final ResourceStatus RESOURCE_MODEL_CREATING_STATE = ResourceStatus.CREATING;
     private static final ResourceStatus RESOURCE_MODEL_FAILED_STATE = ResourceStatus.FAILED;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
     private static final String OPERATION_NAME = "AWS::SSM::UpdateDocument";
@@ -457,6 +458,55 @@ public class UpdateHandlerTest {
 
         final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(RESOURCE_MODEL_UPDATING_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
+        final CallbackContext expectedCallbackContext = CallbackContext.builder()
+                .eventStarted(true)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES-1)
+                .build();
+        final GetProgressResponse getProgressResponse = GetProgressResponse.builder()
+                .callbackContext(expectedCallbackContext)
+                .resourceInformation(expectedResourceInformation)
+                .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(expectedModel)
+                .status(OperationStatus.IN_PROGRESS)
+                .message(SAMPLE_STATUS_INFO)
+                .callbackContext(expectedCallbackContext)
+                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .build();
+
+        when(progressUpdater.getEventProgress(expectedModel, inProgressCallbackContext, ssmClient, proxy, logger))
+                .thenReturn(getProgressResponse);
+
+        final ResourceHandlerRequest<ResourceModel> request = buildRequest(previousModel, expectedModel);
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = unitUnderTest.handleRequest(proxy, request, inProgressCallbackContext, logger);
+
+        Assertions.assertEquals(expectedResponse, response);
+    }
+
+    @Test
+    public void testHandleRequest_StabilizationRetrieverReturnsCreatingStatus_VerifyResponse() {
+        final CallbackContext inProgressCallbackContext = CallbackContext.builder()
+                .eventStarted(true)
+                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_UPDATE_POLL_RETRIES)
+                .build();
+
+        final ResourceModel expectedModel = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .updateMethod(NEW_VERSION)
+                .build();
+        final ResourceModel previousModel = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
+                .updateMethod(NEW_VERSION)
+                .build();
+
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
+                .status(RESOURCE_MODEL_CREATING_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
                 .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
