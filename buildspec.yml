@@ -6,6 +6,8 @@ phases:
       python: 3.7
     commands:
       - pip install --upgrade 'six==1.16.0'
+      - pip install --upgrade 'six==4.2.0'
+      - pip install --upgrade 'virtualenv==20/0/18'
       - pip install pre-commit cloudformation-cli-java-plugin
       - pip install pyyaml --upgrade
       - pip install boto3 --upgrade
