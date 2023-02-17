@@ -201,6 +201,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         switch (status) {
             case ACTIVE:
                 return OperationStatus.SUCCESS;
+            case CREATING:
             case UPDATING:
                 return OperationStatus.IN_PROGRESS;
             default:
