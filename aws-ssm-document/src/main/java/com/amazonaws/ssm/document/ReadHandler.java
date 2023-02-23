@@ -6,6 +6,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import java.util.Map;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.SsmException;
@@ -22,6 +24,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 public class ReadHandler extends BaseHandler<CallbackContext> {
 
     private static final String OPERATION_NAME = "AWS::SSM::GetDocument";
+    private static final String ACCESS_DENIED_ERROR_CODE = "AccessDeniedException";
 
     @NonNull
     private final DocumentModelTranslator documentModelTranslator;
@@ -60,12 +63,28 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         final GetDocumentRequest getDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
 
+        final DescribeDocumentRequest describeDocumentRequest = documentModelTranslator.generateDescribeDocumentRequest(model);
+
         try {
             final GetDocumentResponse getDocumentResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
 
             final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
             final ResourceInformation resourceInformation =
-                documentResponseModelTranslator.generateResourceInformation(getDocumentResponse, documentTags);
+                    documentResponseModelTranslator.generateResourceInformation(getDocumentResponse, documentTags);
+
+            try {
+                final DescribeDocumentResponse describeDocumentResponse = proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
+
+                resourceInformation.getResourceModel().setTargetType(describeDocumentResponse.document().targetType());
+                logger.log(String.format("Attempting target type: " + describeDocumentResponse.document().targetType()));
+                logger.log(String.format("Appended target type: " + resourceInformation.getResourceModel().getTargetType()));
+            } catch(SsmException e) {
+                if (!ACCESS_DENIED_ERROR_CODE.equalsIgnoreCase(e.awsErrorDetails().errorCode())) {
+                    throw e;
+                }
+                logger.log(String.format("Soft fail describe document in ReadHandler due to insufficient permissions %s",
+                        describeDocumentRequest.name()));
+            }
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .resourceModel(resourceInformation.getResourceModel())

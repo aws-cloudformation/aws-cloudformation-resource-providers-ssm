@@ -1,0 +1,21 @@
+{
+  "CreateInputs": {
+    "Name": "commandTest1",
+    "Content": "{\"schemaVersion\":\"2.2\",\"description\":\"Command Document Example Create JSON Template\",\"mainSteps\":[{\"action\":\"aws:runPowerShellScript\",\"name\":\"example\",\"inputs\":{\"runCommand\":[\"Write-Output\"]}}]}",
+    "DocumentType": "Command",
+    "DocumentFormat": "JSON",
+    "Tags": [
+      {
+        "Key": "ContractTestKey",
+        "Value": "ContractTestValue"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Tags/0/Value",
+      "value": "Test2"
+    }
+  ]
+}

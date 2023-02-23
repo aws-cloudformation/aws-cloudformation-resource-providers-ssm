@@ -51,6 +51,7 @@ class DocumentResponseModelTranslator {
                 .documentType(response.document().documentTypeAsString())
                 .tags(translateToResourceModelTags(documentTagMap))
                 .requires(translateRequires(response))
+                .targetType(response.document().targetType())
                 .build();
 
         final ResourceStatus state = translateStatus(response.document().status());
