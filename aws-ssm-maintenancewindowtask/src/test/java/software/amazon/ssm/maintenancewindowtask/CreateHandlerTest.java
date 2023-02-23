@@ -27,7 +27,7 @@ import software.amazon.ssm.maintenancewindowtask.util.ResourceHandlerRequestToSt
 
 import java.util.function.Function;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
