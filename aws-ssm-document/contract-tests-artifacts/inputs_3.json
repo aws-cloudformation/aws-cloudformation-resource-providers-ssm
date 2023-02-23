@@ -1,13 +1,15 @@
 {
-  "CreateInputs": {
-    "Name": "appConfigTest1",
-    "Content": "{\"whitelist\":[{\"name\":\"user1\",\"email\":\"user1@email.com\",\"location\":\"virginia\"},{\"name\":\"user2\",\"email\":\"{VersionName}@email.com\",\"location\":\"washington\"}]}",
-    "DocumentType": "ApplicationConfiguration",
-    "DocumentFormat": "JSON",
-    "Requires": [{
-      "Name": "{{awsssmdocumentcto2}}",
-      "Version": "1"
-    }]
-  },
-  "PatchInputs": []
+    "CreateInputs": {
+        "Name": "appConfigTest1",
+        "Content": "{\"whitelist\":[{\"name\":\"user1\",\"email\":\"user1@email.com\",\"location\":\"virginia\"},{\"name\":\"user2\",\"email\":\"{VersionName}@email.com\",\"location\":\"washington\"}]}",
+        "DocumentType": "ApplicationConfiguration",
+        "DocumentFormat": "JSON",
+        "Requires": [
+            {
+                "Name": "{{awsssmdocumentcto2}}",
+                "Version": "1"
+            }
+        ]
+    },
+    "PatchInputs": []
 }

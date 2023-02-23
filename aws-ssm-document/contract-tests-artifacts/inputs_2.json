@@ -1,11 +1,11 @@
 {
-  "CreateInputs": {
-    "Name": "automationTest1",
-    "Content": "{\"description\": \"Automation Document Example JSON Template\",\"schemaVersion\": \"0.3\",\"assumeRole\":\"{{AutomationAssumeRole }}\",\"parameters\":{\"AutomationAssumeRole\":{\"type\":\"String\",\"description\":\"(Optional) The ARN of the role that allows Automation to perform the actions on your behalf.\",\"default\": \"\"}},\"mainSteps\":[{\"name\": \"slp\",\"action\":\"aws:sleep\",\"inputs\":{\"Duration\":\"PT3S\"}}]}",
-    "DocumentType": "Automation",
-    "DocumentFormat": "JSON",
-    "TargetType": "/AWS::EC2::Volume",
-    "VersionName": "version1"
-  },
-  "PatchInputs": []
+    "CreateInputs": {
+        "Name": "automationTest1",
+        "Content": "{\"description\": \"Automation Document Example JSON Template\",\"schemaVersion\": \"0.3\",\"assumeRole\":\"{{AutomationAssumeRole }}\",\"parameters\":{\"AutomationAssumeRole\":{\"type\":\"String\",\"description\":\"(Optional) The ARN of the role that allows Automation to perform the actions on your behalf.\",\"default\": \"\"}},\"mainSteps\":[{\"name\": \"slp\",\"action\":\"aws:sleep\",\"inputs\":{\"Duration\":\"PT3S\"}}]}",
+        "DocumentType": "Automation",
+        "DocumentFormat": "JSON",
+        "TargetType": "/AWS::EC2::Volume",
+        "VersionName": "version1"
+    },
+    "PatchInputs": []
 }
