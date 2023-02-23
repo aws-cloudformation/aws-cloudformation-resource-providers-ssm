@@ -76,8 +76,6 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                 final DescribeDocumentResponse describeDocumentResponse = proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
 
                 resourceInformation.getResourceModel().setTargetType(describeDocumentResponse.document().targetType());
-                logger.log(String.format("Attempting target type: " + describeDocumentResponse.document().targetType()));
-                logger.log(String.format("Appended target type: " + resourceInformation.getResourceModel().getTargetType()));
             } catch(SsmException e) {
                 if (!ACCESS_DENIED_ERROR_CODE.equalsIgnoreCase(e.awsErrorDetails().errorCode())) {
                     throw e;
