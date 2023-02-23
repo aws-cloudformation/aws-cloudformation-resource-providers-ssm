@@ -10,6 +10,7 @@ phases:
       - pip install pre-commit cloudformation-cli-java-plugin
       - pip install pyyaml --upgrade
       - pip install boto3 --upgrade
+      - pip install aws-sam-cli --upgrade
   build:
     commands:
       # pre-build check for commit hooks
