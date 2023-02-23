@@ -12,4 +12,3 @@ Outputs:
     Value: !Ref RequiresDoc
     Export:
       Name: awsssmdocumentcto2
-
