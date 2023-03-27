@@ -151,9 +151,6 @@
     "readOnlyProperties": [
         "/properties/SyncName"
     ],
-    "tagging": {
-        "taggable": "true"
-    },
     "handlers": {
         "create": {
             "permissions": [
