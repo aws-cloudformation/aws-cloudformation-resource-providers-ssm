@@ -181,6 +181,9 @@
     "primaryIdentifier": [
         "/properties/Name"
     ],
+    "tagging": {
+        "taggable": true
+    },
     "handlers": {
         "create": {
             "permissions": [

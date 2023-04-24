@@ -9,6 +9,7 @@ phases:
       - pip install aws-sam-cli --upgrade
       - pip install --upgrade 'six==1.16.0'
       - pip install --upgrade 'requests>=2.26.0'
+      - pip install --upgrade 'urllib3>=1.26.0'
       - pip install pre-commit cloudformation-cli-java-plugin
       - pip install pyyaml --upgrade
       - pip install boto3 --upgrade
