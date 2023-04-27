@@ -3,7 +3,11 @@ package com.amazonaws.ssm.document;
 import com.amazonaws.ssm.document.tags.TagReader;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeDocumentResponse;
+import software.amazon.awssdk.services.ssm.model.DocumentDescription;
 import software.amazon.awssdk.services.ssm.model.DocumentStatus;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
@@ -36,6 +40,7 @@ public class ReadHandlerTest {
     private static final String OPERATION_NAME = "AWS::SSM::GetDocument";
     private static final String SAMPLE_ACCOUNT_ID = "123456";
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
+    private static final String SAMPLE_TARGET_TYPE = "/AWS::EC2::Volume";
     private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
             "schemaVersion", "1.2",
             "description", "Join instances to an AWS Directory Service domain."
@@ -56,8 +61,24 @@ public class ReadHandlerTest {
     final GetDocumentResponse SAMPLE_GET_DOCUMENT_RESPONSE = GetDocumentResponse.builder()
             .name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE)
             .build();
+    private static final DescribeDocumentRequest SAMPLE_DESCRIBE_DOCUMENT_REQUEST = DescribeDocumentRequest.builder()
+            .name(SAMPLE_DOCUMENT_NAME)
+            .build();
+    final DescribeDocumentResponse SAMPLE_DESCRIBE_DOCUMENT_RESPONSE = DescribeDocumentResponse.builder()
+            .document(DocumentDescription.builder()
+                    .name(SAMPLE_DOCUMENT_NAME)
+                    .targetType(SAMPLE_TARGET_TYPE)
+                    .status(DocumentStatus.ACTIVE)
+                    .build())
+            .build();
     private static final ResourceStatus SAMPLE_RESOURCE_STATE = ResourceStatus.ACTIVE;
     private static final String SAMPLE_STATUS_INFO = "resource status info";
+
+    private static final SsmException ACCESS_DENIED_EXCEPTION = (SsmException) SsmException.builder()
+            .awsErrorDetails(AwsErrorDetails.builder()
+                    .errorCode("AccessDeniedException")
+                    .build())
+            .build();
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -99,7 +120,10 @@ public class ReadHandlerTest {
 
     @Test
     public void testHandleRequest_ReadSuccess_verifyResult() {
-        final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceModel expectedModel = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .targetType(SAMPLE_TARGET_TYPE).build();
         final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
                 .status(SAMPLE_RESOURCE_STATE)
                 .statusInformation(SAMPLE_STATUS_INFO)
@@ -110,7 +134,9 @@ public class ReadHandlerTest {
                 .build();
 
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_RESPONSE);
         when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
         when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE, SAMPLE_TAG_MAP))
             .thenReturn(expectedResourceInformation);
@@ -123,9 +149,49 @@ public class ReadHandlerTest {
     }
 
     @Test
-    public void testHandleRequest_ReadThrowsSsmException_verifyExceptionReturned() {
+    public void testHandleRequest_DescribeDocumentAccessDeniedSoftFail_verifyResult() {
+        final ResourceModel expectedModel = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
+                .status(SAMPLE_RESOURCE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
+        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(expectedModel)
+                .status(OperationStatus.SUCCESS)
+                .build();
+
+        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
+        when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE, SAMPLE_TAG_MAP))
+                .thenReturn(expectedResourceInformation);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
+
+        Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+    }
+
+    @Test
+    public void testHandleRequest_GetDocumentThrowsSsmException_verifyExceptionReturned() {
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
+
+        Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+    }
+
+    @Test
+    public void testHandleRequest_DescribeThrowsSsmException_verifyExceptionReturned() {
+        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));

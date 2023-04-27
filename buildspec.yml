@@ -5,6 +5,8 @@ phases:
       java: openjdk8
       python: 3.7
     commands:
+      - pip install --upgrade pip
+      - pip install aws-sam-cli --upgrade
       - pip install --upgrade 'six==1.16.0'
       - pip install --upgrade 'requests>=2.26.0'
       - pip install --upgrade 'urllib3>=1.26.0'

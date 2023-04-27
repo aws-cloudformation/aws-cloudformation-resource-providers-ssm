@@ -1,0 +1,14 @@
+Resources:
+  RequiresDoc:
+    Type: AWS::SSM::Document
+    Properties:
+      Content: "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"title\":\"WhitelistingTemplate\",\"description\":\"Schema for Whitelisting {VersionName} Template\",\"additionalProperties\":false,\"required\":[\"whitelist\"],\"definitions\":{\"identityAttribute\":{\"type\":\"string\",\"pattern\":\"^(.*?)$\"},\"whitelist\":{\"type\":\"array\",\"uniqueItems\":true,\"items\":{\"type\":\"object\",\"patternProperties\":{\"^[0-9a-zA-Z][0-9a-zA-Z_.]{1,128}?$\":{\"$ref\":\"#/definitions/identityAttribute\"}}}}},\"properties\":{\"whitelist\":{\"$ref\":\"#/definitions/whitelist\"}}}"
+      DocumentType: 'ApplicationConfigurationSchema'
+      DocumentFormat: "JSON"
+
+Outputs:
+  TemplateDocument:
+    Description: "template document"
+    Value: !Ref RequiresDoc
+    Export:
+      Name: awsssmdocumentcto2
