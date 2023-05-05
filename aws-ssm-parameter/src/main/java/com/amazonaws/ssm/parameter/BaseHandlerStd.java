@@ -1,9 +1,12 @@
 package com.amazonaws.ssm.parameter;
 
+import com.amazonaws.util.CollectionUtils;
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
+import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -54,6 +57,27 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     .build();
         }
     }
+
+    protected boolean preExistenceCheck(final ResourceModel resourceModel,
+                              final ProxyClient<SsmClient> proxyClient) {
+        final GetParametersResponse getParametersResponse;
+        try {
+            getParametersResponse = proxyClient.injectCredentialsAndInvokeV2(Translator.getParametersRequest(resourceModel), proxyClient.client()::getParameters);
+        } catch (final InternalServerErrorException exception) {
+            return false;
+        }
+
+        Parameter parameter = Parameter.builder().build();
+        if (!CollectionUtils.isNullOrEmpty(getParametersResponse.parameters())) {
+            parameter = getParametersResponse.parameters().get(0);
+        }
+        return new EqualsBuilder()
+                .append(resourceModel.getName(), parameter.name())
+                .append(resourceModel.getType(), parameter.typeAsString())
+                .append(resourceModel.getValue(), parameter.value())
+                .build();
+    }
+
 
     /**
      * If your resource requires some form of stabilization (e.g. service does not provide strong

@@ -1,8 +1,18 @@
 package com.amazonaws.ssm.parameter;
 
 import com.amazonaws.AmazonServiceException;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+
+import java.time.Duration;
+
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
@@ -23,19 +33,13 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.OperationStatus;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Duration;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -100,6 +104,9 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
                 .logicalResourceIdentifier("logicalId").build();
+
+        handler = Mockito.spy(handler);
+        doReturn(Boolean.FALSE).when(handler).preExistenceCheck(any(), any());
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
         assertThat(response).isNotNull();
@@ -112,6 +119,39 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_WithParameterAlreadyExistingOutOfBandWithSameConfiguration() {
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logicalId").build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client(), times(0)).putParameter(any(PutParameterRequest.class));
+        verify(proxySsmClient.client(), times(1)).getParameters(any(GetParametersRequest.class));
+        verify(ssmClient, never()).serviceName();
     }
 
     @Test
@@ -257,6 +297,9 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .build();
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
 
+        handler = Mockito.spy(handler);
+        doReturn(Boolean.FALSE).when(handler).preExistenceCheck(any(), any());
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
@@ -286,6 +329,9 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(amazonServiceException);
 
+        handler = Mockito.spy(handler);
+        doReturn(Boolean.FALSE).when(handler).preExistenceCheck(any(), any());
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
@@ -307,6 +353,8 @@ public class CreateHandlerTest extends AbstractTestBase {
     public void handleRequest_ParameterAlreadyExistsException() {
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(ParameterAlreadyExistsException.builder().build());
+        handler = Mockito.spy(handler);
+        doReturn(Boolean.FALSE).when(handler).preExistenceCheck(any(), any());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -332,6 +380,9 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(amazonServiceException);
+
+        handler = Mockito.spy(handler);
+        doReturn(Boolean.FALSE).when(handler).preExistenceCheck(any(), any());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
@@ -359,6 +410,9 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(amazonServiceException);
 
+        handler = Mockito.spy(handler);
+        doReturn(Boolean.FALSE).when(handler).preExistenceCheck(any(), any());
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
@@ -380,6 +434,9 @@ public class CreateHandlerTest extends AbstractTestBase {
     public void handleRequest_AmazonServiceExceptionInternalServerError() {
         when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
                 .thenThrow(InternalServerErrorException.builder().build());
+
+        handler = Mockito.spy(handler);
+        doReturn(Boolean.FALSE).when(handler).preExistenceCheck(any(), any());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
