@@ -4,15 +4,22 @@ import com.amazonaws.AmazonServiceException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
+import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
+import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
+import software.amazon.awssdk.services.ssm.model.ParameterInlinePolicy;
+import software.amazon.awssdk.services.ssm.model.ParameterTier;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
-import software.amazon.awssdk.services.ssm.model.ParameterTier;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
@@ -30,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -87,6 +95,19 @@ public class CreateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
+                .parameters(Collections.singletonList(ParameterMetadata.builder()
+                        .name("PARAMETER_NAME")
+                        .description("description")
+                        .tier(ParameterTier.STANDARD)
+                        .allowedPattern("pattern")
+                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
+                        .build()))
+                .build();
+        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
+                .thenReturn(describeParametersResponse);
+        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
+        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
@@ -153,6 +174,19 @@ public class CreateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
+                .parameters(Collections.singletonList(ParameterMetadata.builder()
+                        .name("PARAMETER_NAME")
+                        .description("description")
+                        .tier(ParameterTier.STANDARD)
+                        .allowedPattern("pattern")
+                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
+                        .build()))
+                .build();
+        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
+                .thenReturn(describeParametersResponse);
+        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
+        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
@@ -197,6 +231,19 @@ public class CreateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
+                .parameters(Collections.singletonList(ParameterMetadata.builder()
+                        .name("PARAMETER_NAME")
+                        .description("description")
+                        .tier(ParameterTier.STANDARD)
+                        .allowedPattern("pattern")
+                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
+                        .build()))
+                .build();
+        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
+                .thenReturn(describeParametersResponse);
+        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
+        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
@@ -250,6 +297,19 @@ public class CreateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
+                .parameters(Collections.singletonList(ParameterMetadata.builder()
+                        .name("PARAMETER_NAME")
+                        .description("description")
+                        .tier(ParameterTier.STANDARD)
+                        .allowedPattern("pattern")
+                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
+                        .build()))
+                .build();
+        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
+                .thenReturn(describeParametersResponse);
+        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
+        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
@@ -319,6 +379,28 @@ public class CreateHandlerTest extends AbstractTestBase {
             handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
         } catch (CfnAlreadyExistsException ex) {
             assertThat(ex).isInstanceOf(CfnAlreadyExistsException.class);
+        }
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_IllegalArgumentException() {
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(new IllegalArgumentException("Invalid request"));
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnInvalidRequestException ex) {
+            assertThat(ex).isInstanceOf(CfnInvalidRequestException.class);
         }
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));

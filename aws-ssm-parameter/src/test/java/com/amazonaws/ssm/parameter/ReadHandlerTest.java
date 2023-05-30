@@ -2,10 +2,17 @@ package com.amazonaws.ssm.parameter;
 
 import org.junit.jupiter.api.AfterEach;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
+import software.amazon.awssdk.services.ssm.model.DescribeParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
+import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
+import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterInlinePolicy;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
+import software.amazon.awssdk.services.ssm.model.ParameterTier;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -21,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,10 +72,23 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .parameters(Parameter.builder()
                         .name(NAME)
                         .type(TYPE_STRING)
+                        .dataType(TYPE_STRING)
                         .value(VALUE).build())
                 .build();
+        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
+                .parameters(Collections.singletonList(ParameterMetadata.builder()
+                        .name("PARAMETER_NAME")
+                        .description("description")
+                        .tier(ParameterTier.STANDARD)
+                        .allowedPattern("pattern")
+                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
+                        .build()))
+                .build();
+        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
+        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
+        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
+                .thenReturn(describeParametersResponse);
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(ResourceModel.builder()
                         .build())

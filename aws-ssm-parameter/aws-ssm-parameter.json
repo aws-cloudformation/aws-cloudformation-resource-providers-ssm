@@ -78,11 +78,6 @@
     "primaryIdentifier": [
         "/properties/Name"
     ],
-    "readOnlyProperties": [
-        "/properties/Name",
-        "/properties/Type",
-        "/properties/Value"
-    ],
     "handlers": {
         "create": {
             "permissions": [

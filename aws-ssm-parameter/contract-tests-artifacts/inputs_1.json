@@ -1,0 +1,22 @@
+{
+    "CreateInputs": {
+        "Type": "String",
+        "Value": "Contract Test Create value",
+        "Name": "ContractTestParameter",
+        "Policies": "[{\"Type\":\"Expiration\",\"Version\":\"1.0\",\"Attributes\":{\"Timestamp\":\"3018-09-01T12:00:15Z\"}}]",
+        "Tier": "Advanced",
+        "Description": "Parameter description",
+        "AllowedPattern": ".*",
+        "DataType": "text",
+        "Tags": {
+            "someTagKey": "someTagValue"
+        }
+    },
+    "PatchInputs": [
+        {
+            "op": "replace",
+            "path": "/Value",
+            "value": "Contract Test Update value"
+        }
+    ]
+}

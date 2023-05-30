@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.Tag;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
@@ -45,6 +46,7 @@ public class UpdateHandler extends BaseHandlerStd {
             final Logger logger) {
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
+        TagHelper tagHelper = new TagHelper();
 
         if(model.getType().equalsIgnoreCase(ParameterType.SECURE_STRING.toString())) {
             String message = String.format("SSM Parameters of type %s cannot be updated using CloudFormation", ParameterType.SECURE_STRING);
@@ -52,24 +54,85 @@ public class UpdateHandler extends BaseHandlerStd {
                     HandlerErrorCode.InvalidRequest);
         }
 
-        return ProgressEvent.progress(model, callbackContext)
-                // First validate the resource actually exists per the contract requirements
-                // https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
-                .then(progress ->
-                        proxy.initiate("aws-ssm-parameter::validate-resource-exists", proxyClient, model, callbackContext)
-                                .translateToServiceRequest(Translator::getParametersRequest)
-                                .makeServiceCall(this::validateResourceExists)
-                                .progress())
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.progress(model, callbackContext);
 
-                .then(progress ->
-                        proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
-                                .translateToServiceRequest(Translator::updatePutParameterRequest)
-                                .backoffDelay(getBackOffDelay(model))
-                                .makeServiceCall(this::updateResource)
-                                .stabilize(BaseHandlerStd::stabilize)
-                                .progress())
-                .then(progress -> handleTagging(proxy, proxyClient, progress, model, request.getDesiredResourceTags(), request.getPreviousResourceTags()))
-                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+        if (TagHelper.shouldUpdateTags(request)) {
+            Map<String, String> previousTag = TagHelper.getPreviouslyAttachedTags(request);
+            Map<String, String> newTag = TagHelper.getNewDesiredTags(request);
+            Map<String, String> tagsToAdd = TagHelper.generateTagsToAdd(previousTag, newTag);
+            Set<String> tagsToRemove = TagHelper.generateTagsToRemove(previousTag, newTag);
+            if (tagsToAdd != null && tagsToAdd.size() > 0) {
+                progressEvent = progressEvent
+                        .then(progress -> tagHelper.tagResource(proxy, proxyClient, model, request, callbackContext, tagsToAdd, logger));
+            }
+            if (tagsToRemove != null && tagsToRemove.size() > 0) {
+                progressEvent = progressEvent
+                        .then(progress -> tagHelper.untagResource(proxy, proxyClient, model, request, callbackContext, tagsToRemove, logger));
+            }
+        }
+
+        // Call PutParameter only if previousResourceProperties is not the same as currentResourceProperties
+        // Reference ticket - https://t.corp.amazon.com/D61282592/communication
+        // First validate the resource actually exists per the contract requirements
+        // https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
+        if (!areResourceModelSame(request.getDesiredResourceState(), request.getPreviousResourceState())) {
+            progressEvent = progressEvent
+                    .then(progress ->
+                            proxy.initiate("aws-ssm-parameter::validate-resource-exists", proxyClient, model, callbackContext)
+                                    .translateToServiceRequest(Translator::getParametersRequest)
+                                    .makeServiceCall(this::validateResourceExists)
+                                    .progress())
+
+                    .then(progress ->
+                            proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
+                                    .translateToServiceRequest(Translator::updatePutParameterRequest)
+                                    .backoffDelay(getBackOffDelay(model))
+                                    .makeServiceCall(this::updateResource)
+                                    .stabilize(BaseHandlerStd::stabilize)
+                                    .progress());
+        }
+
+        return progressEvent.then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+    }
+
+    /**
+     * Helper method to check if the previous and current resource model are the same or not except tags.
+     * @param currentResourceModel currentResourceModel
+     * @param previousResourceModel previousResourceModel
+     * @return boolean indicating if previous and current resource model are the same or not
+     */
+    private boolean areResourceModelSame(final ResourceModel currentResourceModel,
+                                         final ResourceModel previousResourceModel) {
+        if (previousResourceModel == null) {
+            return false;
+        }
+        if (!currentResourceModel.getType().equals(previousResourceModel.getType())) {
+            return false;
+        }
+        if (!currentResourceModel.getValue().equals(previousResourceModel.getValue())) {
+            return false;
+        }
+        if ((currentResourceModel.getDescription() == null && previousResourceModel.getDescription() != null) ||
+                (currentResourceModel.getDescription() != null && !currentResourceModel.getDescription().equals(previousResourceModel.getDescription()))) {
+            return false;
+        }
+        if ((currentResourceModel.getPolicies() == null && previousResourceModel.getPolicies() != null) ||
+                (currentResourceModel.getPolicies() != null && !currentResourceModel.getPolicies().equals(previousResourceModel.getPolicies()))) {
+            return false;
+        }
+        if ((currentResourceModel.getAllowedPattern() == null && previousResourceModel.getAllowedPattern() != null) ||
+                (currentResourceModel.getAllowedPattern() != null && !currentResourceModel.getAllowedPattern().equals(previousResourceModel.getAllowedPattern()))) {
+            return false;
+        }
+        if ((currentResourceModel.getTier() == null && previousResourceModel.getTier() != null) ||
+                (currentResourceModel.getTier() != null && !currentResourceModel.getTier().equals(previousResourceModel.getTier()))) {
+            return false;
+        }
+        if ((currentResourceModel.getDataType() == null && previousResourceModel.getDataType() != null) ||
+                (currentResourceModel.getDataType() != null && !currentResourceModel.getDataType().equals(previousResourceModel.getDataType()))) {
+            return false;
+        }
+        return true;
     }
 
     private GetParametersResponse validateResourceExists(GetParametersRequest getParametersRequest, ProxyClient<SsmClient> proxyClient) {
@@ -89,6 +152,8 @@ public class UpdateHandler extends BaseHandlerStd {
             return proxyClient.injectCredentialsAndInvokeV2(putParameterRequest, proxyClient.client()::putParameter);
         } catch (final ParameterAlreadyExistsException exception) {
             throw new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, putParameterRequest.name());
+        } catch (final IllegalArgumentException exception) {
+            throw new CfnInvalidRequestException(OPERATION, exception);
         } catch (final InternalServerErrorException exception) {
             throw new CfnServiceInternalErrorException(OPERATION, exception);
         } catch (final AmazonServiceException exception) {
@@ -103,34 +168,5 @@ public class UpdateHandler extends BaseHandlerStd {
             throw new CfnGeneralServiceException(OPERATION, exception);
         }
     }
-
-    private ProgressEvent<ResourceModel,CallbackContext> handleTagging(
-            final AmazonWebServicesClientProxy proxy,
-            final ProxyClient<SsmClient> proxyClient,
-            final ProgressEvent<ResourceModel, CallbackContext> progress,
-            final ResourceModel resourceModel,
-            final Map<String, String> desiredResourceTags,
-            final Map<String, String> previousResourceTags) {
-
-        final Set<Tag> currentTags = new HashSet<>(Translator.translateTagsToSdk(desiredResourceTags));
-        final Set<Tag> existingTags = new HashSet<>(Translator.translateTagsToSdk(previousResourceTags));
-        // Remove tags with aws prefix as they should not be modified once attached
-        existingTags.removeIf(tag -> tag.key().startsWith("aws"));
-
-        final Set<Tag> setTagsToRemove = Sets.difference(existingTags, currentTags);
-        final Set<Tag> setTagsToAdd = Sets.difference(currentTags, existingTags);
-
-        final List<Tag> tagsToRemove = setTagsToRemove.stream().collect(Collectors.toList());
-        final List<Tag> tagsToAdd = setTagsToAdd.stream().collect(Collectors.toList());
-
-        // Deletes tags only if tagsToRemove is not empty.
-        if (!CollectionUtils.isNullOrEmpty(tagsToRemove)) proxy.injectCredentialsAndInvokeV2(
-                Translator.removeTagsFromResourceRequest(resourceModel.getName(), tagsToRemove), proxyClient.client()::removeTagsFromResource);
-
-        // Adds tags only if tagsToAdd is not empty.
-        if (!CollectionUtils.isNullOrEmpty(tagsToAdd)) proxy.injectCredentialsAndInvokeV2(
-                Translator.addTagsToResourceRequest(resourceModel.getName(), tagsToAdd), proxyClient.client()::addTagsToResource);
-
-        return ProgressEvent.progress(progress.getResourceModel(), progress.getCallbackContext());
-    }
+    
 }
