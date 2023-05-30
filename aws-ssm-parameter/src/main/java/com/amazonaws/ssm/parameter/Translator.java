@@ -125,7 +125,7 @@ public class Translator {
                 .resourceType(ResourceTypeForTagging.PARAMETER)
                 .build();
     }
-    
+
     static String policyToString(ParameterMetadata parameterMetadata) {
         if (parameterMetadata.policies() == null || parameterMetadata.policies().isEmpty()) {
             return null;

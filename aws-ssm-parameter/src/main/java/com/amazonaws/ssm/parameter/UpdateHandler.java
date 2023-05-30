@@ -168,5 +168,5 @@ public class UpdateHandler extends BaseHandlerStd {
             throw new CfnGeneralServiceException(OPERATION, exception);
         }
     }
-    
+
 }
