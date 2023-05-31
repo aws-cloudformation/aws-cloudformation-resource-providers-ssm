@@ -108,6 +108,48 @@ public class ReadHandlerTest extends AbstractTestBase {
     }
 
     @Test
+    public void handleRequest_SimpleSuccessWithTags() {
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .dataType(TYPE_STRING)
+                        .value(VALUE).build())
+                .build();
+        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
+                .parameters(Collections.singletonList(ParameterMetadata.builder()
+                        .name("PARAMETER_NAME")
+                        .description("description")
+                        .tier(ParameterTier.STANDARD)
+                        .allowedPattern("pattern")
+                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
+                        .build()))
+                .build();
+        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder()
+                .tagList(TagHelper.convertToList(TagHelper.convertToSet(TAG_SET))).build();
+        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
+        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
+                .thenReturn(describeParametersResponse);
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(ResourceModel.builder()
+                        .build())
+                .build();
+        final CallbackContext callbackContext = new CallbackContext();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, callbackContext, proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).getParameters(any(GetParametersRequest.class));
+    }
+
+    @Test
     public void handleRequest_EmptyGetParametersResponse() {
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder().build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);

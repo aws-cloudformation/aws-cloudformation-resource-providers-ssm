@@ -201,25 +201,6 @@ public class TagHelper {
     }
 
     /**
-     * generateTagsToAdd
-     *
-     * Determines the tags the customer desired to define or redefine.
-     */
-    public static Set<Tag> generateTagsToAdd(final Set<Tag> previousTags, final Set<Tag> desiredTags) {
-        return Sets.difference(new HashSet<>(desiredTags), new HashSet<>(previousTags));
-    }
-
-    /**
-     * getTagsToRemove
-     *
-     * Determines the tags the customer desired to remove from the function.
-     */
-    public static Set<Tag> generateTagsToRemove(final Set<Tag> previousTags, final Set<Tag> desiredTags) {
-        return Sets.difference(new HashSet<>(previousTags), new HashSet<>(desiredTags));
-    }
-
-
-    /**
      * tagResource during update
      *
      * Calls the service:TagResource API.

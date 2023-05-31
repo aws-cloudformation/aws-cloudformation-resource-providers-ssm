@@ -131,7 +131,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
-                .previousResourceTags(PREVIOUS_TAG_SET)
+                .previousSystemTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logicalId").build();
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
@@ -177,7 +177,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
                 .desiredResourceTags(TAG_SET)
-                .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
                 .previousResourceState(RESOURCE_MODEL)
                 .previousResourceTags(PREVIOUS_TAG_SET)
@@ -434,6 +433,100 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
+    public void handleRequest_AddTagFailWithInternalServerErrorException() {
+        TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+
+        when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenThrow(InternalServerErrorException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnServiceInternalErrorException ex) {
+            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
+        }
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_AddTagFailWithAmazonServiceException() {
+        TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+        }
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_RemoveTagFailWithInternalServerErrorException() {
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey", "AddTagValue");
+
+        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenThrow(InternalServerErrorException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnServiceInternalErrorException ex) {
+            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
+        }
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_RemoveTagFailWithAmazonServiceException() {
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey", "AddTagValue");
+
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+        }
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
     public void handleRequest_SecureStringFailure() {
         RESOURCE_MODEL = ResourceModel.builder()
                 .description(DESCRIPTION)
@@ -610,7 +703,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken("token")
-                .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
                 .previousResourceTags(PREVIOUS_TAG_SET)

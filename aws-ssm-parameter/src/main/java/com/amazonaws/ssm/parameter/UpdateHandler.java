@@ -26,6 +26,7 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -106,33 +107,24 @@ public class UpdateHandler extends BaseHandlerStd {
         if (previousResourceModel == null) {
             return false;
         }
-        if (!currentResourceModel.getType().equals(previousResourceModel.getType())) {
-            return false;
-        }
-        if (!currentResourceModel.getValue().equals(previousResourceModel.getValue())) {
-            return false;
-        }
-        if ((currentResourceModel.getDescription() == null && previousResourceModel.getDescription() != null) ||
-                (currentResourceModel.getDescription() != null && !currentResourceModel.getDescription().equals(previousResourceModel.getDescription()))) {
-            return false;
-        }
-        if ((currentResourceModel.getPolicies() == null && previousResourceModel.getPolicies() != null) ||
-                (currentResourceModel.getPolicies() != null && !currentResourceModel.getPolicies().equals(previousResourceModel.getPolicies()))) {
-            return false;
-        }
-        if ((currentResourceModel.getAllowedPattern() == null && previousResourceModel.getAllowedPattern() != null) ||
-                (currentResourceModel.getAllowedPattern() != null && !currentResourceModel.getAllowedPattern().equals(previousResourceModel.getAllowedPattern()))) {
-            return false;
-        }
-        if ((currentResourceModel.getTier() == null && previousResourceModel.getTier() != null) ||
-                (currentResourceModel.getTier() != null && !currentResourceModel.getTier().equals(previousResourceModel.getTier()))) {
-            return false;
-        }
-        if ((currentResourceModel.getDataType() == null && previousResourceModel.getDataType() != null) ||
-                (currentResourceModel.getDataType() != null && !currentResourceModel.getDataType().equals(previousResourceModel.getDataType()))) {
-            return false;
-        }
-        return true;
+        Map<Integer, Object> currentResourceModelMap = new HashMap<>();
+        Map<Integer, Object> previousResourceModelMap = new HashMap<>();
+        currentResourceModelMap.put(1, currentResourceModel.getType());
+        previousResourceModelMap.put(1, previousResourceModel.getType());
+        currentResourceModelMap.put(2, currentResourceModel.getValue());
+        previousResourceModelMap.put(2, previousResourceModel.getValue());
+        currentResourceModelMap.put(3, currentResourceModel.getDescription());
+        previousResourceModelMap.put(3, previousResourceModel.getDescription());
+        currentResourceModelMap.put(4, currentResourceModel.getPolicies());
+        previousResourceModelMap.put(4, previousResourceModel.getPolicies());
+        currentResourceModelMap.put(5, currentResourceModel.getAllowedPattern());
+        previousResourceModelMap.put(5, previousResourceModel.getAllowedPattern());
+        currentResourceModelMap.put(6, currentResourceModel.getTier());
+        previousResourceModelMap.put(6, previousResourceModel.getTier());
+        currentResourceModelMap.put(7, currentResourceModel.getDataType());
+        previousResourceModelMap.put(7, previousResourceModel.getDataType());
+
+        return currentResourceModelMap.equals(previousResourceModelMap);
     }
 
     private GetParametersResponse validateResourceExists(GetParametersRequest getParametersRequest, ProxyClient<SsmClient> proxyClient) {
