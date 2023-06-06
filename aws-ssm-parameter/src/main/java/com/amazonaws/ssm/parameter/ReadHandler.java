@@ -35,75 +35,39 @@ public class ReadHandler extends BaseHandlerStd {
         this.logger = logger;
         // read model only contains primary key
         ResourceModel model = request.getDesiredResourceState();
-        return ProgressEvent.progress(model, callbackContext)
-                .then(progress ->
-                        proxy.initiate("aws-ssm-parameter::resource-read", proxyClient, model, callbackContext)
-                                .translateToServiceRequest(Translator::getParametersRequest)
-                                .makeServiceCall(this::ReadResource)
-                                .done((getParametersRequest, getParametersResponse, proxyInvocation, resourceModel, context) -> {
-                                    if(getParametersResponse.parameters().size() == 0) {
-                                        throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getName());
-                                    }
-                                    final Parameter parameter = getParametersResponse.parameters().stream().findFirst().get();
-                                    model.setName(parameter.name());
-                                    model.setType(parameter.typeAsString());
-                                    model.setValue(parameter.value());
-                                    model.setDataType(parameter.dataType());
-                                    return ProgressEvent.progress(model, callbackContext);
-                                })
-                )
-                .then(progress ->
-                        proxy.initiate("aws-ssm-parameter::resource-read-tags", proxyClient, model, callbackContext)
-                                .translateToServiceRequest(Translator::listResourceTagRequest)
-                                .makeServiceCall(this::ReadResourceTags)
-                                .done((listResourceTagRequest, listTagsForResourceResponse, proxyInvocation, resourceModel, context) -> {
-                                    List<Tag> tags = listTagsForResourceResponse.tagList();
-                                    model.setTags(TagHelper.convertToMap(tags));
-                                    return ProgressEvent.progress(model, callbackContext);
-                                })
-                )
-                .then(progress ->
-                        proxy.initiate("aws-ssm-parameter::resource-read-metadata", proxyClient, model, callbackContext)
-                                .translateToServiceRequest(Translator::describeParametersRequestForSingleParameter)
-                                .makeServiceCall(this::ReadResourceMetaData)
-                                .done((describeParametersRequest, describeParametersResponse, proxyInvocation, resourceModel, context) -> {
-                                    if(describeParametersResponse.parameters().size() == 0) {
-                                        throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getName());
-                                    }
-                                    final ParameterMetadata parameterMetadata = describeParametersResponse.parameters().stream().findFirst().get();
-                                    model.setDescription(parameterMetadata.description());
-                                    model.setTier(parameterMetadata.tierAsString());
-                                    model.setAllowedPattern(parameterMetadata.allowedPattern());
-                                    model.setPolicies(Translator.policyToString(parameterMetadata));
-                                    return ProgressEvent.defaultSuccessHandler(model);
-                                })
-                );
-    }
 
-    private GetParametersResponse ReadResource(final GetParametersRequest getParametersRequest,
-                                               final ProxyClient<SsmClient> proxyClient) {
-        try{
-            return proxyClient.injectCredentialsAndInvokeV2(getParametersRequest, proxyClient.client()::getParameters);
-        } catch (final InternalServerErrorException exception) {
-            throw new CfnServiceInternalErrorException(OPERATION, exception);
-        }
-    }
-
-    private DescribeParametersResponse ReadResourceMetaData(final DescribeParametersRequest describeParametersRequest,
-                                                            final ProxyClient<SsmClient> proxyClient) {
         try {
-            return proxyClient.injectCredentialsAndInvokeV2(describeParametersRequest, proxyClient.client()::describeParameters);
-        } catch (final InternalServerErrorException exception) {
+            // Get info from getParameters
+            GetParametersResponse getParametersResponse = proxyClient
+                    .injectCredentialsAndInvokeV2(Translator.getParametersRequest(model), proxyClient.client()::getParameters);
+            if (getParametersResponse.parameters().size() == 0) {
+                throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getName());
+            }
+            Parameter parameter = getParametersResponse.parameters().stream().findFirst().get();
+            model.setName(parameter.name());
+            model.setType(parameter.typeAsString());
+            model.setValue(parameter.value());
+            model.setDataType(parameter.dataType());
+            // Get info from listTagsForResource
+            ListTagsForResourceResponse listTagsForResourceResponse = proxyClient
+                    .injectCredentialsAndInvokeV2(Translator.listResourceTagRequest(model), proxyClient.client()::listTagsForResource);
+            List<Tag> tags = listTagsForResourceResponse.tagList();
+            model.setTags(TagHelper.convertToMap(tags));
+            // Get info from describeParameters
+            DescribeParametersResponse describeParametersResponse = proxyClient
+                    .injectCredentialsAndInvokeV2(Translator.describeParametersRequestForSingleParameter(model), proxyClient.client()::describeParameters);
+            if (describeParametersResponse.parameters().size() == 0) {
+                throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getName());
+            }
+            ParameterMetadata parameterMetadata = describeParametersResponse.parameters().stream().findFirst().get();
+            model.setDescription(parameterMetadata.description());
+            model.setTier(parameterMetadata.tierAsString());
+            model.setAllowedPattern(parameterMetadata.allowedPattern());
+            model.setPolicies(Translator.policyToString(parameterMetadata));
+        } catch (InternalServerErrorException exception) {
             throw new CfnServiceInternalErrorException(OPERATION, exception);
         }
-    }
 
-    private ListTagsForResourceResponse ReadResourceTags(final ListTagsForResourceRequest listTagsForResourceRequest,
-                                                         final ProxyClient<SsmClient> proxyClient) {
-        try {
-            return proxyClient.injectCredentialsAndInvokeV2(listTagsForResourceRequest, proxyClient.client()::listTagsForResource);
-        } catch (final InternalServerErrorException exception) {
-            throw new CfnServiceInternalErrorException(OPERATION, exception);
-        }
+        return ProgressEvent.defaultSuccessHandler(model);
     }
 }

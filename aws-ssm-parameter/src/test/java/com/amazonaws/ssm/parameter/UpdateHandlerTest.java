@@ -438,6 +438,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
 
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
         when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenThrow(InternalServerErrorException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -460,6 +469,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
         TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
 
         AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
         when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenThrow(amazonServiceException);
@@ -485,6 +503,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey", "AddTagValue");
 
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
         when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenThrow(InternalServerErrorException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -507,6 +534,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey", "AddTagValue");
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
 
         AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
         when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenThrow(amazonServiceException);

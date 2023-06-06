@@ -211,7 +211,7 @@ public class TagHelper {
         logger.log(String.format("[UPDATE][IN PROGRESS] Going to add tags for ... resource: %s with AccountId: %s",
         resourceModel.getName(), handlerRequest.getAwsAccountId()));
         List<Tag> tagsToAdd = convertToList(convertToSet(addedTags));
-        return proxy.initiate("AWS-SSM-Parameter::TagOps", serviceClient, resourceModel, callbackContext)
+        return proxy.initiate("AWS-SSM-Parameter::TagResource", serviceClient, resourceModel, callbackContext)
             .translateToServiceRequest(model ->
                 Translator.tagResourceRequest(model, tagsToAdd))
             .makeServiceCall(this::addResourceTag)
@@ -229,7 +229,7 @@ public class TagHelper {
         logger.log(String.format("[UPDATE][IN PROGRESS] Going to remove tags for ... resource: %s with AccountId: %s",
         resourceModel.getName(), handlerRequest.getAwsAccountId()));
         List<String> tagsToRemove = convertToList(removedTags);
-        return proxy.initiate("AWS-SSM-Parameter::TagOps", serviceClient, resourceModel, callbackContext)
+        return proxy.initiate("AWS-SSM-Parameter::UntagResource", serviceClient, resourceModel, callbackContext)
             .translateToServiceRequest(model ->
                 Translator.untagResourceRequest(model, tagsToRemove))
             .makeServiceCall(this::removeResourceTag)

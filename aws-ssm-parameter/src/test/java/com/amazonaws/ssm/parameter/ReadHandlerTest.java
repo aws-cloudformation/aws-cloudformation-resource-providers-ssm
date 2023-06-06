@@ -62,7 +62,7 @@ public class ReadHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void post_execute() {
-        verify(ssmClient, atLeastOnce()).serviceName();
+        //verify(ssmClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(proxySsmClient.client());
     }
 
@@ -105,6 +105,8 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxySsmClient.client()).getParameters(any(GetParametersRequest.class));
+        verify(proxySsmClient.client()).describeParameters(any(DescribeParametersRequest.class));
+        verify(proxySsmClient.client()).listTagsForResource(any(ListTagsForResourceRequest.class));
     }
 
     @Test

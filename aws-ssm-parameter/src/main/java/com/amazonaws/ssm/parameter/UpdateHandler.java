@@ -57,6 +57,14 @@ public class UpdateHandler extends BaseHandlerStd {
 
         ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.progress(model, callbackContext);
 
+        //validate resource exists
+        progressEvent = progressEvent
+                .then(progress ->
+                        proxy.initiate("aws-ssm-parameter::validate-resource-exists", proxyClient, model, callbackContext)
+                                .translateToServiceRequest(Translator::getParametersRequest)
+                                .makeServiceCall(this::validateResourceExists)
+                                .progress());
+
         if (TagHelper.shouldUpdateTags(request)) {
             Map<String, String> previousTag = TagHelper.getPreviouslyAttachedTags(request);
             Map<String, String> newTag = TagHelper.getNewDesiredTags(request);
@@ -78,12 +86,6 @@ public class UpdateHandler extends BaseHandlerStd {
         // https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-test-contract.html
         if (!areResourceModelSame(request.getDesiredResourceState(), request.getPreviousResourceState())) {
             progressEvent = progressEvent
-                    .then(progress ->
-                            proxy.initiate("aws-ssm-parameter::validate-resource-exists", proxyClient, model, callbackContext)
-                                    .translateToServiceRequest(Translator::getParametersRequest)
-                                    .makeServiceCall(this::validateResourceExists)
-                                    .progress())
-
                     .then(progress ->
                             proxy.initiate("aws-ssm-parameter::resource-update", proxyClient, model, callbackContext)
                                     .translateToServiceRequest(Translator::updatePutParameterRequest)
@@ -160,5 +162,5 @@ public class UpdateHandler extends BaseHandlerStd {
             throw new CfnGeneralServiceException(OPERATION, exception);
         }
     }
-
+    
 }
