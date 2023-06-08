@@ -4,12 +4,8 @@ import com.amazonaws.AmazonServiceException;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
-import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
-import software.amazon.awssdk.services.ssm.model.DescribeParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterInlinePolicy;
 import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
@@ -103,20 +99,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
-                .parameters(Collections.singletonList(ParameterMetadata.builder()
-                        .name("PARAMETER_NAME")
-                        .description("description")
-                        .tier(ParameterTier.STANDARD)
-                        .allowedPattern("pattern")
-                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
-                        .build()))
-                .build();
-        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
-                .thenReturn(describeParametersResponse);
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
-
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
                 .tier(ParameterTier.STANDARD)
@@ -157,20 +139,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
-                .parameters(Collections.singletonList(ParameterMetadata.builder()
-                        .name("PARAMETER_NAME")
-                        .description("description")
-                        .tier(ParameterTier.STANDARD)
-                        .allowedPattern("pattern")
-                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
-                        .build()))
-                .build();
-        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
-                .thenReturn(describeParametersResponse);
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
-
         final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
         when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenReturn(removeTagsFromResourceResponse);
 
@@ -208,20 +176,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
-                .parameters(Collections.singletonList(ParameterMetadata.builder()
-                        .name("PARAMETER_NAME")
-                        .description("description")
-                        .tier(ParameterTier.STANDARD)
-                        .allowedPattern("pattern")
-                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
-                        .build()))
-                .build();
-        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
-                .thenReturn(describeParametersResponse);
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
-
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
                 .tier(ParameterTier.STANDARD)
@@ -263,19 +217,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
-                .parameters(Collections.singletonList(ParameterMetadata.builder()
-                        .name("PARAMETER_NAME")
-                        .description("description")
-                        .tier(ParameterTier.STANDARD)
-                        .allowedPattern("pattern")
-                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
-                        .build()))
-                .build();
-        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
-                .thenReturn(describeParametersResponse);
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
@@ -324,19 +265,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
-                .parameters(Collections.singletonList(ParameterMetadata.builder()
-                        .name("PARAMETER_NAME")
-                        .description("description")
-                        .tier(ParameterTier.STANDARD)
-                        .allowedPattern("pattern")
-                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
-                        .build()))
-                .build();
-        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
-                .thenReturn(describeParametersResponse);
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
@@ -386,19 +314,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
-                .parameters(Collections.singletonList(ParameterMetadata.builder()
-                        .name("PARAMETER_NAME")
-                        .description("description")
-                        .tier(ParameterTier.STANDARD)
-                        .allowedPattern("pattern")
-                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
-                        .build()))
-                .build();
-        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
-                .thenReturn(describeParametersResponse);
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
@@ -617,19 +532,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-        final DescribeParametersResponse describeParametersResponse = DescribeParametersResponse.builder()
-                .parameters(Collections.singletonList(ParameterMetadata.builder()
-                        .name("PARAMETER_NAME")
-                        .description("description")
-                        .tier(ParameterTier.STANDARD)
-                        .allowedPattern("pattern")
-                        .policies(Collections.singletonList(ParameterInlinePolicy.builder().policyText("{}").build()))
-                        .build()))
-                .build();
-        when(proxySsmClient.client().describeParameters(any(DescribeParametersRequest.class)))
-                .thenReturn(describeParametersResponse);
-        final ListTagsForResourceResponse listTagsForResourceResponse = ListTagsForResourceResponse.builder().build();
-        when(proxySsmClient.client().listTagsForResource(any(ListTagsForResourceRequest.class))).thenReturn(listTagsForResourceResponse);
 
         final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
         when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenReturn(removeTagsFromResourceResponse);

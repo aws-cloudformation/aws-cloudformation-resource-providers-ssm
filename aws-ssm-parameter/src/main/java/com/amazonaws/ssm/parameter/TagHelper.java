@@ -136,7 +136,7 @@ public class TagHelper {
         }
 
         // get resource level tags from previous resource state based on your tag property name
-        if (handlerRequest.getPreviousResourceState() != null) {
+        if (handlerRequest.getPreviousResourceState() != null && handlerRequest.getPreviousResourceState().getTags() != null) {
             previousTags.putAll(handlerRequest.getPreviousResourceState().getTags());
         }
         return previousTags;
@@ -168,7 +168,7 @@ public class TagHelper {
         }
 
         // get resource level tags from resource model based on your tag property name
-        if (handlerRequest.getDesiredResourceState() != null) {
+        if (handlerRequest.getDesiredResourceState() != null && handlerRequest.getDesiredResourceState().getTags() != null) {
             desiredTags.putAll(handlerRequest.getDesiredResourceState().getTags());
         }
         return desiredTags;

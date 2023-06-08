@@ -1,13 +1,9 @@
 package com.amazonaws.ssm.parameter;
 
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
-import software.amazon.awssdk.services.ssm.model.DescribeParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
 import software.amazon.awssdk.services.ssm.model.Tag;
@@ -48,22 +44,6 @@ public class ReadHandler extends BaseHandlerStd {
             model.setType(parameter.typeAsString());
             model.setValue(parameter.value());
             model.setDataType(parameter.dataType());
-            // Get info from listTagsForResource
-            ListTagsForResourceResponse listTagsForResourceResponse = proxyClient
-                    .injectCredentialsAndInvokeV2(Translator.listResourceTagRequest(model), proxyClient.client()::listTagsForResource);
-            List<Tag> tags = listTagsForResourceResponse.tagList();
-            model.setTags(TagHelper.convertToMap(tags));
-            // Get info from describeParameters
-            DescribeParametersResponse describeParametersResponse = proxyClient
-                    .injectCredentialsAndInvokeV2(Translator.describeParametersRequestForSingleParameter(model), proxyClient.client()::describeParameters);
-            if (describeParametersResponse.parameters().size() == 0) {
-                throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getName());
-            }
-            ParameterMetadata parameterMetadata = describeParametersResponse.parameters().stream().findFirst().get();
-            model.setDescription(parameterMetadata.description());
-            model.setTier(parameterMetadata.tierAsString());
-            model.setAllowedPattern(parameterMetadata.allowedPattern());
-            model.setPolicies(Translator.policyToString(parameterMetadata));
         } catch (InternalServerErrorException exception) {
             throw new CfnServiceInternalErrorException(OPERATION, exception);
         }
