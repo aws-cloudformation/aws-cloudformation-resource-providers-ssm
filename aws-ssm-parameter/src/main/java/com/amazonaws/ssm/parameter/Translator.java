@@ -3,7 +3,6 @@ package com.amazonaws.ssm.parameter;
 import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
-import software.amazon.awssdk.services.ssm.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.ParameterStringFilter;
 import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
@@ -57,18 +56,6 @@ public class Translator {
                 .build();
     }
 
-    static DescribeParametersRequest describeParametersRequestForSingleParameter(final ResourceModel model) {
-        ParameterStringFilter nameEqualsFilter = ParameterStringFilter.builder()
-                .key("Name")
-                .option("Equals")
-                .values(model.getName())
-                .build();
-        return DescribeParametersRequest.builder()
-                .maxResults(Constants.MAX_RESULTS)
-                .parameterFilters(nameEqualsFilter)
-                .build();
-    }
-
     static DescribeParametersRequest describeParametersRequest(final String nextToken) {
         return DescribeParametersRequest.builder()
                 .nextToken(nextToken)
@@ -116,21 +103,5 @@ public class Translator {
                 .resourceType(ResourceTypeForTagging.PARAMETER)
                 .tagKeys(tagsToRemove)
                 .build();
-    }
-
-    static ListTagsForResourceRequest listResourceTagRequest(final ResourceModel model) {
-        String parameterName = model.getName();
-        return ListTagsForResourceRequest.builder()
-                .resourceId(parameterName)
-                .resourceType(ResourceTypeForTagging.PARAMETER)
-                .build();
-    }
-
-    static String policyToString(ParameterMetadata parameterMetadata) {
-        if (parameterMetadata.policies() == null || parameterMetadata.policies().isEmpty()) {
-            return null;
-        }
-        return "[" + parameterMetadata.policies().stream().map(policy -> policy.policyText())
-                .collect(Collectors.joining(",")) + "]";
     }
 }

@@ -38,29 +38,6 @@ public class TagHelper {
     private static final String OPERATION = "TagHandler";
 
     /**
-     * convertToMap
-     *
-     * Converts a collection of Tag objects to a tag-name -> tag-value map.
-     *
-     * Note: Tag objects with null tag values will not be included in the output
-     * map.
-     *
-     * @param tags Collection of tags to convert
-     * @return Converted Map of tags
-     */
-    public static Map<String, String> convertToMap(final Collection<Tag> tags) {
-        if (CollectionUtils.isEmpty(tags)) {
-            return Collections.emptyMap();
-        }
-        return tags.stream()
-            .filter(tag -> tag.value() != null)
-            .collect(Collectors.toMap(
-                Tag::key,
-                Tag::value,
-                (oldValue, newValue) -> newValue));
-    }
-
-    /**
      * convertToSet
      *
      * Converts a tag map to a set of Tag objects.
@@ -136,8 +113,10 @@ public class TagHelper {
         }
 
         // get resource level tags from previous resource state based on your tag property name
-        if (handlerRequest.getPreviousResourceState() != null && handlerRequest.getPreviousResourceState().getTags() != null) {
-            previousTags.putAll(handlerRequest.getPreviousResourceState().getTags());
+        if (handlerRequest.getPreviousResourceState() != null) {
+            if (handlerRequest.getPreviousResourceState().getTags() != null) {
+                previousTags.putAll(handlerRequest.getPreviousResourceState().getTags());
+            }
         }
         return previousTags;
     }
@@ -168,8 +147,10 @@ public class TagHelper {
         }
 
         // get resource level tags from resource model based on your tag property name
-        if (handlerRequest.getDesiredResourceState() != null && handlerRequest.getDesiredResourceState().getTags() != null) {
-            desiredTags.putAll(handlerRequest.getDesiredResourceState().getTags());
+        if (handlerRequest.getDesiredResourceState() != null) {
+            if (handlerRequest.getDesiredResourceState().getTags() != null) {
+                desiredTags.putAll(handlerRequest.getDesiredResourceState().getTags());
+            }
         }
         return desiredTags;
     }
