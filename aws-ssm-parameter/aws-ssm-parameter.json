@@ -78,7 +78,7 @@
     "primaryIdentifier": [
         "/properties/Name"
     ],
-    "writeOnlyProperties" : [
+    "writeOnlyProperties": [
         "/properties/Tags",
         "/properties/Description",
         "/properties/Tier",
