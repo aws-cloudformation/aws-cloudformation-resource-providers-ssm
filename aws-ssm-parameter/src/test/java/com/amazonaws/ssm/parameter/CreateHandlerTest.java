@@ -254,7 +254,7 @@ public class CreateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
+        
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
                 .tier(ParameterTier.STANDARD)

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -109,24 +110,9 @@ public class UpdateHandler extends BaseHandlerStd {
         if (previousResourceModel == null) {
             return false;
         }
-        Map<Integer, Object> currentResourceModelMap = new HashMap<>();
-        Map<Integer, Object> previousResourceModelMap = new HashMap<>();
-        currentResourceModelMap.put(1, currentResourceModel.getType());
-        previousResourceModelMap.put(1, previousResourceModel.getType());
-        currentResourceModelMap.put(2, currentResourceModel.getValue());
-        previousResourceModelMap.put(2, previousResourceModel.getValue());
-        currentResourceModelMap.put(3, currentResourceModel.getDescription());
-        previousResourceModelMap.put(3, previousResourceModel.getDescription());
-        currentResourceModelMap.put(4, currentResourceModel.getPolicies());
-        previousResourceModelMap.put(4, previousResourceModel.getPolicies());
-        currentResourceModelMap.put(5, currentResourceModel.getAllowedPattern());
-        previousResourceModelMap.put(5, previousResourceModel.getAllowedPattern());
-        currentResourceModelMap.put(6, currentResourceModel.getTier());
-        previousResourceModelMap.put(6, previousResourceModel.getTier());
-        currentResourceModelMap.put(7, currentResourceModel.getDataType());
-        previousResourceModelMap.put(7, previousResourceModel.getDataType());
-
-        return currentResourceModelMap.equals(previousResourceModelMap);
+        currentResourceModel.setTags(null);
+        previousResourceModel.setTags(null);
+        return Objects.equals(previousResourceModel, currentResourceModel);
     }
 
     private GetParametersResponse validateResourceExists(GetParametersRequest getParametersRequest, ProxyClient<SsmClient> proxyClient) {
@@ -162,5 +148,5 @@ public class UpdateHandler extends BaseHandlerStd {
             throw new CfnGeneralServiceException(OPERATION, exception);
         }
     }
-
+    
 }
