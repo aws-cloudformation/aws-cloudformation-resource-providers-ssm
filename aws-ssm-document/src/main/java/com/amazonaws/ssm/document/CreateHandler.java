@@ -2,7 +2,6 @@ package com.amazonaws.ssm.document;
 
 import com.amazonaws.ssm.document.tags.TagUtil;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
@@ -10,11 +9,15 @@ import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentResponse;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnUnauthorizedTaggingOperationException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import static com.amazonaws.ssm.document.tags.TagUtil.TAGGING_PERMISSION_MESSAGE_FORMAT;
 
 /**
  * Create a new AWS::SSM::Document resource.
@@ -100,6 +103,15 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
                     .build();
         } catch (final SsmException e) {
+            if (TagUtil.getInstance().isTaggingPermissionFailure(e)) {
+                return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                        .resourceModel(model)
+                        .callbackContext(context)
+                        .status(OperationStatus.FAILED)
+                        .message(e.getMessage())
+                        .errorCode(HandlerErrorCode.UnauthorizedTaggingOperation)
+                        .build();
+            }
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
     }
@@ -112,15 +124,12 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             return proxy.injectCredentialsAndInvokeV2(createDocumentRequest, ssmClient::createDocument);
         } catch (final SsmException e) {
-            if (!tagUtil.shouldSoftFailTags(null, model.getTags(), e)) {
-                throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
+            if (tagUtil.isResourceTagModified(null, model.getTags())) {
+                logger.log(TAGGING_PERMISSION_MESSAGE_FORMAT);
             }
-            logger.log(String.format("Soft fail adding tags during create of document %s",
-                    createDocumentRequest.name()));
-        }
 
-        final CreateDocumentRequest createDocumentRequestWithoutTags = createDocumentRequest.toBuilder().tags(ImmutableList.of()).build();
-        return proxy.injectCredentialsAndInvokeV2(createDocumentRequestWithoutTags, ssmClient::createDocument);
+            throw e;
+        }
     }
 
     private ProgressEvent<ResourceModel, CallbackContext> updateProgress(final ResourceModel model, final CallbackContext context,

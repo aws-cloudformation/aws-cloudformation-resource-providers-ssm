@@ -1,6 +1,7 @@
 package com.amazonaws.ssm.document;
 
 import com.amazonaws.ssm.document.tags.TagUpdater;
+import com.amazonaws.ssm.document.tags.TagUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 import lombok.NonNull;
@@ -108,6 +109,15 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                         previousModel.getTags(), model.getTags(),
                         ssmClient, proxy, logger);
             } catch (final SsmException e) {
+                if (TagUtil.getInstance().isTaggingPermissionFailure(e)) {
+                    return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                            .resourceModel(model)
+                            .callbackContext(context)
+                            .status(OperationStatus.FAILED)
+                            .message(e.getMessage())
+                            .errorCode(HandlerErrorCode.UnauthorizedTaggingOperation)
+                            .build();
+                }
                 throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
             }
         }
@@ -121,7 +131,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             }
 
             try {
-                final UpdateDocumentResponse response = proxy.injectCredentialsAndInvokeV2(updateDocumentRequest, ssmClient::updateDocument);
+                proxy.injectCredentialsAndInvokeV2(updateDocumentRequest, ssmClient::updateDocument);
                 setInProgressContext(context);
 
                 return getInProgressEvent(model, context, UPDATING_MESSAGE);

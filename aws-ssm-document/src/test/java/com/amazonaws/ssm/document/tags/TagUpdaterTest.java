@@ -1,7 +1,5 @@
 package com.amazonaws.ssm.document.tags;
 
-import java.util.List;
-import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
@@ -15,8 +13,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.cloudformation.exceptions.CfnUnauthorizedTaggingOperationException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
+
+import java.util.List;
+import java.util.Map;
+
+import static com.amazonaws.ssm.document.tags.TagUtil.TAGGING_PERMISSION_MESSAGE_FORMAT;
 
 @ExtendWith(MockitoExtension.class)
 public class TagUpdaterTest {
@@ -159,7 +163,7 @@ public class TagUpdaterTest {
     }
 
     @Test
-    public void testUpdateTags_addTagsAPIAccessDenied_shouldSoftFail_verifyTagsAddedAndRemoved() {
+    public void testUpdateTags_addTagsAPIAccessDenied_shouldHardFail_VerifyExceptionReturned() {
         final Map<String, String> SAMPLE_RESOURCE_REQUEST_TAGS = ImmutableMap.of(
                 "tagKey1", "tagValue2",
                 "tagKey5", "tagValue5",
@@ -181,15 +185,39 @@ public class TagUpdaterTest {
         );
 
         Mockito.doThrow(ssmException).when(tagClient).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.doThrow(ssmException).when(tagClient).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.when(tagUtil.shouldSoftFailTags(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
 
-        unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
-                SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
+        Assertions.assertThrows(CfnUnauthorizedTaggingOperationException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
+                SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
 
         verifyTagClientCalls(expectedTagsToAdd, expectedTagsToRemove);
-        Mockito.verify(logger, Mockito.times(1)).log(String.format("Soft fail adding tags to %s", SAMPLE_DOCUMENT_NAME));
-        Mockito.verify(logger, Mockito.times(1)).log(String.format("Soft fail removing tags from %s", SAMPLE_DOCUMENT_NAME));
+        Mockito.verify(logger, Mockito.times(1)).log(TAGGING_PERMISSION_MESSAGE_FORMAT);
+    }
+
+    @Test
+    public void testUpdateTags_removeTagsAPIAccessDenied_shouldHardFail_VerifyExceptionReturned() {
+        final Map<String, String> SAMPLE_RESOURCE_REQUEST_TAGS = ImmutableMap.of(
+                "tagKey1", "tagValue2",
+                "tagKey5", "tagValue5",
+                "tagKey6", "tagValue6"
+        );
+
+        // expected tags to remove
+        final List<Tag> expectedTagsToRemove = ImmutableList.of(
+                Tag.builder().key("tagKey1").value("tagValue1").build(),
+                Tag.builder().key("tagKey2").value("tagValue2").build(),
+                Tag.builder().key("tagKey3").value("tagValue3").build()
+        );
+
+        Mockito.doThrow(ssmException).when(tagClient).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
+
+        Assertions.assertThrows(CfnUnauthorizedTaggingOperationException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
+                SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
+
+        Mockito.verify(tagClient, Mockito.times(1)).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
+        Mockito.verify(logger, Mockito.times(1)).log(TAGGING_PERMISSION_MESSAGE_FORMAT);
+        Mockito.verify(logger, Mockito.times(1)).log(TAGGING_PERMISSION_MESSAGE_FORMAT);
     }
 
     @Test
@@ -216,7 +244,7 @@ public class TagUpdaterTest {
         );
 
         Mockito.doThrow(ssmException).when(tagClient).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.when(tagUtil.shouldSoftFailTags(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
 
         Assertions.assertThrows(SsmException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
                 SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
@@ -249,7 +277,7 @@ public class TagUpdaterTest {
         );
 
         Mockito.doThrow(ssmException).when(tagClient).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.when(tagUtil.shouldSoftFailTags(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
 
         Assertions.assertThrows(SsmException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME,
                 SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS,
