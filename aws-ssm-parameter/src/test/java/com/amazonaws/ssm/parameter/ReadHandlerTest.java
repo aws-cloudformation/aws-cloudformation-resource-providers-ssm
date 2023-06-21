@@ -58,7 +58,6 @@ public class ReadHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void post_execute() {
-        //verify(ssmClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(proxySsmClient.client());
     }
 
