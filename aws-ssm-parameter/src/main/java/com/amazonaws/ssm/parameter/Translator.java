@@ -4,6 +4,8 @@ import software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteParameterRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterStringFilter;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.ResourceTypeForTagging;
@@ -12,6 +14,7 @@ import software.amazon.awssdk.services.ssm.model.Tag;
 import java.util.Collections;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -66,15 +69,21 @@ public class Translator {
                 .build();
     }
 
-    static RemoveTagsFromResourceRequest removeTagsFromResourceRequest(final String parameterName, List<Tag> tagsToRemove) {
-        return RemoveTagsFromResourceRequest.builder()
-                .resourceId(parameterName)
-                .resourceType(ResourceTypeForTagging.PARAMETER)
-                .tagKeys(tagsToRemove.stream().map(tag -> tag.key()).collect(Collectors.toList()))
-                .build();
+    // Translate tags
+    static List<Tag> translateTagsToSdk(final Map<String, String> tags) {
+        return Optional.of(tags.entrySet()).orElse(Collections.emptySet())
+                .stream()
+                .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
+                .collect(Collectors.toList());
     }
 
-    static AddTagsToResourceRequest addTagsToResourceRequest(final String parameterName, List<Tag> tagsToAdd) {
+    /**
+     * Request to add tags to a resource
+     * @param model resource model
+     * @return awsRequest the aws service request to create a resource
+     */
+    static AddTagsToResourceRequest tagResourceRequest(final ResourceModel model, List<Tag> tagsToAdd) {
+        String parameterName = model.getName();
         return AddTagsToResourceRequest.builder()
                 .resourceId(parameterName)
                 .resourceType(ResourceTypeForTagging.PARAMETER)
@@ -82,11 +91,17 @@ public class Translator {
                 .build();
     }
 
-    // Translate tags
-    static List<Tag> translateTagsToSdk(final Map<String, String> tags) {
-        return Optional.of(tags.entrySet()).orElse(Collections.emptySet())
-                .stream()
-                .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
-                .collect(Collectors.toList());
+    /**
+     * Request to add tags to a resource
+     * @param model resource model
+     * @return awsRequest the aws service request to create a resource
+     */
+    static RemoveTagsFromResourceRequest untagResourceRequest(final ResourceModel model, List<String> tagsToRemove) {
+        String parameterName = model.getName();
+        return RemoveTagsFromResourceRequest.builder()
+                .resourceId(parameterName)
+                .resourceType(ResourceTypeForTagging.PARAMETER)
+                .tagKeys(tagsToRemove)
+                .build();
     }
 }

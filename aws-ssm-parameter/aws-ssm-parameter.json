@@ -78,15 +78,18 @@
     "primaryIdentifier": [
         "/properties/Name"
     ],
-    "readOnlyProperties": [
-        "/properties/Name",
-        "/properties/Type",
-        "/properties/Value"
+    "writeOnlyProperties": [
+        "/properties/Tags",
+        "/properties/Description",
+        "/properties/Tier",
+        "/properties/AllowedPattern",
+        "/properties/Policies"
     ],
     "handlers": {
         "create": {
             "permissions": [
                 "ssm:PutParameter",
+                "ssm:AddTagsToResource",
                 "ssm:GetParameters"
             ],
             "timeoutInMinutes": 5

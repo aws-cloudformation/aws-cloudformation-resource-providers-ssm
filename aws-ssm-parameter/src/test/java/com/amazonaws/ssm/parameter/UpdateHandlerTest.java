@@ -7,6 +7,9 @@ import software.amazon.awssdk.services.ssm.model.AddTagsToResourceResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterInlinePolicy;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
+import software.amazon.awssdk.services.ssm.model.ParameterTier;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
@@ -16,6 +19,7 @@ import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceRequest;
 import software.amazon.awssdk.services.ssm.model.RemoveTagsFromResourceResponse;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -32,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +45,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -93,7 +99,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
                 .tier(ParameterTier.STANDARD)
@@ -108,7 +113,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(TAG_SET)
                 .systemTags(SYSTEM_TAGS_SET)
                 .desiredResourceState(RESOURCE_MODEL)
-                .previousResourceTags(PREVIOUS_TAG_SET)
+                .previousSystemTags(PREVIOUS_TAG_SET)
                 .logicalResourceIdentifier("logicalId").build();
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
 
@@ -125,6 +130,40 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
+    public void handleRequest_SimpleSuccess_WithSameResourceModel() {
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+        final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
+        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenReturn(removeTagsFromResourceResponse);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client(), times(0)).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
     public void handleRequest_SimpleSuccess_WithoutTagsChange() {
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
@@ -137,7 +176,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                         .version(VERSION).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
         final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
                 .version(VERSION)
                 .tier(ParameterTier.STANDARD)
@@ -166,10 +204,58 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
+    public void handleRequest_SimpleSuccess_WithTagsAdd() {
+        TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
+
+        final AddTagsToResourceResponse addTagsToResourceResponse = AddTagsToResourceResponse.builder().build();
+        when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenReturn(addTagsToResourceResponse);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(proxySsmClient.client(), times(1)).addTagsToResource(any(AddTagsToResourceRequest.class));
+        verify(proxySsmClient.client(), times(0)).removeTagsFromResource(any(RemoveTagsFromResourceRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
     public void handleRequest_SimpleSuccess_WithTagsChange() {
         TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
         PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey2", "AddTagValue2");
 
         final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
                 .parameters(Parameter.builder()
@@ -209,6 +295,185 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(proxySsmClient.client(), times(1)).addTagsToResource(any(AddTagsToResourceRequest.class));
+        verify(proxySsmClient.client(), times(1)).removeTagsFromResource(any(RemoveTagsFromResourceRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess_WithTagsRemove() {
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey", "AddTagValue");
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        final PutParameterResponse putParameterResponse = PutParameterResponse.builder()
+                .version(VERSION)
+                .tier(ParameterTier.STANDARD)
+                .build();
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class))).thenReturn(putParameterResponse);
+
+        final RemoveTagsFromResourceResponse removeTagsFromResourceResponse = RemoveTagsFromResourceResponse.builder().build();
+        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenReturn(removeTagsFromResourceResponse);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(proxySsmClient.client(), times(0)).addTagsToResource(any(AddTagsToResourceRequest.class));
+        verify(proxySsmClient.client(), times(1)).removeTagsFromResource(any(RemoveTagsFromResourceRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_AddTagFailWithInternalServerErrorException() {
+        TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenThrow(InternalServerErrorException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnServiceInternalErrorException ex) {
+            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
+        }
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_AddTagFailWithAmazonServiceException() {
+        TAG_SET_WITH_CHANGE.put("AddTagKey", "AddTagValue");
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        when(proxySsmClient.client().addTagsToResource(any(AddTagsToResourceRequest.class))).thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+        }
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_RemoveTagFailWithInternalServerErrorException() {
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey", "AddTagValue");
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenThrow(InternalServerErrorException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnServiceInternalErrorException ex) {
+            assertThat(ex).isInstanceOf(CfnServiceInternalErrorException.class);
+        }
+        verify(ssmClient, atLeastOnce()).serviceName();
+    }
+
+    @Test
+    public void handleRequest_RemoveTagFailWithAmazonServiceException() {
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(TAG_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.putAll(SYSTEM_TAGS_SET);
+        PREVIOUS_TAG_SET_NO_CHANGE.put("AddTagKey", "AddTagValue");
+
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        AmazonServiceException amazonServiceException = new AmazonServiceException("Client error");
+        when(proxySsmClient.client().removeTagsFromResource(any(RemoveTagsFromResourceRequest.class))).thenThrow(amazonServiceException);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .desiredResourceTags(TAG_SET_WITH_CHANGE)
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET_NO_CHANGE)
+                .logicalResourceIdentifier("logicalId").build();
+        try {
+            final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnGeneralServiceException ex) {
+            assertThat(ex).isInstanceOf(CfnGeneralServiceException.class);
+        }
         verify(ssmClient, atLeastOnce()).serviceName();
     }
 
@@ -326,7 +591,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
-        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -359,7 +623,37 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
-        verifyNoMoreInteractions(proxySsmClient.client());
+    }
+
+    @Test
+    public void handleRequest_IllegalArgumentException() {
+        final GetParametersResponse getParametersResponse = GetParametersResponse.builder()
+                .parameters(Parameter.builder()
+                        .name(NAME)
+                        .type(TYPE_STRING)
+                        .value(VALUE)
+                        .version(VERSION).build())
+                .build();
+        when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
+
+        when(proxySsmClient.client().putParameter(any(PutParameterRequest.class)))
+                .thenThrow(new IllegalArgumentException("Invalid request"));
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken("token")
+                .systemTags(SYSTEM_TAGS_SET)
+                .desiredResourceState(RESOURCE_MODEL)
+                .previousResourceTags(PREVIOUS_TAG_SET)
+                .logicalResourceIdentifier("logical_id").build();
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxySsmClient, logger);
+        } catch (CfnInvalidRequestException ex) {
+            assertThat(ex).isInstanceOf(CfnInvalidRequestException.class);
+        }
+
+        verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
+        verify(ssmClient, atLeastOnce()).serviceName();
     }
 
     @Test
@@ -395,7 +689,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
-        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -431,7 +724,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
-        verifyNoMoreInteractions(proxySsmClient.client());
     }
 
     @Test
@@ -464,6 +756,5 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxySsmClient.client()).putParameter(any(PutParameterRequest.class));
         verify(ssmClient, atLeastOnce()).serviceName();
-        verifyNoMoreInteractions(proxySsmClient.client());
     }
 }

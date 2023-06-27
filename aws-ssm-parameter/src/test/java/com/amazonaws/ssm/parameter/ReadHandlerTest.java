@@ -6,6 +6,9 @@ import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.InternalServerErrorException;
 import software.amazon.awssdk.services.ssm.model.Parameter;
+import software.amazon.awssdk.services.ssm.model.ParameterInlinePolicy;
+import software.amazon.awssdk.services.ssm.model.ParameterMetadata;
+import software.amazon.awssdk.services.ssm.model.ParameterTier;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -21,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,7 +58,6 @@ public class ReadHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void post_execute() {
-        verify(ssmClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(proxySsmClient.client());
     }
 
@@ -64,10 +67,10 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .parameters(Parameter.builder()
                         .name(NAME)
                         .type(TYPE_STRING)
+                        .dataType(TYPE_STRING)
                         .value(VALUE).build())
                 .build();
         when(proxySsmClient.client().getParameters(any(GetParametersRequest.class))).thenReturn(getParametersResponse);
-
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(ResourceModel.builder()
                         .build())

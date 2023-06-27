@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 import software.amazon.awssdk.services.ssm.model.ParameterType;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.exceptions.TerminalException;
@@ -63,20 +64,22 @@ public class CreateHandler extends BaseHandlerStd {
         }
 
         return proxy.initiate("aws-ssm-parameter::resource-create", proxyClient, model, callbackContext)
-               .translateToServiceRequest((resourceModel) -> Translator.createPutParameterRequest(resourceModel, consolidatedTagList))
-               .backoffDelay(getBackOffDelay(model))
-               .makeServiceCall(this::createResource)
-               .stabilize(BaseHandlerStd::stabilize)
-               .progress()
-               .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+                .translateToServiceRequest((resourceModel) -> Translator.createPutParameterRequest(resourceModel, consolidatedTagList))
+                .backoffDelay(getBackOffDelay(model))
+                .makeServiceCall(this::createResource)
+                .stabilize(BaseHandlerStd::stabilize)
+                .progress()
+                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
     private PutParameterResponse createResource(final PutParameterRequest putParameterRequest,
-                                                 final ProxyClient<SsmClient> proxyClient) {
+                                                final ProxyClient<SsmClient> proxyClient) {
         try {
             return proxyClient.injectCredentialsAndInvokeV2(putParameterRequest, proxyClient.client()::putParameter);
         } catch (final ParameterAlreadyExistsException exception) {
             throw new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, putParameterRequest.name());
+        } catch (final IllegalArgumentException exception) {
+            throw new CfnInvalidRequestException(OPERATION, exception);
         } catch (final InternalServerErrorException exception) {
             throw new CfnServiceInternalErrorException(OPERATION, exception);
         } catch (final AmazonServiceException exception) {

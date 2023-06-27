@@ -1,4 +1,5 @@
 {
+    "artifact_type": "RESOURCE",
     "typeName": "AWS::SSM::Parameter",
     "language": "java",
     "runtime": "java8",
@@ -12,5 +13,6 @@
             "parameter"
         ],
         "protocolVersion": "2.0.0"
-    }
+    },
+    "executableEntrypoint": "com.amazonaws.ssm.parameter.HandlerWrapperExecutable"
 }
