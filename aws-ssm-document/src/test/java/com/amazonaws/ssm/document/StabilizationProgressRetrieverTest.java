@@ -25,7 +25,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import com.amazonaws.ssm.document.tags.TagReader;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
 import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +39,10 @@ public class StabilizationProgressRetrieverTest {
     private static final Map<String, String> SAMPLE_TAG_MAP = ImmutableMap.of(
         "tagKey1", "tagValue1",
         "tagKey2", "tagValue2"
+    );
+    private static final List<software.amazon.awssdk.services.ssm.model.Tag> SAMPLE_TAGS = ImmutableList.of(
+        software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey1").value("tagValue1").build(),
+        software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey2").value("tagValue2").build()
     );
     private static final ResourceHandlerRequest<ResourceModel> SAMPLE_RESOURCE_HANDLER_REQUEST = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(SAMPLE_RESOURCE_MODEL)
@@ -111,13 +117,13 @@ public class StabilizationProgressRetrieverTest {
                 .document(DocumentDescription.builder()
                         .name(SAMPLE_DOCUMENT_NAME)
                         .status(DocumentStatus.ACTIVE)
+                        .tags(SAMPLE_TAGS)
                         .build())
                 .build();
 
         when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenReturn(describeDocumentResponse);
-        when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
-        when(responseModelTranslator.generateResourceInformation(describeDocumentResponse, SAMPLE_TAG_MAP)).thenReturn(expectedResourceInformation);
+        when(responseModelTranslator.generateResourceInformation(describeDocumentResponse)).thenReturn(expectedResourceInformation);
 
         final GetProgressResponse response
                 = unitUnderTest.getEventProgress(SAMPLE_RESOURCE_MODEL, inProgressCallbackContext, ssmClient, proxy, logger);
