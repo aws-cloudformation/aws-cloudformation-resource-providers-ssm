@@ -48,7 +48,7 @@ class DocumentResponseModelTranslator {
                 .versionName(response.document().versionName())
                 .documentFormat(response.document().documentFormatAsString())
                 .documentType(response.document().documentTypeAsString())
-                .tags(translateTags(response.document().tags()))
+                .tags(translateDocumentTagsToResourceModelTags(response.document().tags()))
                 .requires(translateRequires(response))
                 .targetType(response.document().targetType())
                 .build();
@@ -90,6 +90,15 @@ class DocumentResponseModelTranslator {
             .collect(Collectors.toList());
     }
 
+    private List<Tag> translateDocumentTagsToResourceModelTags(final List<software.amazon.awssdk.services.ssm.model.Tag> tags) {
+        return tags.stream().map(
+            tag -> Tag.builder()
+                .key(tag.key())
+                .value(tag.value())
+                .build())
+            .collect(Collectors.toList());
+    }
+
     private List<DocumentRequires> translateRequires(final GetDocumentResponse response) {
         if (!response.hasRequires()) {
             return null;
@@ -118,14 +127,5 @@ class DocumentResponseModelTranslator {
                         .version(documentRequires.version())
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    private List<Tag> translateTags(final List<software.amazon.awssdk.services.ssm.model.Tag> tags) {
-        return tags.stream().map(
-            tag -> Tag.builder()
-                .key(tag.key())
-                .value(tag.value())
-                .build())
-            .collect(Collectors.toList());
     }
 }
