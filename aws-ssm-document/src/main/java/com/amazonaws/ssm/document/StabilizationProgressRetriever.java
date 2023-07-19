@@ -82,10 +82,8 @@ class StabilizationProgressRetriever {
             return getEventProgressWithGetDocument(model, context, ssmClient, proxy);
         }
 
-        final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
-
         final ResourceInformation resourceInformation =
-                documentResponseModelTranslator.generateResourceInformation(describeResponse, documentTags);
+                documentResponseModelTranslator.generateResourceInformation(describeResponse);
 
         return GetProgressResponse.builder()
                 .resourceInformation(resourceInformation)

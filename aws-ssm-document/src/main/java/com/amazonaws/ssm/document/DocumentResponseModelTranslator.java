@@ -42,14 +42,13 @@ class DocumentResponseModelTranslator {
                 .build();
     }
 
-    ResourceInformation generateResourceInformation(@NonNull final DescribeDocumentResponse response,
-                                                    @NonNull final Map<String, String> documentTagMap) {
+    ResourceInformation generateResourceInformation(@NonNull final DescribeDocumentResponse response) {
         final ResourceModel model = ResourceModel.builder()
                 .name(response.document().name())
                 .versionName(response.document().versionName())
                 .documentFormat(response.document().documentFormatAsString())
                 .documentType(response.document().documentTypeAsString())
-                .tags(translateToResourceModelTags(documentTagMap))
+                .tags(translateTags(response.document().tags()))
                 .requires(translateRequires(response))
                 .targetType(response.document().targetType())
                 .build();
@@ -119,5 +118,14 @@ class DocumentResponseModelTranslator {
                         .version(documentRequires.version())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    private List<Tag> translateTags(final List<software.amazon.awssdk.services.ssm.model.Tag> tags) {
+        return tags.stream().map(
+            tag -> Tag.builder()
+                .key(tag.key())
+                .value(tag.value())
+                .build())
+            .collect(Collectors.toList());
     }
 }

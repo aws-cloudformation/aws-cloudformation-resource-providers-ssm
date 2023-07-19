@@ -21,6 +21,10 @@ public class DocumentResponseModelTranslatorTest {
     private static final String SAMPLE_DOCUMENT_TYPE = "Command";
     private static final String SAMPLE_DOCUMENT_VERSION = "3";
     private static final String SAMPLE_TARGET_TYPE = "targetType";
+    private static final List<software.amazon.awssdk.services.ssm.model.Tag> SAMPLE_TAGS = ImmutableList.of(
+        software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey1").value("tagValue1").build(),
+        software.amazon.awssdk.services.ssm.model.Tag.builder().key("tagKey2").value("tagValue2").build()
+    );
     private static final List<Tag> SAMPLE_RESOURCE_MODEL_TAGS = ImmutableList.of(
             Tag.builder().key("tagKey1").value("tagValue1").build(),
             Tag.builder().key("tagKey2").value("tagValue2").build()
@@ -102,7 +106,7 @@ public class DocumentResponseModelTranslatorTest {
         final DescribeDocumentResponse describeDocumentResponse = createDescribeDocumentResponseWithAllAttributes();
 
         final ResourceInformation resourceInformation =
-                unitUnderTest.generateResourceInformation(describeDocumentResponse, SAMPLE_TAG_MAP);
+                unitUnderTest.generateResourceInformation(describeDocumentResponse);
 
         Assertions.assertEquals(expectedResourceInformation, resourceInformation);
     }
@@ -232,6 +236,7 @@ public class DocumentResponseModelTranslatorTest {
                         .documentFormat(SAMPLE_DOCUMENT_FORMAT)
                         .attachmentsInformation(SAMPLE_DESCRIBE_RESPONSE_ATTACHMENTS)
                         .requires(SAMPLE_GET_RESPONSE_REQUIRES)
+                        .tags(SAMPLE_TAGS)
                         .build())
                 .build();
     }
