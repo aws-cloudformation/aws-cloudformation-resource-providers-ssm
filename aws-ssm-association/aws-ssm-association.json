@@ -222,6 +222,9 @@
     "primaryIdentifier": [
         "/properties/AssociationId"
     ],
+    "tagging": {
+        "taggable": false
+    },
     "handlers": {
         "create": {
             "permissions": [
