@@ -252,6 +252,11 @@
                 "resource-groups:ListGroups",
                 "resource-groups:ListGroupResources"
             ]
+        },
+        "list": {
+            "permissions": [
+                "ssm:ListAssociations"
+            ]
         }
     },
     "additionalProperties": false
