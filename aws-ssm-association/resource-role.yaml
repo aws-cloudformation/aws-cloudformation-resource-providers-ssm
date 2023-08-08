@@ -32,6 +32,7 @@ Resources:
                 - "ssm:DeleteAssociation"
                 - "ssm:DescribeAssociation"
                 - "ssm:UpdateAssociation"
+                - "ssm:ListAssociations"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
