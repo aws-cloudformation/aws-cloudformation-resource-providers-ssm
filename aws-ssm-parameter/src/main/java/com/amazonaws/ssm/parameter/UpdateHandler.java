@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 public class UpdateHandler extends BaseHandlerStd {
     private static final String OPERATION = "PutParameter";
     private static final String RETRY_MESSAGE = "Detected retryable error, retrying. Exception message: %s";
-    private Logger logger;
 
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -92,7 +91,7 @@ public class UpdateHandler extends BaseHandlerStd {
                                     .translateToServiceRequest(Translator::updatePutParameterRequest)
                                     .backoffDelay(getBackOffDelay(model))
                                     .makeServiceCall(this::updateResource)
-                                    .stabilize(BaseHandlerStd::stabilize)
+                                    .stabilize(this::stabilize)
                                     .progress());
         }
 
