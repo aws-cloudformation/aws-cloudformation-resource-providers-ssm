@@ -78,9 +78,9 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext
     ) {
         // DO NOT stabilize for non `aws:ec2:image` data type
-        if (putParameterRequest.dataType() != Constants.AWS_EC2_IMAGE_DATATYPE) {
-            return true;
-        }
+//        if (putParameterRequest.dataType() != Constants.AWS_EC2_IMAGE_DATATYPE) {
+//            return true;
+//        }
 
         final GetParametersResponse response;
         try {
@@ -95,9 +95,12 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             return false;
         }
 
-        // Temporary logging, TODO: Remove these logs after debugging
-        logger.log(String.format("GetParameter Response is: %s", response));
-        logger.log(String.format("PutParameter Response is: %s", putParameterResponse));
+        // Temporary logging, TODO: Remove these logs after debugging and enabling migration
+        if (response.parameters() != null) {
+            logger.log(String.format("Name from GetParameter Response is: %s", response.parameters().get(0).name()));
+            logger.log(String.format("Version from GetParameter Response is: %s", response.parameters().get(0).version()));
+            logger.log(String.format("PutParameter Response is: %s", putParameterResponse));
+        }
 
         return (response.parameters() != null &&
                 response.parameters().get(0).version() == putParameterResponse.version());
