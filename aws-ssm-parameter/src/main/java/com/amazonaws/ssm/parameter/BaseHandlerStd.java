@@ -78,9 +78,9 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext
     ) {
         // DO NOT stabilize for non `aws:ec2:image` data type
-//        if (putParameterRequest.dataType() != Constants.AWS_EC2_IMAGE_DATATYPE) {
-//            return true;
-//        }
+        if (putParameterRequest.dataType() != Constants.AWS_EC2_IMAGE_DATATYPE) {
+            return true;
+        }
 
         final GetParametersResponse response;
         try {
