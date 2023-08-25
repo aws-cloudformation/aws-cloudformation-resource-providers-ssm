@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.util.Set;
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+    protected Logger logger;
     protected static final Set<String> THROTTLING_ERROR_CODES = ImmutableSet.of(
             "ThrottlingException",
             "TooManyUpdates");
@@ -69,13 +70,18 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
      * @param callbackContext callback context
      * @return boolean state of stabilized or not
      */
-    protected static boolean stabilize(
+    public Boolean stabilize(
             final PutParameterRequest putParameterRequest,
             final PutParameterResponse putParameterResponse,
             final ProxyClient<SsmClient> proxyClient,
             final ResourceModel resourceModel,
             final CallbackContext callbackContext
     ) {
+        // DO NOT stabilize for non `aws:ec2:image` data type
+        if (putParameterRequest.dataType() != Constants.AWS_EC2_IMAGE_DATATYPE) {
+            return true;
+        }
+
         final GetParametersResponse response;
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(Translator.getParametersRequest(resourceModel), proxyClient.client()::getParameters);
@@ -88,6 +94,14 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         if(response == null || response.invalidParameters().size() != 0) {
             return false;
         }
+
+        // Temporary logging, TODO: Remove these logs after debugging and enabling migration
+        if (response.parameters() != null) {
+            logger.log(String.format("Name from GetParameter Response is: %s", response.parameters().get(0).name()));
+            logger.log(String.format("Version from GetParameter Response is: %s", response.parameters().get(0).version()));
+            logger.log(String.format("PutParameter Response is: %s", putParameterResponse));
+        }
+
         return (response.parameters() != null &&
                 response.parameters().get(0).version() == putParameterResponse.version());
     }

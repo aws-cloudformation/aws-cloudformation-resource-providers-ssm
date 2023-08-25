@@ -19,7 +19,6 @@ import java.util.List;
 
 public class ReadHandler extends BaseHandlerStd {
     private static final String OPERATION = "ReadParameter";
-    private Logger logger;
 
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(

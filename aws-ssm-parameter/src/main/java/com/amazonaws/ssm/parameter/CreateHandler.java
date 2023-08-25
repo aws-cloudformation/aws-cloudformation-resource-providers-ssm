@@ -29,8 +29,6 @@ import java.util.Random;
 public class CreateHandler extends BaseHandlerStd {
     private static final String OPERATION = "PutParameter";
     private static final String RETRY_MESSAGE = "Detected retryable error, retrying. Exception message: %s";
-    private Logger logger;
-
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -67,7 +65,7 @@ public class CreateHandler extends BaseHandlerStd {
                 .translateToServiceRequest((resourceModel) -> Translator.createPutParameterRequest(resourceModel, consolidatedTagList))
                 .backoffDelay(getBackOffDelay(model))
                 .makeServiceCall(this::createResource)
-                .stabilize(BaseHandlerStd::stabilize)
+                .stabilize(this::stabilize)
                 .progress()
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }

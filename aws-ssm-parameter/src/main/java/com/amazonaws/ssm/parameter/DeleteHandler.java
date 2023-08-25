@@ -19,7 +19,6 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 public class DeleteHandler extends BaseHandlerStd {
     private static final String OPERATION = "DeleteParameter";
     private static final String RETRY_MESSAGE = "Detected retryable error, retrying. Exception message: %s";
-    private Logger logger;
 
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(

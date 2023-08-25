@@ -1,10 +1,10 @@
 package com.amazonaws.ssm.parameter;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.awscore.AwsRequest;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -19,7 +19,7 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 
 public class AbstractTestBase {
     protected static final Credentials MOCK_CREDENTIALS;
-    protected static final org.slf4j.Logger delegate;
+    protected static final Logger delegate;
     protected static final LoggerProxy logger;
 
     protected static final String DESCRIPTION;
