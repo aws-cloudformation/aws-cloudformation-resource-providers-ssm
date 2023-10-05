@@ -1,0 +1,26 @@
+{
+    "CreateInputs": {
+        "Name": "AWS-EnableS3BucketEncryption",
+        "AutomationTargetParameterName": "BucketName",
+        "ScheduleExpression": "cron(28 21 ? * TUE#2 *)",
+        "ScheduleOffset": 3,
+        "ApplyOnlyAtCronInterval": true,
+        "CalendarNames": [
+            "{{awsssmassociationcto3}}"
+        ],
+        "Targets": [
+            {
+                "Key": "ParameterValues",
+                "Values": [
+                    "bucket"
+                ]
+            }
+        ],
+        "Parameters": {
+            "AutomationAssumeRole": [
+                "arn:aws:iam::{{account}}:role/ReadOnly"
+            ]
+        }
+    },
+    "PatchInputs": []
+}
