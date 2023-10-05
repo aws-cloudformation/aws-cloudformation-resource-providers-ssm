@@ -1,0 +1,41 @@
+{
+    "CreateInputs": {
+        "AssociationName": "test1",
+        "Name": "AWS-RunShellScript",
+        "ComplianceSeverity": "HIGH",
+        "SyncCompliance": "AUTO",
+        "WaitForSuccessTimeoutSeconds": 60,
+        "Targets": [
+            {
+                "Key": "InstanceIds",
+                "Values": [
+                    "*"
+                ]
+            }
+        ],
+        "Parameters": {
+            "commands": [
+                "ls"
+            ],
+            "workingDirectory": [
+                "/"
+            ]
+        },
+        "MaxConcurrency": "50%",
+        "MaxErrors": "5%",
+        "OutputLocation": {
+            "S3Location": {
+                "OutputS3BucketName": "{{awsssmassociationcto2}}",
+                "OutputS3KeyPrefix": "outputs",
+                "OutputS3Region": "{{ region }}"
+            }
+        }
+    },
+    "PatchInputs": [
+        {
+            "op": "replace",
+            "path": "/MaxConcurrency",
+            "value": "100%"
+        }
+    ]
+}

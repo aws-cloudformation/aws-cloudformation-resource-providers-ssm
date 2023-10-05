@@ -1,0 +1,15 @@
+{
+    "CreateInputs": {
+        "Name": "{{awsssmassociationcto4}}",
+        "DocumentVersion": "$DEFAULT",
+        "Targets": [
+            {
+                "Key": "InstanceIds",
+                "Values": [
+                    "*"
+                ]
+            }
+        ]
+    },
+    "PatchInputs": []
+}

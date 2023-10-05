@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref 'LatestAmiId'
+      InstanceType: t3.small
+  ContractTestS3OutputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketName: !Sub ssm-association-cfn-contract-test-${AWS::AccountId}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+  DefaultOpenChangeCalendarDocument:
+    Type: 'AWS::SSM::Document'
+    Properties:
+      Content: "BEGIN:VCALENDAR\r\nPRODID:-//AWS//Change Calendar 1.0//EN\r\nVERSION:2.0\r\nX-CALENDAR-TYPE:DEFAULT_OPEN\r\nX-WR-CALDESC:test\r\nBEGIN:VTODO\r\nDTSTAMP:20200320T004207Z\r\nUID:3b5af39a-d0b3-4049-a839-d7bb8af01f92\r\nSUMMARY:Add events to this calendar.\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
+      DocumentType: ChangeCalendar
+      DocumentFormat: TEXT
+  UpdatePackagesDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Content:
+        mainSteps:
+          - "action": "aws:runShellScript"
+            "name": "UpdatePackages"
+            "inputs":
+              "runCommand":
+                - "yum update -y"
+        parameters: {}
+        schemaVersion: "2.0"
+      DocumentType: "Command"
+Outputs:
+  InstanceId:
+    Value: !Ref Instance
+    Export:
+      Name: awsssmassociationcto1
+  ContractTestBucketName:
+    Value: !Ref ContractTestS3OutputBucket
+    Export:
+      Name: awsssmassociationcto2
+  CalendarName:
+    Value: !Ref DefaultOpenChangeCalendarDocument
+    Export:
+      Name: awsssmassociationcto3
+  DocumentName:
+    Value: !Ref UpdatePackagesDocument
+    Export:
+      Name: awsssmassociationcto4

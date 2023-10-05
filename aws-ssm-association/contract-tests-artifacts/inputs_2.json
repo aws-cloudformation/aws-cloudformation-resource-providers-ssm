@@ -1,0 +1,15 @@
+{
+    "CreateInputs": {
+        "Name": "AWS-RunShellScript",
+        "InstanceId": "{{ awsssmassociationcto1 }}",
+        "Parameters": {
+            "commands": [
+                "ls"
+            ],
+            "workingDirectory": [
+                "/"
+            ]
+        }
+    },
+    "PatchInputs": []
+}
