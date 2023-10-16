@@ -3,6 +3,11 @@ package com.amazonaws.ssm.document;
 import com.amazonaws.ssm.document.tags.TagReader;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
@@ -18,19 +23,11 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -108,6 +105,9 @@ public class ReadHandlerTest {
     private SsmException ssmException;
 
     @Mock
+    private AwsErrorDetails awsErrorDetails;
+
+    @Mock
     private CfnGeneralServiceException cfnException;
 
     private ReadHandler unitUnderTest;
@@ -166,6 +166,8 @@ public class ReadHandlerTest {
         when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(ssmException.awsErrorDetails()).thenReturn(awsErrorDetails);
+        when(awsErrorDetails.errorCode()).thenReturn("AccessDeniedException");
         when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
         when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE, SAMPLE_TAG_MAP))
                 .thenReturn(expectedResourceInformation);
@@ -191,7 +193,9 @@ public class ReadHandlerTest {
     public void testHandleRequest_DescribeThrowsSsmException_verifyExceptionReturned() {
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(ssmException.awsErrorDetails()).thenReturn(awsErrorDetails);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));

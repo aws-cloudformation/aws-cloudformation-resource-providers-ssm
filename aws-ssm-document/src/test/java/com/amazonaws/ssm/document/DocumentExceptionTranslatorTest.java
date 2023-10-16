@@ -26,6 +26,7 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.exceptions.CfnUnauthorizedTaggingOperationException;
 import software.amazon.cloudformation.proxy.Logger;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +34,9 @@ public class DocumentExceptionTranslatorTest {
 
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_OPERATION_NAME = "sampleOperation";
+
+    private static final String ADD_TAGS_ERROR_MESSAGE = "not authorized to perform: ssm:AddTagsToResource";
+    private static final String REMOVE_TAGS_ERROR_MESSAGE = "not authorized to perform: ssm:RemoveTagsFromResource";
 
     private final DocumentExceptionTranslator unitUnderTest = new DocumentExceptionTranslator();
 

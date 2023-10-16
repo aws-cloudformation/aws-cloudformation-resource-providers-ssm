@@ -1,10 +1,5 @@
 package com.amazonaws.ssm.document.tags;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -13,8 +8,17 @@ import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.awssdk.services.ssm.model.Tag;
+import software.amazon.cloudformation.exceptions.CfnUnauthorizedTaggingOperationException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.amazonaws.ssm.document.tags.TagUtil.TAGGING_PERMISSION_MESSAGE_FORMAT;
 
 @RequiredArgsConstructor
 public class TagUpdater {
@@ -66,9 +70,8 @@ public class TagUpdater {
         try {
             tagClient.addTags(tagsToAdd, documentName, ssmClient, proxy);
         } catch (final SsmException e) {
-            if (tagUtil.shouldSoftFailTags(previousResourceModelTags, currentResourceModelTags, e)) {
-                logger.log(String.format("Soft fail adding tags to %s", documentName));
-                return;
+            if (tagUtil.isResourceTagModified(previousResourceModelTags, currentResourceModelTags)) {
+                logger.log(TAGGING_PERMISSION_MESSAGE_FORMAT);
             }
 
             throw e;
@@ -84,9 +87,8 @@ public class TagUpdater {
         try {
             tagClient.removeTags(tagsToRemove, documentName, ssmClient, proxy);
         } catch (final SsmException e) {
-            if (tagUtil.shouldSoftFailTags(previousResourceModelTags, currentResourceModelTags, e)) {
-                logger.log(String.format("Soft fail removing tags from %s", documentName));
-                return;
+            if (tagUtil.isResourceTagModified(previousResourceModelTags, currentResourceModelTags)) {
+                logger.log(TAGGING_PERMISSION_MESSAGE_FORMAT);
             }
 
             throw e;

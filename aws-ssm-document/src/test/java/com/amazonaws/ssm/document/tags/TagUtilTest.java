@@ -2,7 +2,6 @@ package com.amazonaws.ssm.document.tags;
 
 import com.amazonaws.ssm.document.Tag;
 import com.google.common.collect.ImmutableList;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +11,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.ssm.model.SsmException;
+
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 public class TagUtilTest {
@@ -46,41 +47,41 @@ public class TagUtilTest {
 
         Mockito.when(ssmException.awsErrorDetails()).thenReturn(errorDetails);
 
-        Assertions.assertFalse(unitUnderTest.shouldSoftFailTags(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException));
+        Assertions.assertFalse(unitUnderTest.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException));
     }
 
     @Test
     public void testShouldSoftFail_AccessDeniedException_PreviousModelTagsNonNull_currentModelTagsNull_isFalse() {
         Mockito.when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
 
-        Assertions.assertFalse(unitUnderTest.shouldSoftFailTags(SAMPLE_PREVIOUS_MODEL_TAGS, null, ssmException));
+        Assertions.assertFalse(unitUnderTest.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, null, ssmException));
     }
 
     @Test
     public void testShouldSoftFail_AccessDeniedException_PreviousModelTagsNull_CurrentModelTagsNonNull_isFalse() {
         Mockito.when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
 
-        Assertions.assertFalse(unitUnderTest.shouldSoftFailTags(null, SAMPLE_MODEL_TAGS, ssmException));
+        Assertions.assertFalse(unitUnderTest.isResourceTagModified(null, SAMPLE_MODEL_TAGS, ssmException));
     }
 
     @Test
     public void testShouldSoftFail_AccessDeniedException_PreviousModelTagsNonNull_CurrentModelTagsNonNull_isFalse() {
         Mockito.when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
 
-        Assertions.assertFalse(unitUnderTest.shouldSoftFailTags(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException));
+        Assertions.assertFalse(unitUnderTest.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException));
     }
 
     @Test
     public void testShouldSoftFail_AccessDeniedException_PreviousModelTagsNull_CurrentModelTagsNull_isTrue() {
         Mockito.when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
 
-        Assertions.assertTrue(unitUnderTest.shouldSoftFailTags(null, null, ssmException));
+        Assertions.assertTrue(unitUnderTest.isResourceTagModified(null, null, ssmException));
     }
 
     @Test
     public void testShouldSoftFail_AccessDeniedException_PreviousModelTagsEmpty_CurrentModelTagsEmpty_isTrue() {
         Mockito.when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
 
-        Assertions.assertTrue(unitUnderTest.shouldSoftFailTags(ImmutableList.of(), ImmutableList.of(), ssmException));
+        Assertions.assertTrue(unitUnderTest.isResourceTagModified(ImmutableList.of(), ImmutableList.of(), ssmException));
     }
 }

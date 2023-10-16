@@ -14,7 +14,9 @@ import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.SsmException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnUnauthorizedTaggingOperationException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -28,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 
+import static com.amazonaws.ssm.document.tags.TagUtil.TAGGING_PERMISSION_MESSAGE_FORMAT;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -301,9 +304,7 @@ public class CreateHandlerTest {
     }
 
     @Test
-    public void handleRequest_doesSoftFailOnTagging_VerifyCreationInProgress() {
-        final CreateDocumentRequest createDocumentRequestWithoutTags = SAMPLE_CREATE_DOCUMENT_REQUEST.toBuilder()
-                .tags(ImmutableList.of()).build();
+    public void handleRequest_doesHardFailOnTagging_VerifyFailedEventReturned() {
         final ResourceModel resourceModel = ResourceModel.builder()
                 .name(SAMPLE_DOCUMENT_NAME)
                 .content(SAMPLE_DOCUMENT_CONTENT)
@@ -328,13 +329,10 @@ public class CreateHandlerTest {
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(expectedModel)
-                .status(OperationStatus.IN_PROGRESS)
                 .callbackContext(expectedCallbackContext)
-                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-                .build();
-
-        final CreateDocumentResponse createDocumentResponse = CreateDocumentResponse.builder()
-                .documentDescription(DocumentDescription.builder().name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.CREATING).build())
+                .status(OperationStatus.FAILED)
+                .message(ssmException.getMessage())
+                .errorCode(HandlerErrorCode.UnauthorizedTaggingOperation)
                 .build();
 
         when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
@@ -342,16 +340,15 @@ public class CreateHandlerTest {
         // throw access denied error
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
 
-        // soft fail
-        when(tagUtil.shouldSoftFailTags(null, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
-        when(proxy.injectCredentialsAndInvokeV2(eq(createDocumentRequestWithoutTags), any())).thenReturn(createDocumentResponse);
+        // hard fail
+        when(tagUtil.isResourceTagModified(null, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger);
+                = unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger)
 
-        verify(safeLogger).safeLogDocumentInformation(resourceModel, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
-        verify(logger, Mockito.times(1)).log(String.format("Soft fail adding tags during create of document %s", SAMPLE_DOCUMENT_NAME));
         Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(resourceModel, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+        verify(logger, Mockito.times(1)).log(TAGGING_PERMISSION_MESSAGE_FORMAT);
     }
 
     @Test
@@ -375,7 +372,7 @@ public class CreateHandlerTest {
         when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
         // soft fail
-        when(tagUtil.shouldSoftFailTags(null, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
+        when(tagUtil.isResourceTagModified(null, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger));
