@@ -80,8 +80,14 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         final CreateDocumentRequest createDocumentRequest;
         try {
             createDocumentRequest =
-                    documentModelTranslator.generateCreateDocumentRequest(model, request.getLogicalResourceIdentifier(),
-                            request.getSystemTags(), request.getDesiredResourceTags(), request.getClientRequestToken());
+                    documentModelTranslator.generateCreateDocumentRequest(model,
+                            request.getLogicalResourceIdentifier(),
+                            request.getSystemTags(),
+                            TagUtil.getInstance().consolidateTags(
+                                    TagUtil.getInstance().translateTags(request.getDesiredResourceState().getTags()),
+                                    request.getDesiredResourceTags(),
+                                    request.getSystemTags()),
+                            request.getClientRequestToken());
 
         } catch (final InvalidDocumentContentException e) {
             throw new CfnInvalidRequestException(e.getMessage(), e);
