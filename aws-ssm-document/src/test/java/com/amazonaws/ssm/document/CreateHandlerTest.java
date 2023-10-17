@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentResponse;
@@ -77,6 +78,14 @@ public class CreateHandlerTest {
             .build();
     private static final GetDocumentRequest SAMPLE_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
+            .build();
+    private static final AwsErrorDetails ACCESS_DENIED_ERROR_DETAILS = AwsErrorDetails.builder()
+            .errorCode("AccessDeniedException")
+            .errorMessage("errorMessage")
+            .build();
+    private static final AwsErrorDetails TAGGING_ACCESS_DENIED_ERROR_DETAILS = AwsErrorDetails.builder()
+            .errorCode("AccessDeniedException")
+            .errorMessage("ssm:AddTagsToResource")
             .build();
     private static final int CALLBACK_DELAY_SECONDS = 30;
     private static final int NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES = 20;
@@ -164,6 +173,7 @@ public class CreateHandlerTest {
     @Test
     public void handleRequest_NewDocumentCreation_ssmServiceThrowsException_VerifyExpectedException() {
         when(documentModelTranslator.generateCreateDocumentRequest(SAMPLE_RESOURCE_MODEL, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
+        when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
@@ -323,8 +333,6 @@ public class CreateHandlerTest {
                 .tags(SAMPLE_MODEL_TAGS)
                 .build();
         final CallbackContext expectedCallbackContext = CallbackContext.builder()
-                .createDocumentStarted(true)
-                .stabilizationRetriesRemaining(NUMBER_OF_DOCUMENT_CREATE_POLL_RETRIES)
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
@@ -338,13 +346,14 @@ public class CreateHandlerTest {
         when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
 
         // throw access denied error
+        when(ssmException.awsErrorDetails()).thenReturn(TAGGING_ACCESS_DENIED_ERROR_DETAILS);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
 
         // hard fail
-        when(tagUtil.isResourceTagModified(null, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
+        when(tagUtil.isResourceTagModified(null, SAMPLE_MODEL_TAGS)).thenReturn(true);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger)
+                = unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
         verify(safeLogger).safeLogDocumentInformation(resourceModel, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
@@ -370,9 +379,8 @@ public class CreateHandlerTest {
                 .build();
 
         when(documentModelTranslator.generateCreateDocumentRequest(resourceModel, SAMPLE_LOGICAL_RESOURCE_ID, SAMPLE_SYSTEM_TAGS, SAMPLE_RESOURCE_TAGS, SAMPLE_REQUEST_TOKEN)).thenReturn(SAMPLE_CREATE_DOCUMENT_REQUEST);
+        when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_CREATE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
-        // soft fail
-        when(tagUtil.isResourceTagModified(null, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, resourceModelHandlerRequest, null, logger));

@@ -185,7 +185,7 @@ public class TagUpdaterTest {
         );
 
         Mockito.doThrow(ssmException).when(tagClient).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS)).thenReturn(true);
 
         Assertions.assertThrows(CfnUnauthorizedTaggingOperationException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
                 SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
@@ -210,7 +210,7 @@ public class TagUpdaterTest {
         );
 
         Mockito.doThrow(ssmException).when(tagClient).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(true);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS)).thenReturn(true);
 
         Assertions.assertThrows(CfnUnauthorizedTaggingOperationException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
                 SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
@@ -244,7 +244,7 @@ public class TagUpdaterTest {
         );
 
         Mockito.doThrow(ssmException).when(tagClient).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS)).thenReturn(false);
 
         Assertions.assertThrows(SsmException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
                 SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
@@ -277,7 +277,7 @@ public class TagUpdaterTest {
         );
 
         Mockito.doThrow(ssmException).when(tagClient).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
-        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmException)).thenReturn(false);
+        Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS)).thenReturn(false);
 
         Assertions.assertThrows(SsmException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME,
                 SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS,

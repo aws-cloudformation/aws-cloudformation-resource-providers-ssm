@@ -24,6 +24,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -102,10 +103,21 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             }
         }
 
-        if (!Objects.equals(previousModel.getTags(), model.getTags())) {
+        final Map<String, String> previousTags = TagUtil.getInstance().consolidateTags(
+                TagUtil.getInstance().translateTags(request.getPreviousResourceState().getTags()),
+                request.getPreviousResourceTags(),
+                request.getPreviousSystemTags());
+        final Map<String, String> desiredTags = TagUtil.getInstance().consolidateTags(
+                TagUtil.getInstance().translateTags(request.getDesiredResourceState().getTags()),
+                request.getDesiredResourceTags(),
+                request.getSystemTags());
+
+        if (!Objects.deepEquals(previousTags, desiredTags)) {
             try {
                 logger.log("update tags request for document name: " + model.getName());
-                tagUpdater.updateTags(model.getName(), request.getPreviousResourceTags(), request.getDesiredResourceTags(),
+                tagUpdater.updateTags(model.getName(),
+                        previousTags,
+                        desiredTags,
                         previousModel.getTags(), model.getTags(),
                         ssmClient, proxy, logger);
             } catch (final SsmException e) {
@@ -141,11 +153,11 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         }
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(model)
-                    .status(OperationStatus.SUCCESS)
-                    .callbackContext(context)
-                    .callbackDelaySeconds(0)
-                    .build();
+                .resourceModel(model)
+                .status(OperationStatus.SUCCESS)
+                .callbackContext(context)
+                .callbackDelaySeconds(0)
+                .build();
     }
 
     private ProgressEvent<ResourceModel, CallbackContext> updateProgress(final ResourceModel model, final CallbackContext context,
@@ -171,10 +183,10 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
             if (latestVersion == null || defaultVersion == null) {
                 final DescribeDocumentRequest describeDocumentRequest =
-                    documentModelTranslator.generateDescribeDocumentRequest(model);
+                        documentModelTranslator.generateDescribeDocumentRequest(model);
                 try {
                     final DescribeDocumentResponse describeResponse =
-                        proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
+                            proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
                     latestVersion = describeResponse.document().latestVersion();
                     defaultVersion = describeResponse.document().defaultVersion();
                 } catch(SsmException e) {
@@ -184,7 +196,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
             if (!latestVersion.equalsIgnoreCase(defaultVersion)) {
                 final UpdateDocumentDefaultVersionRequest request =
-                    documentModelTranslator.generateUpdateDocumentDefaultVersionRequest(model.getName(), latestVersion);
+                        documentModelTranslator.generateUpdateDocumentDefaultVersionRequest(model.getName(), latestVersion);
 
                 try {
                     proxy.injectCredentialsAndInvokeV2(request, ssmClient::updateDocumentDefaultVersion);
@@ -223,12 +235,12 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                                                                              final CallbackContext context,
                                                                              final String message) {
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(model)
-            .status(OperationStatus.IN_PROGRESS)
-            .message(message)
-            .callbackContext(context)
-            .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
-            .build();
+                .resourceModel(model)
+                .status(OperationStatus.IN_PROGRESS)
+                .message(message)
+                .callbackContext(context)
+                .callbackDelaySeconds(CALLBACK_DELAY_SECONDS)
+                .build();
     }
 
     private void setInProgressContext(CallbackContext context) {

@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeDocumentResponse;
@@ -58,18 +59,34 @@ public class UpdateHandlerTest {
     private static final Map<String, String> SAMPLE_SYSTEM_TAGS = ImmutableMap.of("aws:cloudformation:stack-name", "testStack");
     private static final Map<String, String> SAMPLE_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey1", "tagValue1");
     private static final Map<String, String> SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS = ImmutableMap.of("tagKey2", "tagValue2");
-    private static final List<Tag> SAMPLE_PREVIOUS_MODEL_TAGS = ImmutableList.of(
+    private static final List<Tag> SAMPLE_MODEL_TAGS = ImmutableList.of(
             Tag.builder().key("tagModelKey1").value("tagModelValue1").build(),
             Tag.builder().key("tagModelKey2").value("tagModelValue2").build()
     );
-    private static final List<Tag> SAMPLE_MODEL_TAGS = ImmutableList.of(
+    private static final List<Tag> SAMPLE_PREVIOUS_MODEL_TAGS = ImmutableList.of(
             Tag.builder().key("tagModelKey3").value("tagModelValue3").build(),
             Tag.builder().key("tagModelKey4").value("tagModelValue4").build()
+    );
+    private static final Map<String, String> SAMPLE_CONSOLIDATED_TAGS = ImmutableMap.of(
+            "tagKey1", "tagValue1",
+            "tagModelKey1", "tagModelValue1",
+            "tagModelKey2", "tagModelValue2",
+            "aws:cloudformation:stack-name", "testStack"
+    );
+    private static final Map<String, String> SAMPLE_PREVIOUS_CONSOLIDATED_TAGS = ImmutableMap.of(
+            "tagKey2", "tagValue2",
+            "tagModelKey3", "tagModelValue3",
+            "tagModelKey4", "tagModelValue4"
     );
     private static final String SAMPLE_REQUEST_TOKEN = "sampleRequestToken";
     private static final UpdateDocumentRequest SAMPLE_UPDATE_DOCUMENT_REQUEST = UpdateDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
             .content(SAMPLE_DOCUMENT_CONTENT_STRING)
+            .build();
+
+    private static final AwsErrorDetails ACCESS_DENIED_ERROR_DETAILS = AwsErrorDetails.builder()
+            .errorCode("AccessDeniedException")
+            .errorMessage("errorMessage")
             .build();
 
     private static final ResourceModel SAMPLE_RESOURCE_MODEL = ResourceModel.builder()
@@ -160,7 +177,6 @@ public class UpdateHandlerTest {
     // Test Update for Replacement
     @Test
     public void testHandleRequest_withReplacement_DocumentUpdateTagsSuccess_VerifyResponse() {
-
         final ResourceModel expectedModel = ResourceModel.builder().name(SAMPLE_DOCUMENT_NAME).content(SAMPLE_PREVIOUS_DOCUMENT_CONTENT)
                 .tags(SAMPLE_MODEL_TAGS)
                 .build();
@@ -177,16 +193,19 @@ public class UpdateHandlerTest {
                 = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
-        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS, SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS,
-                SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
+        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME,
+                SAMPLE_PREVIOUS_CONSOLIDATED_TAGS, SAMPLE_CONSOLIDATED_TAGS,
+                SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS,
+                ssmClient, proxy, logger);
         verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
     public void testHandleRequest_withReplacement_DocumentUpdateTagsThrowsException_VerifyResponse() {
-        doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS,
-                SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
+        doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_CONSOLIDATED_TAGS,
+                SAMPLE_CONSOLIDATED_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
 
+        when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
@@ -273,16 +292,20 @@ public class UpdateHandlerTest {
         final ProgressEvent<ResourceModel, CallbackContext> response = unitUnderTest.handleRequest(proxy, request, null, logger);
 
         Assertions.assertEquals(expectedResponse, response);
-        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS, SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS,
-                SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
+        Mockito.verify(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME,
+                SAMPLE_PREVIOUS_CONSOLIDATED_TAGS,
+                SAMPLE_CONSOLIDATED_TAGS,
+                SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS,
+                ssmClient, proxy, logger);
         verify(safeLogger).safeLogDocumentInformation(expectedModel, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 
     @Test
     public void testHandleRequest_withTrueUpdate_DocumentUpdateTagsThrowsException_VerifyResponse() {
-        doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_DESIRED_RESOURCE_TAGS,
-                SAMPLE_DESIRED_RESOURCE_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
+        doThrow(ssmException).when(tagUpdater).updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_PREVIOUS_CONSOLIDATED_TAGS,
+                SAMPLE_CONSOLIDATED_TAGS, SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger);
 
+        when(ssmException.awsErrorDetails()).thenReturn(ACCESS_DENIED_ERROR_DETAILS);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         final ResourceModel expectedModel = ResourceModel.builder()
@@ -468,7 +491,6 @@ public class UpdateHandlerTest {
                 .callbackContext(expectedCallbackContext)
                 .resourceInformation(expectedResourceInformation)
                 .build();
-
         final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(expectedModel)
                 .status(OperationStatus.IN_PROGRESS)
@@ -664,8 +686,8 @@ public class UpdateHandlerTest {
                 .build();
 
         when(progressUpdater.getEventProgress(expectedModel, inProgressCallbackContext, ssmClient, proxy, logger))
-                .thenThrow(SsmException.class);
-        when(exceptionTranslator.getCfnException(any(SsmException.class), eq(SAMPLE_DOCUMENT_NAME), eq(OPERATION_NAME), eq(logger))).thenThrow(CfnGeneralServiceException.class);
+                .thenThrow(ssmException);
+        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenThrow(CfnGeneralServiceException.class);
 
         final ResourceHandlerRequest<ResourceModel> request = buildRequest(previousModel, expectedModel);
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, request, inProgressCallbackContext, logger));
@@ -677,13 +699,13 @@ public class UpdateHandlerTest {
 
     private ResourceHandlerRequest<ResourceModel> buildRequest(ResourceModel previousModel, ResourceModel model, Map<String, String> previousTags, Map<String, String> tags) {
         return ResourceHandlerRequest.<ResourceModel>builder()
-            .systemTags(SAMPLE_SYSTEM_TAGS)
-            .desiredResourceTags(tags)
-            .previousResourceTags(previousTags)
-            .clientRequestToken(SAMPLE_REQUEST_TOKEN)
-            .desiredResourceState(model)
-            .previousResourceState(previousModel)
-            .awsAccountId(SAMPLE_ACCOUNT_ID)
-            .build();
+                .systemTags(SAMPLE_SYSTEM_TAGS)
+                .desiredResourceTags(tags)
+                .previousResourceTags(previousTags)
+                .clientRequestToken(SAMPLE_REQUEST_TOKEN)
+                .desiredResourceState(model)
+                .previousResourceState(previousModel)
+                .awsAccountId(SAMPLE_ACCOUNT_ID)
+                .build();
     }
 }
