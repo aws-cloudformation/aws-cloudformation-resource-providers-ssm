@@ -46,13 +46,7 @@ public class TagUtil {
      */
     public boolean isResourceTagModified(@Nullable final List<Tag> previousResourceModelTags,
                                          @Nullable final List<Tag> currentResourceModelTags) {
-        if (previousResourceModelTags == null || previousResourceModelTags.isEmpty()) {
-            return !(currentResourceModelTags == null || currentResourceModelTags.isEmpty());
-        }
-        if (currentResourceModelTags == null || currentResourceModelTags.isEmpty()) {
-            return !(previousResourceModelTags == null || previousResourceModelTags.isEmpty());
-        }
-        return !Objects.deepEquals(previousResourceModelTags, currentResourceModelTags);
+        return !Objects.equals(previousResourceModelTags, currentResourceModelTags);
     }
 
     /**
