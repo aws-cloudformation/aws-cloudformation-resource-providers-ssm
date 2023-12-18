@@ -96,6 +96,9 @@ public class AssociationDescriptionTranslator {
         simpleTypeValidator.getValidatedInteger(association.scheduleOffset())
             .ifPresent(model::setScheduleOffset);
 
+        simpleTypeValidator.getValidatedInteger(association.duration())
+            .ifPresent(model::setDuration);
+
         return model;
     }
 }

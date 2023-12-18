@@ -94,6 +94,9 @@ public class CreateAssociationTranslator implements RequestTranslator<CreateAsso
         simpleTypeValidator.getValidatedInteger(model.getScheduleOffset())
             .ifPresent(createAssociationRequestBuilder::scheduleOffset);
 
+        simpleTypeValidator.getValidatedInteger(association.getDuration())
+            .ifPresent(createAssociationRequestBuilder::duration);
+
         return createAssociationRequestBuilder.build();
     }
 }

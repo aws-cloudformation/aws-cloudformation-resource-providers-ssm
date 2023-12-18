@@ -34,6 +34,7 @@ import static com.amazonaws.ssm.association.TestsInputs.MODEL_TARGETS;
 import static com.amazonaws.ssm.association.TestsInputs.PARAMETERS;
 import static com.amazonaws.ssm.association.TestsInputs.SCHEDULE_EXPRESSION;
 import static com.amazonaws.ssm.association.TestsInputs.SCHEDULE_OFFSET;
+import static com.amazonaws.ssm.association.TestsInputs.CUTOFF_DURATION;
 import static com.amazonaws.ssm.association.TestsInputs.SERVICE_OUTPUT_LOCATION;
 import static com.amazonaws.ssm.association.TestsInputs.SERVICE_TARGETS;
 import static com.amazonaws.ssm.association.TestsInputs.SYNC_COMPLIANCE;
@@ -93,6 +94,7 @@ class AssociationDescriptionTranslatorTest {
                 .applyOnlyAtCronInterval(true)
                 .calendarNames(CALENDAR_NAMES)
                 .scheduleOffset(SCHEDULE_OFFSET)
+                .duration(CUTOFF_DURATION)
                 .build();
 
         final ResourceModel resultModel =
@@ -117,6 +119,7 @@ class AssociationDescriptionTranslatorTest {
                 .applyOnlyAtCronInterval(true)
                 .calendarNames(CALENDAR_NAMES)
                 .scheduleOffset(SCHEDULE_OFFSET)
+                .duration(CUTOFF_DURATION)
                 .build();
 
         assertThat(resultModel).isEqualTo(expectedModel);

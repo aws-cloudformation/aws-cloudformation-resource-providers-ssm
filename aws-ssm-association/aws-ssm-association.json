@@ -211,6 +211,11 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 6
+        },
+        "Duration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 24
         }
     },
     "required": [

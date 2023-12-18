@@ -76,4 +76,6 @@ public class TestsInputs {
     );
 
     public static final Integer SCHEDULE_OFFSET = 2;
+
+    public static final Integer CUTOFF_DURATION = 4;
 }
