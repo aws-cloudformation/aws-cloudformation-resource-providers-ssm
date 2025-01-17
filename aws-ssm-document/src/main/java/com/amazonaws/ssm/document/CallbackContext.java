@@ -3,6 +3,7 @@ package com.amazonaws.ssm.document;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import software.amazon.cloudformation.proxy.StdCallbackContext;
 
 import lombok.Builder;
 import lombok.Data;
@@ -11,8 +12,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @JsonDeserialize(builder = CallbackContext.CallbackContextBuilder.class)
-@EqualsAndHashCode
-public class CallbackContext {
+@EqualsAndHashCode(callSuper = true)
+public class CallbackContext extends StdCallbackContext {
 
     /**
      * Boolean that tells whether the create operation on resource started.

@@ -1,6 +1,6 @@
 {
     "CreateInputs": {
-        "Name": "commandTest1",
+        "Name": "commandTest1-{{ uuid }}",
         "Content": "{\"schemaVersion\":\"2.2\",\"description\":\"Command Document Example Create JSON Template\",\"mainSteps\":[{\"action\":\"aws:runPowerShellScript\",\"name\":\"example\",\"inputs\":{\"runCommand\":[\"Write-Output\"]}}]}",
         "DocumentType": "Command",
         "DocumentFormat": "JSON",

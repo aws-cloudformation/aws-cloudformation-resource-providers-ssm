@@ -11,12 +11,14 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: com.amazonaws.ssm.document.HandlerWrapper::handleRequest
-      Runtime: java8
-      CodeUri: ./target/aws-ssm-document-handler-1.0-SNAPSHOT.jar
+      Runtime: java11
+      CodeUri: ./target/aws-ssm-document-1.0.jar
+      MemorySize: 256 # to prevent OutOfMemory exception when testing
 
   TestEntrypoint:
     Type: AWS::Serverless::Function
     Properties:
       Handler: com.amazonaws.ssm.document.HandlerWrapper::testEntrypoint
-      Runtime: java8
-      CodeUri: ./target/aws-ssm-document-handler-1.0-SNAPSHOT.jar
+      Runtime: java11
+      CodeUri: ./target/aws-ssm-document-1.0.jar
+      MemorySize: 256 # to prevent OutOfMemory exception when testing

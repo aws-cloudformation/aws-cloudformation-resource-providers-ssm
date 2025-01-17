@@ -20,6 +20,8 @@ import software.amazon.cloudformation.proxy.Logger;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static com.amazonaws.ssm.document.tags.TagUtil.TAGGING_PERMISSION_MESSAGE_FORMAT;
 
 @ExtendWith(MockitoExtension.class)
@@ -186,8 +188,9 @@ public class TagUpdaterTest {
 
         Mockito.doThrow(ssmException).when(tagClient).addTags(expectedTagsToAdd, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
         Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS)).thenReturn(true);
+        Mockito.doNothing().when(logger).log(any());
 
-        Assertions.assertThrows(CfnUnauthorizedTaggingOperationException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
+        Assertions.assertThrows(SsmException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
                 SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
 
         verifyTagClientCalls(expectedTagsToAdd, expectedTagsToRemove);
@@ -211,8 +214,9 @@ public class TagUpdaterTest {
 
         Mockito.doThrow(ssmException).when(tagClient).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);
         Mockito.when(tagUtil.isResourceTagModified(SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS)).thenReturn(true);
+        Mockito.doNothing().when(logger).log(any());
 
-        Assertions.assertThrows(CfnUnauthorizedTaggingOperationException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
+        Assertions.assertThrows(SsmException.class, () -> unitUnderTest.updateTags(SAMPLE_DOCUMENT_NAME, SAMPLE_EXISTING_RESOURCE_REQUEST_TAGS, SAMPLE_RESOURCE_REQUEST_TAGS,
                 SAMPLE_PREVIOUS_MODEL_TAGS, SAMPLE_MODEL_TAGS, ssmClient, proxy, logger));
 
         Mockito.verify(tagClient, Mockito.times(1)).removeTags(expectedTagsToRemove, SAMPLE_DOCUMENT_NAME, ssmClient, proxy);

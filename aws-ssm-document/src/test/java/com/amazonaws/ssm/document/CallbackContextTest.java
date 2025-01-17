@@ -1,6 +1,7 @@
 package com.amazonaws.ssm.document;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ public class CallbackContextTest {
             .eventStarted(true)
             .build();
 
+        OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         final String serializedText = OBJECT_MAPPER.writeValueAsString(context);
 
         Assertions.assertEquals(context, OBJECT_MAPPER.readValue(serializedText, CallbackContext.class));

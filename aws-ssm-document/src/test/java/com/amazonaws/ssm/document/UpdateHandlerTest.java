@@ -686,8 +686,8 @@ public class UpdateHandlerTest {
                 .build();
 
         when(progressUpdater.getEventProgress(expectedModel, inProgressCallbackContext, ssmClient, proxy, logger))
-                .thenThrow(ssmException);
-        when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenThrow(CfnGeneralServiceException.class);
+                .thenThrow(SsmException.class);
+        when(exceptionTranslator.getCfnException(any(SsmException.class), eq(SAMPLE_DOCUMENT_NAME), eq(OPERATION_NAME), eq(logger))).thenThrow(CfnGeneralServiceException.class);
 
         final ResourceHandlerRequest<ResourceModel> request = buildRequest(previousModel, expectedModel);
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, request, inProgressCallbackContext, logger));

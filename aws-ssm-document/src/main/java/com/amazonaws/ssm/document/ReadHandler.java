@@ -25,6 +25,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
     private static final String OPERATION_NAME = "AWS::SSM::GetDocument";
     private static final String ACCESS_DENIED_ERROR_CODE = "AccessDeniedException";
+    private static final String INVALID_DOCUMENT_FORMAT_JSON = "Invalid document format JSON";
 
     @NonNull
     private final DocumentModelTranslator documentModelTranslator;
@@ -61,27 +62,45 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), request.getSystemTags(), logger);
 
-        final GetDocumentRequest getDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
-
         final DescribeDocumentRequest describeDocumentRequest = documentModelTranslator.generateDescribeDocumentRequest(model);
 
         try {
-            final GetDocumentResponse getDocumentResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
-
-            final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
-            final ResourceInformation resourceInformation =
-                    documentResponseModelTranslator.generateResourceInformation(getDocumentResponse, documentTags);
-
+            DescribeDocumentResponse describeDocumentResponse = null;
             try {
-                final DescribeDocumentResponse describeDocumentResponse = proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
-
-                resourceInformation.getResourceModel().setTargetType(describeDocumentResponse.document().targetType());
+                describeDocumentResponse = proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
             } catch(SsmException e) {
                 if (!ACCESS_DENIED_ERROR_CODE.equalsIgnoreCase(e.awsErrorDetails().errorCode())) {
                     throw e;
                 }
                 logger.log(String.format("Soft fail describe document in ReadHandler due to insufficient permissions %s",
                         describeDocumentRequest.name()));
+            }
+
+            GetDocumentRequest getDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
+            GetDocumentResponse getDocumentResponse = null;
+
+            if (describeDocumentResponse != null &&
+                describeDocumentResponse.document().documentTypeAsString().equalsIgnoreCase("ChangeCalendar")) {
+                getDocumentRequest = getDocumentRequest.toBuilder().documentFormat("TEXT").build();
+            }
+
+            try {
+                getDocumentResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
+            } catch (SsmException e) {
+                if (INVALID_DOCUMENT_FORMAT_JSON.equalsIgnoreCase(e.awsErrorDetails().errorMessage())) {
+                    getDocumentRequest = getDocumentRequest.toBuilder().documentFormat("TEXT").build();
+                    getDocumentResponse = proxy.injectCredentialsAndInvokeV2(getDocumentRequest, ssmClient::getDocument);
+                } else {
+                    throw e;
+                }
+            }
+
+            final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
+            final ResourceInformation resourceInformation =
+                    documentResponseModelTranslator.generateResourceInformation(getDocumentResponse, documentTags);
+
+            if (describeDocumentResponse != null) {
+                resourceInformation.getResourceModel().setTargetType(describeDocumentResponse.document().targetType());
             }
 
             return ProgressEvent.<ResourceModel, CallbackContext>builder()

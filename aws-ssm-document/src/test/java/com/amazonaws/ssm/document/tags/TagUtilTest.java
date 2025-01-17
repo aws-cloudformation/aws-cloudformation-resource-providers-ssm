@@ -111,7 +111,6 @@ public class TagUtilTest {
                 .build());
 
         Assertions.assertFalse(unitUnderTest.isTaggingPermissionFailure(ssmException));
-
     }
 
     @Test

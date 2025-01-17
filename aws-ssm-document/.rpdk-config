@@ -1,7 +1,7 @@
 {
     "typeName": "AWS::SSM::Document",
     "language": "java",
-    "runtime": "java8",
+    "runtime": "java11",
     "entrypoint": "com.amazonaws.ssm.document.HandlerWrapper::handleRequest",
     "testEntrypoint": "com.amazonaws.ssm.document.HandlerWrapper::testEntrypoint",
     "settings": {
