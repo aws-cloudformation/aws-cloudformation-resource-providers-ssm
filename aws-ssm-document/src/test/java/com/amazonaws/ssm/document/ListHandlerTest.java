@@ -76,7 +76,7 @@ public class ListHandlerTest {
                     DocumentIdentifier.builder().name(Document_Identifier2).build()))
                 .nextToken("token2")
                 .build();
-        
+
         when(proxy.injectCredentialsAndInvokeV2(any(ListDocumentsRequest.class), any())).thenReturn(listDocumentsResponse);
 
         final ResourceModel model1 = ResourceModel.builder()
@@ -119,7 +119,7 @@ public class ListHandlerTest {
 
         Assertions.assertThrows(CfnInvalidRequestException.class, () -> handler.handleRequest(proxy, request, null, logger));
     }
-    
+
     @Test
     public void handleRequest_NullToken() {
         final ListDocumentsResponse listDocumentsResponse = ListDocumentsResponse.builder()
