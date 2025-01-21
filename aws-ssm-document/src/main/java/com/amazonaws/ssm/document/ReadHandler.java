@@ -17,6 +17,8 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import static com.amazonaws.ssm.document.tags.TagUtil.LIST_TAGS_OPERATION_NAME;
+
 /**
  * Get AWS::SSM::Document resource.
  */
@@ -63,9 +65,10 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         safeLogger.safeLogDocumentInformation(model, callbackContext, request.getAwsAccountId(), request.getSystemTags(), logger);
 
         final DescribeDocumentRequest describeDocumentRequest = documentModelTranslator.generateDescribeDocumentRequest(model);
+        DescribeDocumentResponse describeDocumentResponse = null;
+        GetDocumentResponse getDocumentResponse;
 
         try {
-            DescribeDocumentResponse describeDocumentResponse = null;
             try {
                 describeDocumentResponse = proxy.injectCredentialsAndInvokeV2(describeDocumentRequest, ssmClient::describeDocument);
             } catch(SsmException e) {
@@ -77,7 +80,6 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
             }
 
             GetDocumentRequest getDocumentRequest = documentModelTranslator.generateGetDocumentRequest(model);
-            GetDocumentResponse getDocumentResponse = null;
 
             if (describeDocumentResponse != null &&
                 describeDocumentResponse.document().documentTypeAsString().equalsIgnoreCase("ChangeCalendar")) {
@@ -94,21 +96,27 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     throw e;
                 }
             }
-
-            final Map<String, String> documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
-            final ResourceInformation resourceInformation =
-                    documentResponseModelTranslator.generateResourceInformation(getDocumentResponse, documentTags);
-
-            if (describeDocumentResponse != null) {
-                resourceInformation.getResourceModel().setTargetType(describeDocumentResponse.document().targetType());
-            }
-
-            return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModel(resourceInformation.getResourceModel())
-                    .status(OperationStatus.SUCCESS)
-                    .build();
         } catch (final SsmException e) {
             throw exceptionTranslator.getCfnException(e, model.getName(), OPERATION_NAME, logger);
         }
+
+        final Map<String, String> documentTags;
+
+        try {
+            documentTags = tagReader.getDocumentTags(model.getName(), ssmClient, proxy);
+        } catch (final SsmException e) {
+            throw exceptionTranslator.getCfnException(e, model.getName(), LIST_TAGS_OPERATION_NAME, logger);
+        }
+
+        final ResourceInformation resourceInformation =
+                documentResponseModelTranslator.generateResourceInformation(getDocumentResponse, documentTags);
+
+        if (describeDocumentResponse != null) {
+            resourceInformation.getResourceModel().setTargetType(describeDocumentResponse.document().targetType());
+        }
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(resourceInformation.getResourceModel())
+                .status(OperationStatus.SUCCESS)
+                .build();
     }
 }

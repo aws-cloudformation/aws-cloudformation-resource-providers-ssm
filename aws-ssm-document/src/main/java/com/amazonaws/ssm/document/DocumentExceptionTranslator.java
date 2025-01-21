@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.ssm.model.InvalidNextTokenException;
 import software.amazon.awssdk.services.ssm.model.InvalidResourceIdException;
 import software.amazon.awssdk.services.ssm.model.MaxDocumentSizeExceededException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -26,10 +27,13 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.exceptions.CfnUnauthorizedTaggingOperationException;
 import software.amazon.cloudformation.proxy.Logger;
 
 import lombok.NonNull;
 import java.io.IOException;
+
+import static com.amazonaws.ssm.document.tags.TagUtil.LIST_TAGS_OPERATION_NAME;
 
 class DocumentExceptionTranslator {
 
@@ -81,6 +85,13 @@ class DocumentExceptionTranslator {
             return new CfnServiceInternalErrorException(operationName, e);
         } else if (e.getCause() instanceof IOException) {
             return new CfnNetworkFailureException(operationName, e);
+        } else if (e.awsErrorDetails() != null
+                && e.awsErrorDetails().errorCode() != null
+                && e.awsErrorDetails().errorCode().equalsIgnoreCase("AccessDeniedException")) {
+            if (operationName.equalsIgnoreCase(LIST_TAGS_OPERATION_NAME)) {
+                return new CfnUnauthorizedTaggingOperationException(e);
+            }
+            return new CfnAccessDeniedException(operationName, e);
         } else if (e.statusCode() == GENERIC_USER_ERROR_STATUS_CODE) {
             return new CfnInvalidRequestException(e.getMessage(), e);
         }

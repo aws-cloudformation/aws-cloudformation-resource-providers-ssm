@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.ssm.model.AutomationDefinitionNotFoundException;
 import software.amazon.awssdk.services.ssm.model.DocumentAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.DocumentLimitExceededException;
@@ -18,6 +19,7 @@ import software.amazon.awssdk.services.ssm.model.InvalidDocumentVersionException
 import software.amazon.awssdk.services.ssm.model.InvalidResourceIdException;
 import software.amazon.awssdk.services.ssm.model.MaxDocumentSizeExceededException;
 import software.amazon.awssdk.services.ssm.model.SsmException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -28,6 +30,8 @@ import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededExceptio
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.exceptions.CfnUnauthorizedTaggingOperationException;
 import software.amazon.cloudformation.proxy.Logger;
+
+import static com.amazonaws.ssm.document.tags.TagUtil.LIST_TAGS_OPERATION_NAME;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentExceptionTranslatorTest {
@@ -102,5 +106,19 @@ public class DocumentExceptionTranslatorTest {
         Mockito.when(ssmException.statusCode()).thenReturn(400);
 
         Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnInvalidRequestException);
+    }
+
+    @Test
+    public void testGetCfnException_AccessDeniedException_verifyExceptionsReturned() {
+        Mockito.when(ssmException.awsErrorDetails()).thenReturn(AwsErrorDetails.builder().errorCode("AccessDeniedException").build());
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, SAMPLE_OPERATION_NAME, logger) instanceof CfnAccessDeniedException);
+    }
+
+    @Test
+    public void testGetCfnException_ListTagsForResourceAccessDeniedException_verifyExceptionsReturned() {
+        Mockito.when(ssmException.awsErrorDetails()).thenReturn(AwsErrorDetails.builder().errorCode("AccessDeniedException").build());
+
+        Assertions.assertTrue(unitUnderTest.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, LIST_TAGS_OPERATION_NAME, logger) instanceof CfnUnauthorizedTaggingOperationException);
     }
 }
