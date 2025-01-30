@@ -38,6 +38,8 @@ public class ReadHandlerTest {
     private static final String SAMPLE_ACCOUNT_ID = "123456";
     private static final String SAMPLE_DOCUMENT_NAME = "sampleDocument";
     private static final String SAMPLE_TARGET_TYPE = "/AWS::EC2::Volume";
+    private static final String SAMPLE_DOCUMENT_TYPE = "Command";
+    private static final String CHANGE_CALENDAR_DOCUMENT_TYPE = "ChangeCalendar";
     private static final Map<String, Object> SAMPLE_DOCUMENT_CONTENT = ImmutableMap.of(
             "schemaVersion", "1.2",
             "description", "Join instances to an AWS Directory Service domain."
@@ -55,15 +57,28 @@ public class ReadHandlerTest {
     private static final GetDocumentRequest SAMPLE_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
             .build();
-    final GetDocumentResponse SAMPLE_GET_DOCUMENT_RESPONSE = GetDocumentResponse.builder()
+    private static final GetDocumentRequest TEXT_GET_DOCUMENT_REQUEST = GetDocumentRequest.builder()
+            .name(SAMPLE_DOCUMENT_NAME)
+            .documentFormat("TEXT")
+            .build();
+    private final GetDocumentResponse SAMPLE_GET_DOCUMENT_RESPONSE = GetDocumentResponse.builder()
             .name(SAMPLE_DOCUMENT_NAME).status(DocumentStatus.ACTIVE)
             .build();
     private static final DescribeDocumentRequest SAMPLE_DESCRIBE_DOCUMENT_REQUEST = DescribeDocumentRequest.builder()
             .name(SAMPLE_DOCUMENT_NAME)
             .build();
-    final DescribeDocumentResponse SAMPLE_DESCRIBE_DOCUMENT_RESPONSE = DescribeDocumentResponse.builder()
+    private final DescribeDocumentResponse SAMPLE_DESCRIBE_DOCUMENT_RESPONSE = DescribeDocumentResponse.builder()
             .document(DocumentDescription.builder()
                     .name(SAMPLE_DOCUMENT_NAME)
+                    .documentType(SAMPLE_DOCUMENT_TYPE)
+                    .targetType(SAMPLE_TARGET_TYPE)
+                    .status(DocumentStatus.ACTIVE)
+                    .build())
+            .build();
+    final DescribeDocumentResponse CHANGE_CALENDAR_DESCRIBE_DOCUMENT_RESPONSE = DescribeDocumentResponse.builder()
+            .document(DocumentDescription.builder()
+                    .name(SAMPLE_DOCUMENT_NAME)
+                    .documentType(CHANGE_CALENDAR_DOCUMENT_TYPE)
                     .targetType(SAMPLE_TARGET_TYPE)
                     .status(DocumentStatus.ACTIVE)
                     .build())
@@ -74,6 +89,13 @@ public class ReadHandlerTest {
     private static final SsmException ACCESS_DENIED_EXCEPTION = (SsmException) SsmException.builder()
             .awsErrorDetails(AwsErrorDetails.builder()
                     .errorCode("AccessDeniedException")
+                    .errorMessage("AccessDeniedMessage")
+                    .build())
+            .build();
+    private static final SsmException INVALID_DOCUMENT_FORMAT_JSON_EXCEPTION = (SsmException) SsmException.builder()
+            .awsErrorDetails(AwsErrorDetails.builder()
+                    .errorCode("ValidationException")
+                    .errorMessage("Invalid document format JSON")
                     .build())
             .build();
 
@@ -182,7 +204,12 @@ public class ReadHandlerTest {
     @Test
     public void testHandleRequest_GetDocumentThrowsSsmException_verifyExceptionReturned() {
         when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_RESPONSE);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
+        when(ssmException.awsErrorDetails()).thenReturn(awsErrorDetails);
+        when(awsErrorDetails.errorMessage()).thenReturn("Some SsmException");
+
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
@@ -191,14 +218,74 @@ public class ReadHandlerTest {
 
     @Test
     public void testHandleRequest_DescribeThrowsSsmException_verifyExceptionReturned() {
-        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
         when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
-        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
         when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenThrow(ssmException);
         when(ssmException.awsErrorDetails()).thenReturn(awsErrorDetails);
         when(exceptionTranslator.getCfnException(ssmException, SAMPLE_DOCUMENT_NAME, OPERATION_NAME, logger)).thenReturn(cfnException);
 
         Assertions.assertThrows(CfnGeneralServiceException.class, () -> unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger));
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+    }
+
+    @Test
+    public void testHandleRequest_DescribeReturnsChangeCalenarDocument_verifyResult() {
+        final ResourceModel expectedModel = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .targetType(SAMPLE_TARGET_TYPE).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
+                .status(SAMPLE_RESOURCE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
+        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(expectedModel)
+                .status(OperationStatus.SUCCESS)
+                .build();
+
+        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(TEXT_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenReturn(CHANGE_CALENDAR_DESCRIBE_DOCUMENT_RESPONSE);
+        when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
+        when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE, SAMPLE_TAG_MAP))
+        .thenReturn(expectedResourceInformation);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+        = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
+
+        Assertions.assertEquals(expectedResponse, response);
+        verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
+    }
+
+    @Test
+    public void testHandleRequest_DescribeDocumentAccessDeniedForChangeCalendarDocumentType_verifyResult() {
+        final ResourceModel expectedModel = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .content(SAMPLE_DOCUMENT_CONTENT)
+                .targetType(SAMPLE_TARGET_TYPE).build();
+        final ResourceInformation expectedResourceInformation = ResourceInformation.builder().resourceModel(expectedModel)
+                .status(SAMPLE_RESOURCE_STATE)
+                .statusInformation(SAMPLE_STATUS_INFO)
+                .build();
+        final ProgressEvent<ResourceModel, CallbackContext> expectedResponse = ProgressEvent.<ResourceModel, CallbackContext>builder()
+                .resourceModel(expectedModel)
+                .status(OperationStatus.SUCCESS)
+                .build();
+
+        when(documentModelTranslator.generateGetDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_GET_DOCUMENT_REQUEST);
+        when(documentModelTranslator.generateDescribeDocumentRequest(SAMPLE_RESOURCE_MODEL)).thenReturn(SAMPLE_DESCRIBE_DOCUMENT_REQUEST);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_DESCRIBE_DOCUMENT_REQUEST), any())).thenThrow(ACCESS_DENIED_EXCEPTION);
+        when(proxy.injectCredentialsAndInvokeV2(eq(SAMPLE_GET_DOCUMENT_REQUEST), any())).thenThrow(INVALID_DOCUMENT_FORMAT_JSON_EXCEPTION);
+        when(proxy.injectCredentialsAndInvokeV2(eq(TEXT_GET_DOCUMENT_REQUEST), any())).thenReturn(SAMPLE_GET_DOCUMENT_RESPONSE);
+
+        when(tagReader.getDocumentTags(SAMPLE_DOCUMENT_NAME, ssmClient, proxy)).thenReturn(SAMPLE_TAG_MAP);
+        when(documentResponseModelTranslator.generateResourceInformation(SAMPLE_GET_DOCUMENT_RESPONSE, SAMPLE_TAG_MAP))
+        .thenReturn(expectedResourceInformation);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+        = unitUnderTest.handleRequest(proxy, SAMPLE_RESOURCE_HANDLER_REQUEST, null, logger);
+
+        Assertions.assertEquals(expectedResponse, response);
         verify(safeLogger).safeLogDocumentInformation(SAMPLE_RESOURCE_MODEL, null, SAMPLE_ACCOUNT_ID, SAMPLE_SYSTEM_TAGS, logger);
     }
 }

@@ -1,6 +1,6 @@
 {
     "CreateInputs": {
-        "Name": "appConfigTest1",
+        "Name": "appConfigTest1-{{ uuid }}",
         "Content": "{\"whitelist\":[{\"name\":\"user1\",\"email\":\"user1@email.com\",\"location\":\"virginia\"},{\"name\":\"user2\",\"email\":\"{VersionName}@email.com\",\"location\":\"washington\"}]}",
         "DocumentType": "ApplicationConfiguration",
         "DocumentFormat": "JSON",

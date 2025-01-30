@@ -132,12 +132,35 @@ class DocumentModelTranslator {
                 .build();
     }
 
-    ListDocumentsRequest generateListDocumentsRequest() {
-        List<DocumentKeyValuesFilter> keyValuesFilters =
-                ImmutableList.of(DocumentKeyValuesFilter.builder().key("owner").values("self").build());
+    static ListDocumentsRequest generateListDocumentsRequest(@Nullable final String nextToken, @Nullable final ResourceModel model) {
+        final ImmutableList.Builder<DocumentKeyValuesFilter> filterListBuilder =
+                ImmutableList.builder();
+
+        if (model == null) {
+            return ListDocumentsRequest.builder()
+                .maxResults(50)
+                .nextToken(nextToken)
+                .build();
+        }
+
+        if (model.getName() != null) {
+            filterListBuilder.add(DocumentKeyValuesFilter.builder().key("Name").values(model.getName()).build());
+        }
+
+        if (model.getDocumentType() != null) {
+            filterListBuilder.add(DocumentKeyValuesFilter.builder().key("DocumentType").values(model.getDocumentType()).build());
+        }
+
+        if (model.getTargetType() != null) {
+            filterListBuilder.add(DocumentKeyValuesFilter.builder().key("TargetType").values(model.getTargetType()).build());
+        }
+
+        final List<DocumentKeyValuesFilter> filters = filterListBuilder.build();
 
         return ListDocumentsRequest.builder()
-                .filters(keyValuesFilters)
+                .filters(filters.isEmpty() ? null : filters)
+                .maxResults(50)
+                .nextToken(nextToken)
                 .build();
     }
 

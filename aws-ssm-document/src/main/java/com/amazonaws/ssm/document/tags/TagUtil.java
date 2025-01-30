@@ -20,6 +20,8 @@ public class TagUtil {
 
     public static final String TAGGING_PERMISSION_MESSAGE_FORMAT = "Did not have IAM permissions to process tags on" +
             " AWS::SSM::Document resource.";
+    public static final String LIST_TAGS_OPERATION_NAME = "ListTagsForResource";
+
 
     private static final String ACCESS_DENIED_ERROR_CODE = "AccessDeniedException";
     private static final String ADD_TAGS_ACTION = "ssm:AddTagsToResource";

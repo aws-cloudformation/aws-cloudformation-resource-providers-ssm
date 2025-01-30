@@ -7,9 +7,10 @@ import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.ssm.model.CreateDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DeleteDocumentRequest;
 import software.amazon.awssdk.services.ssm.model.DescribeDocumentRequest;
+import software.amazon.awssdk.services.ssm.model.DocumentKeyValuesFilter;
 import software.amazon.awssdk.services.ssm.model.DocumentFormat;
 import software.amazon.awssdk.services.ssm.model.GetDocumentRequest;
-import software.amazon.awssdk.services.ssm.model.GetDocumentResponse;
+import software.amazon.awssdk.services.ssm.model.ListDocumentsRequest;
 import software.amazon.awssdk.services.ssm.model.UpdateDocumentRequest;
 
 import java.util.List;
@@ -48,6 +49,7 @@ public class DocumentModelTranslatorTest {
     private static final String SAMPLE_DOCUMENT_TYPE = "type";
     private static final String LATEST_DOCUMENT_VERSION = "$LATEST";
     private static final String SAMPLE_TARGET_TYPE = "targetType";
+    private static final Integer MAX_RESULTS = 50;
     private static final List<Tag> SAMPLE_RESOURCE_MODEL_TAGS = ImmutableList.of(
             Tag.builder().key("tagKey1").value("tagValue1").build(),
             Tag.builder().key("tagKey2").value("tagValue2").build()
@@ -487,6 +489,97 @@ public class DocumentModelTranslatorTest {
 
         Assertions.assertEquals(expectedRequest, request);
     }
+
+    //ListDocumentRequest tests
+    @Test
+    public void testGenerateListDocumentsRequest_NoFilters_verifyResult() {
+        final ResourceModel model = ResourceModel.builder().build();
+
+        final ListDocumentsRequest expectedRequest = ListDocumentsRequest.builder()
+                .maxResults(MAX_RESULTS)
+                .nextToken(SAMPLE_REQUEST_TOKEN)
+                .build();
+
+        final ListDocumentsRequest request = unitUnderTest.generateListDocumentsRequest(SAMPLE_REQUEST_TOKEN,model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
+    @Test
+    public void testGenerateListDocumentsRequest_NameFilter_verifyResult() {
+        final ResourceModel model = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .build();
+
+        List<DocumentKeyValuesFilter> keyValuesFilters =
+                ImmutableList.of(DocumentKeyValuesFilter.builder().key("Name").values(SAMPLE_DOCUMENT_NAME).build());
+        final ListDocumentsRequest expectedRequest = ListDocumentsRequest.builder()
+                .filters(keyValuesFilters)
+                .maxResults(MAX_RESULTS)
+                .nextToken(SAMPLE_REQUEST_TOKEN)
+                .build();
+
+        final ListDocumentsRequest request = unitUnderTest.generateListDocumentsRequest(SAMPLE_REQUEST_TOKEN,model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+    @Test
+    public void testGenerateListDocumentsRequest_DocumentTypeFilter_verifyResult() {
+        final ResourceModel model = ResourceModel.builder()
+                .documentType(SAMPLE_DOCUMENT_TYPE)
+                .build();
+
+        List<DocumentKeyValuesFilter> keyValuesFilters =
+                ImmutableList.of(DocumentKeyValuesFilter.builder().key("DocumentType").values(SAMPLE_DOCUMENT_TYPE).build());
+        final ListDocumentsRequest expectedRequest = ListDocumentsRequest.builder()
+                .filters(keyValuesFilters)
+                .maxResults(MAX_RESULTS)
+                .nextToken(SAMPLE_REQUEST_TOKEN)
+                .build();
+
+        final ListDocumentsRequest request = unitUnderTest.generateListDocumentsRequest(SAMPLE_REQUEST_TOKEN,model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+    @Test
+    public void testGenerateListDocumentsRequest_TargetTypeFilter_verifyResult() {
+        final ResourceModel model = ResourceModel.builder()
+                .targetType(SAMPLE_TARGET_TYPE)
+                .build();
+
+        List<DocumentKeyValuesFilter> keyValuesFilters =
+                ImmutableList.of(DocumentKeyValuesFilter.builder().key("TargetType").values(SAMPLE_TARGET_TYPE).build());
+        final ListDocumentsRequest expectedRequest = ListDocumentsRequest.builder()
+                .filters(keyValuesFilters)
+                .maxResults(MAX_RESULTS)
+                .nextToken(SAMPLE_REQUEST_TOKEN)
+                .build();
+
+        final ListDocumentsRequest request = unitUnderTest.generateListDocumentsRequest(SAMPLE_REQUEST_TOKEN,model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+    @Test
+    public void testGenerateListDocumentsRequest_AllThreeFilter_verifyResult() {
+        final ResourceModel model = ResourceModel.builder()
+                .name(SAMPLE_DOCUMENT_NAME)
+                .documentType(SAMPLE_DOCUMENT_TYPE)
+                .targetType(SAMPLE_TARGET_TYPE)
+                .build();
+
+        List<DocumentKeyValuesFilter> keyValuesFilters =
+                ImmutableList.of(DocumentKeyValuesFilter.builder().key("Name").values(SAMPLE_DOCUMENT_NAME).build(),DocumentKeyValuesFilter.builder().key("DocumentType").values(SAMPLE_DOCUMENT_TYPE).build(),DocumentKeyValuesFilter.builder().key("TargetType").values(SAMPLE_TARGET_TYPE).build());
+        final ListDocumentsRequest expectedRequest = ListDocumentsRequest.builder()
+                .filters(keyValuesFilters)
+                .maxResults(MAX_RESULTS)
+                .nextToken(SAMPLE_REQUEST_TOKEN)
+                .build();
+
+        final ListDocumentsRequest request = unitUnderTest.generateListDocumentsRequest(SAMPLE_REQUEST_TOKEN,model);
+
+        Assertions.assertEquals(expectedRequest, request);
+    }
+
 
     private ResourceModel createResourceModel() {
         return ResourceModel.builder()

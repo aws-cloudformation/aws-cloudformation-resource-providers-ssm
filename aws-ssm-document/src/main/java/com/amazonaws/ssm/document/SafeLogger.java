@@ -23,13 +23,13 @@ public class SafeLogger {
         return INSTANCE;
     }
 
-    public void safeLogDocumentInformation(@NonNull final ResourceModel resourceModel,
+    public void safeLogDocumentInformation(@Nullable final ResourceModel resourceModel,
                                            @Nullable final CallbackContext callbackContext,
                                            @NonNull final String customerAccountId,
                                            @Nullable final Map<String, String> systemTags,
                                            @NonNull final Logger logger) {
-        final String documentDetails = String.format(DOCUMENT_INFO_SAFE_LOG_FORMAT, resourceModel.getName(),
-            resourceModel.getDocumentType(), resourceModel.getDocumentFormat());
+        final String documentDetails = resourceModel != null ? String.format(DOCUMENT_INFO_SAFE_LOG_FORMAT, resourceModel.getName(),
+            resourceModel.getDocumentType(), resourceModel.getDocumentFormat()) : null;
 
         final String stackId = systemTags != null ? systemTags.get(STACK_ID_KEY) : null;
 
